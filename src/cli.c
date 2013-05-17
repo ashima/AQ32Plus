@@ -384,8 +384,9 @@ void cliCom(void)
 
         ///////////////////////////////
 
-        case 'o': // Not Used
-            cliQuery = 'x';
+        case 'o': // quaternion and roll/pitch/yaw
+        	cliPrintF("%1.4f %1.4f %1.4f %1.4f  %1.4f %1.4f %1.4fx\n", q0, q1, q2, q3, 
+        		sensors.attitude500Hz[ROLL], sensors.attitude500Hz[PITCH], sensors.attitude500Hz[YAW]);
             validCliCommand = false;
             break;
 
@@ -734,14 +735,14 @@ void cliCom(void)
         	break;
 
         ///////////////////////////////
-
+#ifdef HAVEOSD
         case 'M': // MAX7456 CLI
            	max7456CLI();
 
            	cliQuery = 'x';
         	validCliCommand = false;
         	break;
-
+#endif
         ///////////////////////////////
 
         case 'N': // Mixer CLI

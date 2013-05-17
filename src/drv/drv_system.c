@@ -169,18 +169,18 @@ void SysTick_Handler(void)
                 accelSum100Hz[index] = 0.0f;
             }
 
-            if (frameCounter == COUNT_100HZ)
-            {
-                readTemperatureRequestPressure(MS5611_I2C);
-            }
-            else if (frameCounter == FRAME_COUNT)
-            {
-                readPressureRequestTemperature(MS5611_I2C);
-            }
-            else
-            {
-                readPressureRequestPressure(MS5611_I2C);
-            }
+            // if (frameCounter == COUNT_100HZ)
+            // {
+            //     readTemperatureRequestPressure(MS5611_I2C);
+            // }
+            // else if (frameCounter == FRAME_COUNT)
+            // {
+            //     readPressureRequestTemperature(MS5611_I2C);
+            // }
+            // else
+            // {
+            //     readPressureRequestPressure(MS5611_I2C);
+            // }
 
             d1Sum += d1.value;
         }
@@ -192,8 +192,8 @@ void SysTick_Handler(void)
 
         ///////////////////////////////
 
-        if (((frameCounter + 1) % COUNT_10HZ) == 0)
-            newMagData = readMag(HMC5883L_I2C);
+        // if (((frameCounter + 1) % COUNT_10HZ) == 0)
+        //     newMagData = readMag(HMC5883L_I2C);
 
         if ((frameCounter % COUNT_10HZ) == 0)
             frame_10Hz = true;
@@ -243,7 +243,9 @@ uint32_t millis(void)
 ///////////////////////////////////////////////////////////////////////////////
 // System Initialization
 ///////////////////////////////////////////////////////////////////////////////
-
+#ifdef NOGPS
+void gpsInit() {}
+#endif
 void systemInit(void)
 {
 	// Init cycle counter
@@ -255,8 +257,8 @@ void systemInit(void)
     checkFirstTime(false);
 	readEEPROM();
 
-	if (eepromConfig.receiverType == SPEKTRUM)
-		checkSpektrumBind();
+	// if (eepromConfig.receiverType == SPEKTRUM)
+	// 	checkSpektrumBind();
 
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);  // 2 bits for pre-emption priority, 2 bits for subpriority
 
@@ -267,32 +269,34 @@ void systemInit(void)
 
     BLUE_LED_ON;
 
-    adcInit();
-    gpsInit();
-    i2cInit(I2C1);
+    // adcInit();
+    // gpsInit();
+    // i2cInit(I2C1);
     i2cInit(I2C2);
     pwmEscInit(eepromConfig.escPwmRate);
-    pwmServoInit(eepromConfig.servoPwmRate);
+    // pwmServoInit(eepromConfig.servoPwmRate);
     rxInit();
+#ifndef NOSPI
     spiInit(SPI2);
     spiInit(SPI3);
+#endif
     telemetryInit();
     timingFunctionsInit();
 
-    delay(5000);   // 5 sec delay to make sure GPS is up before executing init procedure
+    // delay(5000);   // 5 sec delay to make sure GPS is up before executing init procedure
 
-    initGPS();
+    // initGPS();
 
-    delay(15000);  // 20 sec total delay for sensor stabilization - probably not long enough.....
+    // delay(15000);  // 20 sec total delay for sensor stabilization - probably not long enough.....
 
     GREEN_LED_ON;
 
     initMPU6000();
-    initMag(HMC5883L_I2C);
-    initPressure(MS5611_I2C);
-
+    // initMag(HMC5883L_I2C);
+    // initPressure(MS5611_I2C);
+#ifdef HAVEOSD
     initMax7456();
-
+#endif
     initPID();
 }
 

@@ -361,6 +361,16 @@ typedef struct eepromConfig_t
 
     ///////////////////////////////////
 
+    int8_t signAX;
+    int8_t signAY;
+    int8_t signAZ;
+    int8_t signGX;
+    int8_t signGY;
+    int8_t signGZ;
+    int8_t signMX;
+    int8_t signMY;
+    int8_t signMZ;
+
 } eepromConfig_t;
 
 extern eepromConfig_t eepromConfig;

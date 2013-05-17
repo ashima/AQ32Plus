@@ -43,6 +43,12 @@
 #define ESC_PULSE_1MS    2000  // 1ms pulse width
 #define ESC_PULSE_PERIOD 5000  // pulse period (400Hz)
 
+#ifdef ASHIMACORE
+static volatile uint32_t *OutputChannels[] = {
+  &(TIM8->CCR1), &(TIM8->CCR2),
+  &(TIM2->CCR1), &(TIM2->CCR2),
+  &(TIM3->CCR1), &(TIM3->CCR2) };
+#else
 static volatile uint32_t *OutputChannels[] = { &(TIM8->CCR4),
 	                                           &(TIM8->CCR3),
 	                                           &(TIM8->CCR2),
@@ -51,6 +57,7 @@ static volatile uint32_t *OutputChannels[] = { &(TIM8->CCR4),
                                                &(TIM3->CCR1),
                                                &(TIM3->CCR2),
                                                &(TIM2->CCR1), };
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // PWM ESC Initialization
@@ -74,7 +81,14 @@ void pwmEscInit(uint16_t escPwmRate)
     // ESC PWM5 TIM2_CH2 PB3
     // ESC PWM6 TIM3_CH1 PB4
     // ESC PWM7 TIM3_CH2 PB5
-    // ESC PWM8 TIM2_CH1 PA15
+
+    // AshimaCore Outputs (Same, minus PC 8 and 9 which are used for SDIO)
+    // ESC PWM1 TIM8_CH1 PC6
+    // ESC PWM2 TIM8_CH2 PC7
+    // ESC PWM2 TIM2_CH1 PA15
+    // ESC PWM3 TIM2_CH2 PB3
+    // ESC PWM4 TIM3_CH1 PB4
+    // ESC PWM5 TIM3_CH2 PB5
 
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
@@ -99,8 +113,11 @@ void pwmEscInit(uint16_t escPwmRate)
   //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 
  	GPIO_Init(GPIOB, &GPIO_InitStructure);
-
+#ifdef ASHIMACORE
+    GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_6 | GPIO_Pin_7;
+#else
     GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9;
+#endif
   //GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
   //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   //GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;

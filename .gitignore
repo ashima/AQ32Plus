@@ -1,2 +1,12 @@
 /Release
-/.cproject
+*.o
+*.obj
+*.hex
+*.bin
+*.elf
+*.mapfile
+*.lst
+*.swp
+\#*
+*~
+

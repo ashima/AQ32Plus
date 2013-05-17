@@ -38,83 +38,65 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-uint8_t usbDeviceConfigured = false;
-
-__ALIGN_BEGIN USB_OTG_CORE_HANDLE    USB_OTG_dev __ALIGN_END;
 
 ///////////////////////////////////////////////////////////////////////////////
+// Telemetry Initialization
+///////////////////////////////////////////////////////////////////////////////
 
-void cliInit(void)
+void telemetryInit(void)
 {
-#ifndef ASHIMACORE
-    GPIO_InitTypeDef  GPIO_InitStructure;
-
-	GPIO_StructInit(&GPIO_InitStructure);
-
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-
-    GPIO_InitStructure.GPIO_Pin   = USB_DISCONNECT_PIN;
-	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
-  //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-
-	GPIO_Init(USB_DISCONNECT_GPIO, &GPIO_InitStructure);
-
-	GPIO_ResetBits(USB_DISCONNECT_GPIO, USB_DISCONNECT_PIN);
-
-    delay(200);
-
-	GPIO_SetBits(USB_DISCONNECT_GPIO, USB_DISCONNECT_PIN);
-#endif
-	USBD_Init(&USB_OTG_dev,	USB_OTG_FS_CORE_ID, &USR_desc, &USBD_CDC_cb, &USR_cb);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Telemetry Available
+///////////////////////////////////////////////////////////////////////////////
 
-uint8_t cliAvailable(void)
+uint16_t telemetryAvailable(void)
 {
-    if (cdc_RX_IsCharReady() == -1)
-    	return(true);
-    else
-    	return(false);
+    return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Telemetry Read
+///////////////////////////////////////////////////////////////////////////////
 
-char cliRead(void)
+uint8_t telemetryRead(void)
 {
-    if (usbDeviceConfigured == true)
-        return cdc_RX_GetChar();
-    else
-        return(0);
+    return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Telemetry Read Poll
+///////////////////////////////////////////////////////////////////////////////
 
-void cliPrint(char* str)
+uint8_t telemetryReadPoll(void)
 {
-	if (usbDeviceConfigured == true)
-	{
-		cdc_DataTx((unsigned char*)str, strlen(str));
-	}
+    return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// CLI Print Formatted - Print formatted string to USB VCP
+// Telemetry Write
+///////////////////////////////////////////////////////////////////////////////
+
+void telemetryWrite(uint8_t ch)
+{
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Telemetry Print
+///////////////////////////////////////////////////////////////////////////////
+
+void telemetryPrint(char *str)
+{
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Telemetry Print Formatted - Print formatted string to Telemetry Port
 // From Ala42
 ///////////////////////////////////////////////////////////////////////////////
 
-void cliPrintF(const char * fmt, ...)
+void telemetryPrintF(const char * fmt, ...)
 {
-	char buf[256];
-
-	va_list  vlist;
-	va_start (vlist, fmt);
-
-	vsnprintf(buf, sizeof(buf), fmt, vlist);
-	cliPrint(buf);
-	va_end(vlist);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

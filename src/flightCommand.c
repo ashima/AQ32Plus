@@ -210,10 +210,10 @@ void processFlightCommands(void)
 
 	// Check yaw in detent and flight mode to determine hdg hold engaged state
 
-	if ((commandInDetent[YAW] == true) && (flightMode == ATTITUDE))
-	    headingHoldEngaged = true;
-	else
-	    headingHoldEngaged = false;
+	// if ((commandInDetent[YAW] == true) && (flightMode == ATTITUDE))
+	//     headingHoldEngaged = true;
+	// else
+	//     headingHoldEngaged = false;
 
 	///////////////////////////////////
 

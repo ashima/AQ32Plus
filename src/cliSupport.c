@@ -39,7 +39,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // MAX7456 CLI
 ///////////////////////////////////////////////////////////////////////////////
-
+#ifndef NOSPI
 void max7456CLI()
 {
     uint8_t  max7456query;
@@ -290,7 +290,7 @@ void max7456CLI()
 	    }
     }
 }
-
+#endif
 ///////////////////////////////////////////////////////////////////////////////
 // Mixer CLI
 ///////////////////////////////////////////////////////////////////////////////
@@ -891,6 +891,16 @@ void receiverCLI()
 // Sensor CLI
 ///////////////////////////////////////////////////////////////////////////////
 
+char extractSign(int8_t v)
+{
+    if (v > 0)
+        return '+';
+    else if (v < 0)
+        return '-';
+    else
+        return '!';
+}
+
 void sensorCLI()
 {
     uint8_t  sensorQuery;
@@ -943,6 +953,11 @@ void sensorCLI()
                 cliPrintF("KiMag (MARG):              %9.4f\n",   eepromConfig.KiMag);
                 cliPrintF("hdot est/h est Comp Fil A: %9.4f\n",   eepromConfig.compFilterA);
                 cliPrintF("hdot est/h est Comp Fil B: %9.4f\n",   eepromConfig.compFilterB);
+                cliPrintF("signs: ax ay az; gx gy gz; mx my mz\n");
+                cliPrintF("       %c  %c  %c   %c  %c  %c   %c  %c  %c\n",
+                    extractSign(eepromConfig.signAX), extractSign(eepromConfig.signAY), extractSign(eepromConfig.signAZ),
+                    extractSign(eepromConfig.signGX), extractSign(eepromConfig.signGY), extractSign(eepromConfig.signGZ),
+                    extractSign(eepromConfig.signMX), extractSign(eepromConfig.signMY), extractSign(eepromConfig.signMZ));
 
                 cliPrint("MPU6000 DLPF:                 ");
                 switch(eepromConfig.dlpfSetting)
@@ -1021,7 +1036,7 @@ void sensorCLI()
                     	eepromConfig.dlpfSetting = BITS_DLPF_CFG_42HZ;
                      	break;
                 }
-
+#ifdef MPU6000_SPI
                 setSPIdivisor(MPU6000_SPI, 64);  // 0.65625 MHz SPI clock (within 20 +/- 10%)
 
                 GPIO_ResetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
@@ -1030,6 +1045,7 @@ void sensorCLI()
 			    GPIO_SetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
 
                 setSPIdivisor(MPU6000_SPI, 2);  // 21 MHz SPI clock (within 20 +/- 10%)
+#endif
 
                 sensorQuery = 'a';
                 validQuery = true;
@@ -1085,6 +1101,22 @@ void sensorCLI()
 
             ///////////////////////////
 
+            case 'S': // change coordinate system of sensor reads
+                eepromConfig.signAX = readFloatCLI() < 0 ? -1 : 1;
+                eepromConfig.signAY = readFloatCLI() < 0 ? -1 : 1;
+                eepromConfig.signAZ = readFloatCLI() < 0 ? -1 : 1;
+                eepromConfig.signGX = readFloatCLI() < 0 ? -1 : 1;
+                eepromConfig.signGY = readFloatCLI() < 0 ? -1 : 1;
+                eepromConfig.signGZ = readFloatCLI() < 0 ? -1 : 1;
+                eepromConfig.signMX = readFloatCLI() < 0 ? -1 : 1;
+                eepromConfig.signMY = readFloatCLI() < 0 ? -1 : 1;
+                eepromConfig.signMZ = readFloatCLI() < 0 ? -1 : 1;
+                sensorQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
             case 'V': // Set Battery Voltage Divider
                 eepromConfig.batteryVoltageDivider = readFloatCLI();
 
@@ -1109,6 +1141,7 @@ void sensorCLI()
 			   	cliPrint("                                           'D' Set kpMag/kiMag                      DkpMag;kiMag\n");
 			   	cliPrint("                                           'E' Set h dot est/h est Comp Filter A/B  EA;B\n");
 			   	cliPrint("                                           'M' Set Mag Variation (+ East, - West)   MMagVar\n");
+			   	cliPrint("                                           'S' Set Sensor signs                     ax;ay;ax;gx;gy;gz;mx;my;mz\n");
 			   	cliPrint("                                           'V' Set Battery Voltage Divider          VbatVoltDivider\n");
 			   	cliPrint("                                           'W' Write EEPROM Parameters\n");
 			   	cliPrint("'x' Exit Sensor CLI                        '?' Command Summary\n");
@@ -1124,7 +1157,10 @@ void sensorCLI()
 ///////////////////////////////////////////////////////////////////////////////
 // GPS CLI
 ///////////////////////////////////////////////////////////////////////////////
-
+#ifdef NOGPS
+void gpsCLI() {}
+void initGPS() {}
+#else
 void gpsCLI()
 {
 	USART_InitTypeDef USART_InitStructure;
@@ -1279,5 +1315,5 @@ void gpsCLI()
 	}
 
 }
-
+#endif
 ///////////////////////////////////////////////////////////////////////////////

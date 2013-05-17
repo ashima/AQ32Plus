@@ -153,7 +153,11 @@
 /************************* PLL Parameters *************************************/
 /* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N */
 // AKA #define PLL_M      25
+#ifdef ASHIMACORE
+#define PLL_M      20
+#else
 #define PLL_M      8
+#endif
 #define PLL_N      336
 
 /* SYSCLK = PLL_VCO / PLL_P */

@@ -94,7 +94,9 @@
 
 #include "drv_adc.h"
 #include "drv_cli.h"
+#ifndef NOGPS
 #include "drv_gps.h"
+#endif
 #include "drv_i2c.h"
 #include "drv_led.h"
 #include "drv_max7456.h"
@@ -107,7 +109,7 @@
 #include "drv_timingFunctions.h"
 
 #include "hmc5883.h"
-#include "mpu6000.h"
+#include "mpu6000_I2C.h"
 #include "ms5611_I2C.h"
 
 #include "cli.h"
@@ -117,10 +119,12 @@
 #include "coordinateTransforms.h"
 #include "escCalibration.h"
 #include "flightCommand.h"
+#ifndef NOGPS
 #include "gps.h"
 #include "gpsMediaTek19.h"
 #include "gpsNMEA.h"
 #include "gpsUblox.h"
+#endif
 #include "linearAlgebra.h"
 #include "lowPassFilter.h"
 #include "MargAHRS.h"
