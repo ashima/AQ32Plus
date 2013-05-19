@@ -1,8 +1,5 @@
 
-ARMCC=arm-none-eabi-gcc
-ARMAR=arm-none-eabi-ar
-ARMOBJCOPY=arm-none-eabi-objcopy
-ARMOBJDUMP=arm-none-eabi-objdump
+BUILD=../$(BUILDDIR)
 LIBS=../Libraries
 
 STDPERIPH=$(LIBS)/STM32F4xx_StdPeriph_Driver
@@ -46,33 +43,12 @@ SRCS=$(wildcard *.c) \
 
 #$(wildcard $(STDOTG)/src/*.c) 
 
-TARGET=AQ32Plus
-
 OBJS=$(SRCS:.c=.o) startup/startup_stm32f40xx.o
 LINKFILE=../stm32_flash.ld
-STARTFILE=
-
-all: $(TARGET).all
-
-$(TARGET).all: $(patsubst %,$(TARGET).%,text.bin isr.bin lst hex)
-
-%.text.bin: %.elf
-	$(ARMOBJCOPY) -R .isr_vector -R .eeprom -O binary $^ $@
-
-%.isr.bin: %.elf
-	$(ARMOBJCOPY) -j .isr_vector -O binary $^ $@
-
-%.lst: %.elf
-	$(ARMOBJCOPY) -O ihex $^ $*.hex
-
-%.hex: %.elf
-	$(ARMOBJDUMP) -SD $^ > $*.lst
-
 
 $(TARGET).elf: $(OBJS)
 	$(ARMCC) $(CFLAGS) -T $(LINKFILE) \
-	-o $@ $(STARTFILE) $^  \
-	-Wl,--print-map	 > fly.mapfile
+	-o $@ $^  -Wl,--print-map > $(TARGET).mapfile
 
 %.o: %.S
 	$(ARMCC) $(CFLAGS) -o $@ -c $^
@@ -80,14 +56,8 @@ $(TARGET).elf: $(OBJS)
 %.o: %.c
 	$(ARMCC) $(CFLAGS) $(DEFS) $(CMSISINC) $(INCS) -o $@ -c $^
 
-.PHONY: clean realclean flash
+.PHONY: clean 
 
 clean:
-	-rm *.o */*.o $(patsubst %,$(TARGET).%,text.bin isr.bin lst hex mapfile)
+	-rm *.o */*.o $(TARGET).elf
 
-realclean: clean
-	-cd .. ; find . -name '*.o' | xargs rm
-
-flash:
-	dfu-util -d 0483:df11 -a 0 -s 0x08000000 -D fly.isr.bin
-	dfu-util -d 0483:df11 -a 0 -s 0x08008000 -D fly.text.bin -R	
