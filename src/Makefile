@@ -46,14 +46,15 @@ SRCS=$(wildcard *.c) \
 
 #$(wildcard $(STDOTG)/src/*.c) 
 
+TARGET=AQ32Plus
 
 OBJS=$(SRCS:.c=.o) startup/startup_stm32f40xx.o
 LINKFILE=../stm32_flash.ld
 STARTFILE=
 
-all: fly.all
+all: $(TARGET).all
 
-fly.all: fly.text.bin fly.isr.bin fly.lst fly.hex
+$(TARGET).all: $(patsubst %,$(TARGET).%,text.bin isr.bin lst hex)
 
 %.text.bin: %.elf
 	$(ARMOBJCOPY) -R .isr_vector -R .eeprom -O binary $^ $@
@@ -68,7 +69,7 @@ fly.all: fly.text.bin fly.isr.bin fly.lst fly.hex
 	$(ARMOBJDUMP) -SD $^ > $*.lst
 
 
-fly.elf: $(OBJS)
+$(TARGET).elf: $(OBJS)
 	$(ARMCC) $(CFLAGS) -T $(LINKFILE) \
 	-o $@ $(STARTFILE) $^  \
 	-Wl,--print-map	 > fly.mapfile
@@ -79,11 +80,13 @@ fly.elf: $(OBJS)
 %.o: %.c
 	$(ARMCC) $(CFLAGS) $(DEFS) $(CMSISINC) $(INCS) -o $@ -c $^
 
-clean:
-	rm *.o */*.o fly.*
+.PHONY: clean realclean flash
 
-realclean:
-	cd .. ; find . -name '*.o' | xargs rm
+clean:
+	-rm *.o */*.o $(patsubst %,$(TARGET).%,text.bin isr.bin lst hex mapfile)
+
+realclean: clean
+	-cd .. ; find . -name '*.o' | xargs rm
 
 flash:
 	dfu-util -d 0483:df11 -a 0 -s 0x08000000 -D fly.isr.bin
