@@ -81,13 +81,13 @@ void mpu6000Calibration(void)
         delayMicroseconds(sampleRate);
     }
 
-    accelBias1[XAXIS]   /= (float) numberOfSamples;
-    accelBias1[YAXIS]   /= (float) numberOfSamples;
-    accelBias1[ZAXIS]   /= (float) numberOfSamples;
-    gyroBias1[ROLL ]    /= (float) numberOfSamples;
-    gyroBias1[PITCH]    /= (float) numberOfSamples;
-    gyroBias1[YAW  ]    /= (float) numberOfSamples;
-    mpu6000Temperature1 /= (float) numberOfSamples;
+    accelBias1[XAXIS]   /= (eepromConfig.signAX * (float) numberOfSamples);
+    accelBias1[YAXIS]   /= (eepromConfig.signAY * (float) numberOfSamples);
+    accelBias1[ZAXIS]   /= (eepromConfig.signAZ * (float) numberOfSamples);
+    gyroBias1[ROLL ]    /= (eepromConfig.signGX * (float) numberOfSamples);
+    gyroBias1[PITCH]    /= (eepromConfig.signGY * (float) numberOfSamples);
+    gyroBias1[YAW  ]    /= (eepromConfig.signGZ * (float) numberOfSamples);
+    mpu6000Temperature1 /=                        (float) numberOfSamples;
 
     cliPrintF("\nGyro Temperature Reading: %6.2F", mpu6000Temperature1);
 
@@ -123,13 +123,13 @@ void mpu6000Calibration(void)
         delayMicroseconds(sampleRate);
     }
 
-    accelBias2[XAXIS]   /= (float) numberOfSamples;
-    accelBias2[YAXIS]   /= (float) numberOfSamples;
-    accelBias2[ZAXIS]   /= (float) numberOfSamples;
-    gyroBias2[ROLL ]    /= (float) numberOfSamples;
-    gyroBias2[PITCH]    /= (float) numberOfSamples;
-    gyroBias2[YAW  ]    /= (float) numberOfSamples;
-    mpu6000Temperature2 /= (float) numberOfSamples;
+    accelBias1[XAXIS]   /= (eepromConfig.signAX * (float) numberOfSamples);
+    accelBias1[YAXIS]   /= (eepromConfig.signAY * (float) numberOfSamples);
+    accelBias1[ZAXIS]   /= (eepromConfig.signAZ * (float) numberOfSamples);
+    gyroBias1[ROLL ]    /= (eepromConfig.signGX * (float) numberOfSamples);
+    gyroBias1[PITCH]    /= (eepromConfig.signGY * (float) numberOfSamples);
+    gyroBias1[YAW  ]    /= (eepromConfig.signGZ * (float) numberOfSamples);
+    mpu6000Temperature2 /=                        (float) numberOfSamples;
 
     cliPrintF("\nGyro Temperature Reading: %6.2F", mpu6000Temperature2);
 

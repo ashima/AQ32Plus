@@ -415,6 +415,16 @@ void checkFirstTime(bool eepromReset)
         eepromConfig.armCount              = 50;
         eepromConfig.disarmCount           = 0;
 
+        eepromConfig.signAX                = 1;
+        eepromConfig.signAY                = 1;
+        eepromConfig.signAZ                = 1;
+        eepromConfig.signGX                = 1;
+        eepromConfig.signGY                = 1;
+        eepromConfig.signGZ                = 1;
+        eepromConfig.signMX                = 1;
+        eepromConfig.signMY                = 1;
+        eepromConfig.signMZ                = 1;
+
         writeEEPROM();
 	}
 }

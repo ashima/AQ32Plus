@@ -393,7 +393,11 @@ void cliCom(void)
         ///////////////////////////////
 
         case 'p': // Not Used
-            cliQuery = 'x';
+        	cliPrintF("%1.3f %1.3f %1.3f  %1.0f %1.0f %1.0f %1.0f  %1.0f %1.0f %1.0f %1.0f  %1.2f %1.2f %1.2f\n",
+        		sensors.attitude500Hz[ROLL], sensors.attitude500Hz[PITCH], sensors.attitude500Hz[YAW],
+        		rxCommand[ROLL], rxCommand[PITCH], rxCommand[YAW], rxCommand[THROTTLE], 
+        		motor[0], motor[1], motor[2], motor[3],
+        		eepromConfig.PID[ROLL_RATE_PID].iTerm, eepromConfig.PID[PITCH_RATE_PID].iTerm, eepromConfig.PID[YAW_RATE_PID].iTerm);
         	validCliCommand = false;
         	break;
 
