@@ -81,12 +81,12 @@ void mpu6000Calibration(void)
         delayMicroseconds(sampleRate);
     }
 
-    accelBias1[XAXIS]   /= (eepromConfig.signAX * (float) numberOfSamples);
-    accelBias1[YAXIS]   /= (eepromConfig.signAY * (float) numberOfSamples);
-    accelBias1[ZAXIS]   /= (eepromConfig.signAZ * (float) numberOfSamples);
-    gyroBias1[ROLL ]    /= (eepromConfig.signGX * (float) numberOfSamples);
-    gyroBias1[PITCH]    /= (eepromConfig.signGY * (float) numberOfSamples);
-    gyroBias1[YAW  ]    /= (eepromConfig.signGZ * (float) numberOfSamples);
+    accelBias1[XAXIS]   /= ((float) eepromConfig.signAX * numberOfSamples);
+    accelBias1[YAXIS]   /= ((float) eepromConfig.signAY * numberOfSamples);
+    accelBias1[ZAXIS]   /= ((float) eepromConfig.signAZ * numberOfSamples);
+    gyroBias1[ROLL ]    /= ((float) eepromConfig.signGX * numberOfSamples);
+    gyroBias1[PITCH]    /= ((float) eepromConfig.signGY * numberOfSamples);
+    gyroBias1[YAW  ]    /= ((float) eepromConfig.signGZ * numberOfSamples);
     mpu6000Temperature1 /=                        (float) numberOfSamples;
 
     cliPrintF("\nGyro Temperature Reading: %6.2F", mpu6000Temperature1);
@@ -99,7 +99,7 @@ void mpu6000Calibration(void)
     ///////////////////////////////////
 
     cliPrint("\nWaiting for 10 minutes for MPU6000 temp to rise...\n");
-    delay(600000);    // Number of mSec in 10 minutes
+    delay(60000);    // Number of mSec in 10 minutes
 
     ///////////////////////////////////
     // Get samples at temperature2
@@ -123,12 +123,12 @@ void mpu6000Calibration(void)
         delayMicroseconds(sampleRate);
     }
 
-    accelBias1[XAXIS]   /= (eepromConfig.signAX * (float) numberOfSamples);
-    accelBias1[YAXIS]   /= (eepromConfig.signAY * (float) numberOfSamples);
-    accelBias1[ZAXIS]   /= (eepromConfig.signAZ * (float) numberOfSamples);
-    gyroBias1[ROLL ]    /= (eepromConfig.signGX * (float) numberOfSamples);
-    gyroBias1[PITCH]    /= (eepromConfig.signGY * (float) numberOfSamples);
-    gyroBias1[YAW  ]    /= (eepromConfig.signGZ * (float) numberOfSamples);
+    accelBias2[XAXIS]   /= ((float) eepromConfig.signAX * numberOfSamples);
+    accelBias2[YAXIS]   /= ((float) eepromConfig.signAY * numberOfSamples);
+    accelBias2[ZAXIS]   /= ((float) eepromConfig.signAZ * numberOfSamples);
+    gyroBias2[ROLL ]    /= ((float) eepromConfig.signGX * numberOfSamples);
+    gyroBias2[PITCH]    /= ((float) eepromConfig.signGY * numberOfSamples);
+    gyroBias2[YAW  ]    /= ((float) eepromConfig.signGZ * numberOfSamples);
     mpu6000Temperature2 /=                        (float) numberOfSamples;
 
     cliPrintF("\nGyro Temperature Reading: %6.2F", mpu6000Temperature2);

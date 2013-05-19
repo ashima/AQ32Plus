@@ -71,9 +71,9 @@ void magCalibration(I2C_TypeDef *I2Cx)
 	{
 		if (readMag(I2Cx) == true)
 		{
-			d[calibrationCounter][XAXIS] = eepromConfig.signMX * (float)rawMag[XAXIS].value * magScaleFactor[XAXIS];
-			d[calibrationCounter][YAXIS] = eepromConfig.signMY * (float)rawMag[YAXIS].value * magScaleFactor[YAXIS];
-			d[calibrationCounter][ZAXIS] = eepromConfig.signMZ * (float)rawMag[ZAXIS].value * magScaleFactor[ZAXIS];
+			d[calibrationCounter][XAXIS] = (float)eepromConfig.signMX * rawMag[XAXIS].value * magScaleFactor[XAXIS];
+			d[calibrationCounter][YAXIS] = (float)eepromConfig.signMY * rawMag[YAXIS].value * magScaleFactor[YAXIS];
+			d[calibrationCounter][ZAXIS] = (float)eepromConfig.signMZ * rawMag[ZAXIS].value * magScaleFactor[ZAXIS];
 
 			calibrationCounter++;
 		}
