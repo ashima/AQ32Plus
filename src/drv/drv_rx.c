@@ -224,6 +224,18 @@ void TIM1_CC_IRQHandler(void)
 ///////////////////////////////////////////////////////////////////////////////
 //  Spektrum Satellite Receiver UART Interrupt Handler
 ///////////////////////////////////////////////////////////////////////////////
+extern uint8_t armed;
+void rxFrameLost()
+{
+  armed = false;
+}
+
+void rxFrameReset()
+{
+  spektrumFramePosition = 0;
+}
+uint32_t frameReset;
+uint32_t frameLost;
 
 void USART3_IRQHandler(void)
 {
@@ -234,12 +246,14 @@ void USART3_IRQHandler(void)
     if (USART_GetITStatus(USART3, USART_IT_RXNE) == SET)
     {
         rcActive             = true;
-        spektrumTime         = micros();
-        spektrumTimeInterval = spektrumTime - spektrumTimeLast;
-        spektrumTimeLast     = spektrumTime;
+//        spektrumTime         = micros();
+//        spektrumTimeInterval = spektrumTime - spektrumTimeLast;
+//        spektrumTimeLast     = spektrumTime;
 
-        if (spektrumTimeInterval > 5000)
-            spektrumFramePosition = 0;
+//        if (spektrumTimeInterval > 5000)
+//            spektrumFramePosition = 0;
+        watchDogReset(frameReset);
+        watchDogReset(frameLost);
 
         spektrumFrame[spektrumFramePosition] = USART_ReceiveData(USART3);
 
@@ -481,6 +495,10 @@ void rxInit(void)
 
         ///////////////////////////////
 	}
+
+        watchDogRegister(&frameReset, 4,    rxFrameReset ); // 4 ms
+        watchDogRegister(&frameLost,  1000, rxFrameLost ); // 1000 ms
+
 
 	///////////////////////////////////
 }
