@@ -6,9 +6,8 @@ STDPERIPH=$(LIBS)/STM32F4xx_StdPeriph_Driver
 STDUSB=$(LIBS)/STM32_USB_Device_Library
 STDOTG=$(LIBS)/STM32_USB_OTG_Driver
 
-CFLAGS= -O3 -mthumb -mthumb-interwork -mcpu=cortex-m4 -DSTM32F40XX  \
-        -Wl,--gc-sections -ffunction-sections  \
-        -fdata-sections -fsigned-char
+CFLAGS= -O3 -fsigned-char -mthumb -mthumb-interwork -mcpu=cortex-m4 \
+        -Wl,--gc-sections -ffunction-sections -fdata-sections 
 
 INCDIRS=$(LIBS)/CMSIS/Include \
      $(LIBS)/CMSIS/Device/ST/STM32F4xx/Include \
@@ -18,8 +17,9 @@ INCDIRS=$(LIBS)/CMSIS/Include \
      $(STDPERIPH)/inc \
      vcp drv sensors calibration gps max7456 .
      
-DEFS=-DUSE_USB_OTG_FS -DUSE_STDPERIPH_DRIVER -DASHIMACORE -DNOGPS -DNOSPI \
-     -DHSE_VALUE=20000000
+DEFS=-DUSE_USB_OTG_FS -DUSE_STDPERIPH_DRIVER -DSTM32F40XX -DHSE_VALUE=20000000
+#DEFS+=-DASHIMACORE -DNOSPI -DNOGPS
+
 INCS=$(patsubst %, -I %,$(INCDIRS))
 USBSRC= cdc/src/usbd_cdc_core.c 
 DRVSRC=drv_adc.c drv_cli.c drv_i2c.c drv_led.c drv_spi.c \
