@@ -79,6 +79,11 @@ static TIM_ICInitTypeDef  TIM_ICInitStructure;
 
 #define SPEKTRUM_FRAME_SIZE 16
 
+enum frameWatchDogConsts {
+  frameResetTime = 4 , // 4ms
+  frameLostTime = 1000, // 1 second.
+  };
+
 uint8_t  i;
 uint8_t  spektrumBindCount;
 
@@ -494,10 +499,10 @@ void rxInit(void)
 		}
 
         ///////////////////////////////
-	}
 
-        watchDogRegister(&frameReset, 4,    rxFrameReset ); // 4 ms
-        watchDogRegister(&frameLost,  1000, rxFrameLost ); // 1000 ms
+        watchDogRegister(&frameReset, frameResetTime,    rxFrameReset ); 
+        watchDogRegister(&frameLost,  frameLostTime, rxFrameLost );
+	}
 
 
 	///////////////////////////////////
