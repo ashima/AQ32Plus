@@ -9,8 +9,6 @@
 #include <inttypes.h>
 #include "watchdogs.h"
 
-extern uint32_t sysTickUptime;
-
 typedef struct {
   uint32_t ticks;     /*!< System ticks at last reset. */
   uint32_t timeout;   /*!< Number of ticks after which to timeout */
