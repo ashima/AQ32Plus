@@ -52,8 +52,12 @@ void watchDogsTick()
   ++watchDogTicks;
 
   for ( i = 0 ; i < watchDogTop ; ++i )
-    if (watchDogTicks - watchDog[i].ticks > watchDog[i].timeout )
+    if (watchDogTicks - watchDog[i].ticks > watchDog[i].timeout 
+        && watchDog[i].ticks != 0xFFFFFFFF)
+      {
       (*(watchDog[i].func))();
+      watchDogDisable(i);
+      }
   //assert(watchDogTop==i);
   }
 
