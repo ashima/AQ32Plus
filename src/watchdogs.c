@@ -15,7 +15,11 @@ typedef struct {
   timeout_fp func;    /*!< Function to call on timeout */
   } watchDogs_t;
 
-enum { watchDogNUM = 16 } ;
+enum watchDogConsts
+  { 
+  watchDogNUM = 16,
+  disabledFlag = 0xffffffff,
+  } ;
 
 static watchDogs_t watchDog[watchDogNUM];
 static uint32_t    watchDogTop   = 0;
@@ -26,12 +30,13 @@ static uint32_t    watchDogTicks = 0;
   \param hnd      Output; Pointer to storage for new timer's handle
   \param timeout  Input: Trigger function after 'timeout' ticks.
   \param func     Input: function to call on timeout.
+  \param sd      Input: boolean - start disabled.
  */
-int watchDogRegister(uint32_t* hnd, uint32_t timeout, timeout_fp func)
+int watchDogRegister(uint32_t* hnd, uint32_t timeout, timeout_fp func,int sd)
   {
   if (watchDogTop < watchDogNUM)
     {
-    watchDog[watchDogTop].ticks   = watchDogTicks;
+    watchDog[watchDogTop].ticks   = sd ? disabledFlag : watchDogTicks;
     watchDog[watchDogTop].timeout = timeout;
     watchDog[watchDogTop].func    = func;
 
@@ -53,7 +58,7 @@ void watchDogsTick()
 
   for ( i = 0 ; i < watchDogTop ; ++i )
     if (watchDogTicks - watchDog[i].ticks > watchDog[i].timeout 
-        && watchDog[i].ticks != 0xFFFFFFFF)
+        && watchDog[i].ticks != disabledFlag)
       {
       (*(watchDog[i].func))();
       watchDogDisable(i);
@@ -67,7 +72,7 @@ void watchDogsTick()
  */
 void watchDogDisable(uint32_t hnd)
   {
-  watchDog[hnd].ticks = 0xFFFFFFFF;
+  watchDog[hnd].ticks = disabledFlag;
   }
 
 /*

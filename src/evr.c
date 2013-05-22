@@ -1,6 +1,6 @@
 /**
   \file       evr.c
-  \brief      EVR (EVent Report) Modle.
+  \brief      EVR (EVent Report) Module.
   \copyright  Copyright (C) 2013 Ashima Research. All rights reserved. This
               file distributed under the MIT Expat License. See LICENSE file.
               https://github.com/ashima/AQ32Plus
@@ -14,13 +14,13 @@
 
 enum evrConstants
   { 
-  evrBITS         = 16,
-  evrSeverityBITS = 2,
-  evrBuffBITS  = 4,
-  evrListenerMAX  = 8,
+  evrBITS         = 16, /*!< size of evr message. */
+  evrSeverityBITS = 2,  /*!< by convention top two bits are severity */
+  evrBuffBITS     = 4,  /*!< size of ring buffer in bits */
+  evrListenerMAX  = 8,  /*!< Max number of listeners */
 
 // Derived constants.
-  evrBuffMAX      = 1<<evrBuffBITS,
+  evrBuffMAX      = 1 << evrBuffBITS,
   evrBuffMASK     = evrBuffMAX - 1,
   evrMessageBITS  = evrBITS - evrSeverityBITS,
   evrMessageMAX   = 1 << evrMessageBITS,
