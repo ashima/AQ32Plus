@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "board.h"
+#include "evr.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Receiver Defines and Variables
@@ -234,6 +235,7 @@ void rxFrameLost()
 { 
   // Maybe do something more interesting like auto-descent or hover-hold.
   armed = false;
+  evrPush(EVR_RxFrameLost,0);
 }
 
 void rxFrameReset()

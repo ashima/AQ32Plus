@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "board.h"
+#include "evr.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -246,6 +247,16 @@ uint32_t millis(void)
 // System Initialization
 ///////////////////////////////////////////////////////////////////////////////
 
+void checkResetType()
+  {
+  uint32_t rst = RCC->CSR;
+
+  evrPush(( rst & (RCC_CSR_PORRSTF | RCC_CSR_PADRSTF | RCC_CSR_SFTRSTF) )
+          ? EVR_NormalReset : EVR_AbnormalReset , rst >> 24 );
+  
+  RCC_ClearFlag();
+  }
+
 void systemInit(void)
 {
 	// Init cycle counter
@@ -253,7 +264,7 @@ void systemInit(void)
 
     // SysTick
     SysTick_Config(SystemCoreClock / 1000);
-
+    checkResetType();
     checkFirstTime(false);
 	readEEPROM();
 
