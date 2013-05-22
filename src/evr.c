@@ -45,11 +45,11 @@ static uint32_t  evrListenerTop = 0;
 void evrPush(uint16_t evr, uint16_t reason)
   {
   evr_t e = { millis(), evr, reason };
-
-  __disable_irq();
-  evrRingBuff[ evrHead ] = e;
-  evrHead = (evrHead +1) & evrBuffMASK;
-  __enable_irq();
+  int i;
+  do
+    i = __LDREXW(&evrHead);
+  while (__STREXW( (i+1) & evrBuffMASK,&evrHead));
+  evrRingBuff[ i ] = e;
   }
 
 /*
