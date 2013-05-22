@@ -7,7 +7,7 @@
 #include <inttypes.h>
 #include "evr.h"
 
-const char* evrSeverity[evrTypesNUM] =
+const char* evrSeverityStringTable[evrTypesNUM] =
   {
   "Information", "Warning", "Error", "Fatal"
   };

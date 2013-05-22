@@ -1,4 +1,5 @@
 /**
+  \file       evr.h
   \brief      EVR (EVent Report).
   \copyright  Copyright (C) 2013 Ashima Research. All rights reserved. This
               file distributed under the MIT Expat License. See LICENSE file.
@@ -19,14 +20,17 @@ typedef const char* constStrArr_t[];
 
 enum { evrTypesNUM = 4 } ;
 
-extern const char*  evrSeverity[evrTypesNUM];
+extern const char*  evrSeverityStringTable[evrTypesNUM];
 extern const char** evrStringTable[evrTypesNUM];
 
 void evrPush(uint16_t evr, uint16_t reason);
 int evrRegisterListener(evrListener_fp f);
 void evrCheck();
 void evrHistory(evrListener_fp);
-const char* evrToString(uint32_t);
+uint16_t evrSeverity(uint16_t evr);
+const char *evrSeverityToStr(uint16_t s);
+const char *evrToSeverityStr(uint16_t evr);
+const char* evrToStr(uint16_t);
 /*
  Evr Lists for Information, Warnings, Errors and Fatal event reports.
  */
