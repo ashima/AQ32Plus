@@ -501,8 +501,8 @@ void rxInit(void)
 
         ///////////////////////////////
 
-        watchDogRegister(&frameReset, frameResetTime,    rxFrameReset ); 
-        watchDogRegister(&frameLost,  frameLostTime, rxFrameLost );
+        watchDogRegister(&frameReset, frameResetTime, rxFrameReset, true ); 
+        watchDogRegister(&frameLost,  frameLostTime,  rxFrameLost,  true );
 	}
 
 	///////////////////////////////////
