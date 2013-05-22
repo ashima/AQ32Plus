@@ -79,6 +79,11 @@ static TIM_ICInitTypeDef  TIM_ICInitStructure;
 
 #define SPEKTRUM_FRAME_SIZE 16
 
+enum frameWatchDogConsts {
+  frameResetTime = 4 , // 4ms
+  frameLostTime = 1000, // 1 second.
+  };
+
 uint8_t  i;
 uint8_t  spektrumBindCount;
 
@@ -224,6 +229,19 @@ void TIM1_CC_IRQHandler(void)
 ///////////////////////////////////////////////////////////////////////////////
 //  Spektrum Satellite Receiver UART Interrupt Handler
 ///////////////////////////////////////////////////////////////////////////////
+extern uint8_t armed;
+void rxFrameLost()
+{ 
+  // Maybe do something more interesting like auto-descent or hover-hold.
+  armed = false;
+}
+
+void rxFrameReset()
+{
+  spektrumFramePosition = 0;
+}
+uint32_t frameReset;
+uint32_t frameLost;
 
 void USART3_IRQHandler(void)
 {
@@ -234,12 +252,14 @@ void USART3_IRQHandler(void)
     if (USART_GetITStatus(USART3, USART_IT_RXNE) == SET)
     {
         rcActive             = true;
-        spektrumTime         = micros();
-        spektrumTimeInterval = spektrumTime - spektrumTimeLast;
-        spektrumTimeLast     = spektrumTime;
+//        spektrumTime         = micros();
+//        spektrumTimeInterval = spektrumTime - spektrumTimeLast;
+//        spektrumTimeLast     = spektrumTime;
 
-        if (spektrumTimeInterval > 5000)
-            spektrumFramePosition = 0;
+//        if (spektrumTimeInterval > 5000)
+//            spektrumFramePosition = 0;
+        watchDogReset(frameReset);
+        watchDogReset(frameLost);
 
         spektrumFrame[spektrumFramePosition] = USART_ReceiveData(USART3);
 
@@ -480,6 +500,9 @@ void rxInit(void)
 		}
 
         ///////////////////////////////
+
+        watchDogRegister(&frameReset, frameResetTime,    rxFrameReset ); 
+        watchDogRegister(&frameLost,  frameLostTime, rxFrameLost );
 	}
 
 	///////////////////////////////////
