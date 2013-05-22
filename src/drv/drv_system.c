@@ -110,6 +110,8 @@ void SysTick_Handler(void)
     sysTickCycleCounter = *DWT_CYCCNT;
     sysTickUptime++;
 
+    watchDogsTick();
+
     if ((systemReady         == true)  &&
         (cliBusy             == false) &&
         (escCalibrating      == false) &&
