@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "board.h"
+#include "evr.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Receiver Defines and Variables
@@ -231,8 +232,10 @@ void TIM1_CC_IRQHandler(void)
 ///////////////////////////////////////////////////////////////////////////////
 extern uint8_t armed;
 void rxFrameLost()
-{
+{ 
+  // Maybe do something more interesting like auto-descent or hover-hold.
   armed = false;
+  evrPush(EVR_RxFrameLost,0);
 }
 
 void rxFrameReset()
@@ -503,7 +506,6 @@ void rxInit(void)
         watchDogRegister(&frameReset, frameResetTime,    rxFrameReset ); 
         watchDogRegister(&frameLost,  frameLostTime, rxFrameLost );
 	}
-
 
 	///////////////////////////////////
 }

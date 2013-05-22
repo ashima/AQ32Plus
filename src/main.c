@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "board.h"
+#include "evr.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -72,8 +73,11 @@ int main(void)
 
     systemReady = true;
 
+    evrPush(EVR_StartingMain,0);
+
     while (1)
     {
+        evrCheck();
         if (frame_50Hz)
         {
         	frame_50Hz = false;
