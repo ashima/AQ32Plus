@@ -62,7 +62,7 @@ extern uint8_t headingHoldEngaged;
 // Arm State Variables
 ///////////////////////////////////////////////////////////////////////////////
 
-extern uint8_t armed;
+extern semaphore_t armed;
 extern uint8_t armingTimer;
 extern uint8_t disarmingTimer;
 
