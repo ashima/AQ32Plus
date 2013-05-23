@@ -78,12 +78,12 @@ static void cycleCounterInit(void)
 
 uint16_t frameCounter = 0;
 
-uint8_t frame_500Hz = false;
-uint8_t frame_100Hz = false;
-uint8_t frame_50Hz  = false;
-uint8_t frame_10Hz  = false;
-uint8_t frame_5Hz   = false;
-uint8_t frame_1Hz   = false;
+semaphore_t frame_500Hz = false;
+semaphore_t frame_100Hz = false;
+semaphore_t frame_50Hz  = false;
+semaphore_t frame_10Hz  = false;
+semaphore_t frame_5Hz   = false;
+semaphore_t frame_1Hz   = false;
 
 uint32_t deltaTime1000Hz, executionTime1000Hz, previous1000HzTime;
 uint32_t deltaTime500Hz,  executionTime500Hz,  previous500HzTime;
@@ -95,9 +95,9 @@ uint32_t deltaTime1Hz,    executionTime1Hz,    previous1HzTime;
 
 float dt500Hz, dt100Hz;
 
-uint8_t systemReady = false;
+semaphore_t systemReady = false;
 
-uint8_t execUp = false;
+semaphore_t execUp = false;
 
 ///////////////////////////////////////////////////////////////////////////////
 // SysTick
@@ -221,16 +221,22 @@ void SysTick_Handler(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 // System Time in Microseconds
+// Note: This can be called from within IRQ Handlers, so uses LDREX/STREX.
+// If a higher priority IRQ or DMA or anything happens the STREX will fail 
+// and restart the loop. Othewise the same number that was read is harmlessly
+// writen back.
 ///////////////////////////////////////////////////////////////////////////////
 
 uint32_t micros(void)
-{
+{ 
     register uint32_t oldCycle, cycle, timeMs;
-    __disable_irq();
-    cycle = *DWT_CYCCNT;
-    oldCycle = sysTickCycleCounter;
-    timeMs = sysTickUptime;
-    __enable_irq();
+    do
+        {
+        timeMs = __LDREXW(&sysTickUptime);
+        cycle = *DWT_CYCCNT;
+        oldCycle = sysTickCycleCounter;
+        } while ( __STREXW( timeMs , &sysTickUptime ) );
+
     return (timeMs * 1000) + (cycle - oldCycle) / usTicks;
 }
 

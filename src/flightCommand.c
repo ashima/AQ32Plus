@@ -57,7 +57,7 @@ uint8_t headingHoldEngaged     = false;
 // Arm State Variables
 ///////////////////////////////////////////////////////////////////////////////
 
-uint8_t armed          = false;
+semaphore_t armed      = false;
 uint8_t armingTimer    = 0;
 uint8_t disarmingTimer = 0;
 

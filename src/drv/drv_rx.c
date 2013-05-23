@@ -230,7 +230,7 @@ void TIM1_CC_IRQHandler(void)
 ///////////////////////////////////////////////////////////////////////////////
 //  Spektrum Satellite Receiver UART Interrupt Handler
 ///////////////////////////////////////////////////////////////////////////////
-extern uint8_t armed;
+extern semaphore_t armed;
 void rxFrameLost()
 { 
   // Maybe do something more interesting like auto-descent or hover-hold.
