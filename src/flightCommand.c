@@ -185,7 +185,8 @@ void processFlightCommands(void)
 
     // Check AUX1 for rate, attitude, or GPS mode (3 Position Switch) NOT COMPLETE YET....
 
-	if ((rxCommand[AUX1] > MIDCOMMAND) && (flightMode == RATE))
+	//if ((rxCommand[AUX1] > MIDCOMMAND) && (flightMode == RATE))
+	if ( flightMode==RATE )
 	{
 		flightMode = ATTITUDE;
 		setPIDintegralError(ROLL_ATT_PID,  0.0f);
@@ -195,6 +196,7 @@ void processFlightCommands(void)
 		setPIDstates(PITCH_ATT_PID, 0.0f);
 		setPIDstates(HEADING_PID,   0.0f);
 	}
+#if 0
 	else if ((rxCommand[AUX1] <= MIDCOMMAND) && (flightMode == ATTITUDE))
 	{
 		flightMode = RATE;
@@ -205,6 +207,7 @@ void processFlightCommands(void)
 		setPIDstates(PITCH_RATE_PID, 0.0f);
 		setPIDstates(YAW_RATE_PID,   0.0f);
 	}
+#endif
 
 	///////////////////////////////////
 
