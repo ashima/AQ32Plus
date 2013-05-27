@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "board.h"
+#include "crc32.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // MAX7456 CLI
@@ -1316,4 +1317,109 @@ void gpsCLI()
 
 }
 #endif
+///////////////////////////////////////////////////////////////////////////////
+// Receiver CLI
+///////////////////////////////////////////////////////////////////////////////
+
+int min(int a, int b)
+{
+    return a < b ? a : b;
+}
+
+void eepromCLI()
+{
+    uint8_t  index;
+    uint8_t  eepromQuery;
+    uint8_t  validQuery = false;
+
+    cliBusy = true;
+
+    cliPrint("\nEntering EEPROM CLI....\n\n");
+
+    while(true)
+    {
+        cliPrint("EEPROM CLI -> ");
+
+        while ((cliAvailable() == false) && (validQuery == false));
+
+        if (validQuery == false)
+            eepromQuery = cliRead();
+
+        cliPrint("\n");
+
+        switch(eepromQuery)
+        {
+            ///////////////////////////
+
+            case 'a':
+                //cliPrint("\nReceiver Type:                  ");
+                validQuery = false;
+                break;
+
+            ///////////////////////////
+
+            case 'd':
+                ; // C89 means this statement cannot start off with a variable decl
+                int line_length = 64;
+                int len = sizeof(eepromConfig_t);
+                uint8_t *by = (uint8_t*)&eepromConfig;
+                int i, j;
+
+                for (i = 0; i < ceil((float)len / line_length); i++)
+                {
+                    for (j = 0; j < min(line_length, len - line_length * i); j++)
+                        cliPrintF("%02X", by[i * line_length + j]);
+
+                    cliPrint("\n");
+                }
+                cliPrintF("\n%08X\n", crc32(0, by, len));
+                //cliPrintF("sizeof(eepromConfig_t): %d\n", crc32(0, by, len), len);
+
+                eepromQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'x':
+                cliPrint("\nExiting EEPROM CLI....\n\n");
+                cliBusy = false;
+                return;
+                break;
+
+            ///////////////////////////
+
+            case 'A':
+                
+
+                break;
+
+            ///////////////////////////
+
+            case 'W': // Write EEPROM Parameters
+                cliPrint("\nWriting EEPROM Parameters....\n\n");
+                writeEEPROM();
+                break;
+
+            ///////////////////////////
+
+            case '?':
+                cliPrint("\n");
+                cliPrint("'a' Receiver Configuration Data            'A' Set RX Input Type                    AX, 1=Parallel, 2=Serial, 3=Spektrum\n");
+                cliPrint("'b' Set Maximum Rate Command               'B' Set RC Control Order                 BTAER1234\n");
+                cliPrint("'c' Set Maximum Attitude Command           'C' Set Spektrum Resolution              C0 or C1\n");
+                cliPrint("                                           'D' Set Number of Spektrum Channels      D6 thru D12\n");
+                cliPrint("                                           'E' Set RC Control Points                EmidCmd;minChk;maxChk;minThrot;maxThrot\n");
+                cliPrint("                                           'F' Set Arm/Disarm Counts                FarmCount;disarmCount\n");
+                cliPrint("                                           'W' Write EEPROM Parameters\n");
+                cliPrint("'x' Exit Receiver CLI                      '?' Command Summary\n");
+                cliPrint("\n");
+                break;
+
+            ///////////////////////////
+        }
+    }
+
+}
+
 ///////////////////////////////////////////////////////////////////////////////
