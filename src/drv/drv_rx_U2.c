@@ -254,7 +254,6 @@ void USART2_IRQHandler(void)
 //        if (spektrumTimeInterval > 5000)
 //            spektrumFramePosition = 0;
         watchDogReset(frameReset);
-        watchDogReset(frameLost);
 
         spektrumFrame[spektrumFramePosition] = USART_ReceiveData(USART2);
 
@@ -271,6 +270,7 @@ void USART2_IRQHandler(void)
         {
             if ( spektrumFrame[0] == 3 && spektrumFrame[1] ==1 )
             {
+                watchDogReset(frameLost);
                 for (b = 3; b < SPEKTRUM_FRAME_SIZE; b += 2)
                 {
                 spektrumChannel = 0x0F & (spektrumFrame[b - 1] >> spektrumChannelShift);
