@@ -19,15 +19,18 @@ constStrArr_t evrInfo = {
     };
 constStrArr_t evrWarn = {
     "Abnormal Reset",
+    "Battery Low",
+    "Battery Very Low",
     };
 constStrArr_t evrError = {
     "Out of EVR Listener slots",
     "Failed to register Frame Reset Watchdog",
     "Failed to register Frame Lost Watchdog",
     "Recieve pilot command frame timeout!",
+    "Battery dangeriously Low!",
     };
 constStrArr_t evrFatal = {
-    ""
+    "",
     };
 
 const char **evrStringTable[] = {evrInfo,evrWarn,evrError,evrFatal} ;

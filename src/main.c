@@ -36,6 +36,7 @@
 
 #include "board.h"
 #include "evr.h"
+#include "batMon.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -155,6 +156,8 @@ int main(void)
         	cliCom();
 
         	rfCom();
+
+            batMonTick();
 
             executionTime10Hz = micros() - currentTime;
         }
