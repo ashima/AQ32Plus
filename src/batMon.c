@@ -37,6 +37,7 @@ enum
   {
   thresholdThreshold = 20, /* 2 second at 10Hz. */
   thresholdsNUM = sizeof(thresholds) / sizeof(thresholds_t),
+  batteryNumCells = 3,  // hard coded for the moment.
   };
 
 /* Exp Filter = LPF time const = 0.1 sampletime */
@@ -52,7 +53,7 @@ void batMonTick()
   float v;
   int i;
 
-  v = batteryVoltage();
+  v = batteryVoltage() /  /* eepromConfig.*/ batteryNumCells ;
 
   if (0.0 == v_bat_ave)
     v_bat_ave = v;
