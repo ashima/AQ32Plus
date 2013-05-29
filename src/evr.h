@@ -42,6 +42,8 @@ enum evrInfoList {
 
 enum evrWarnList {
   EVR_AbnormalReset = 0x4000,
+  EVR_BatLow,
+  EVR_BatVeryLow,
   };
 
 enum evrErrorList {
@@ -49,6 +51,7 @@ enum evrErrorList {
   EVR_FailRegisterWatchdogFrameReset,
   EVR_FailRegisterWatchdogFrameLost,
   EVR_RxFrameLost,
+  EVR_BatMaxLow,
   };
 
 //enum evrFatalList {
