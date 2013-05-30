@@ -92,7 +92,7 @@ int writeEEPROM(void)
     uint32_t       *dst = (uint32_t*)FLASH_WRITE_EEPROM_ADDR;
     eepromConfig_t *src = &eepromConfig;
 
-    src->CRCAtEnd[1] = crc32B( (uint32_t*)&src[0], src->CRCAtEnd);
+    src->CRCAtEnd[0] = crc32B( (uint32_t*)&src[0], src->CRCAtEnd);
 
     FLASH_Unlock();
 
