@@ -122,7 +122,7 @@ uint16_t evrSeverity(uint16_t evr)
  */
 const char *evrSeverityToStr(uint16_t s)
   {
-  return evrSeverityStringTable[ s & evrSeverityMASK ];
+  return evrStringTable[ s & evrSeverityMASK ].severity;
   }
 
 /*
@@ -143,8 +143,8 @@ const char *evrToStr(uint16_t evr)
   {
   uint32_t s = evrSeverity(evr),
            i = evr & evrMessageMASK;
-  if (i < sizeof( evrStringTable[s]) )
-    return evrStringTable[s][i];
+  if (i < evrStringTable[s].len )
+    return evrStringTable[s].msgs[i];
   else
     return (const char*)0;
   }

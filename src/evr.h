@@ -18,10 +18,16 @@ typedef struct
 typedef void (*evrListener_fp)(evr_t); /*!< prototype for listener functions */
 typedef const char* constStrArr_t[];
 
+typedef struct evrStringTable_t
+  {
+  const char*   severity;
+  const char**  msgs;
+  uint32_t      len;
+  } evrStringTable_t;
+
 enum { evrTypesNUM = 4 } ;
 
-extern const char*  evrSeverityStringTable[evrTypesNUM];
-extern const char** evrStringTable[evrTypesNUM];
+extern const evrStringTable_t evrStringTable[evrTypesNUM];
 
 void evrPush(uint16_t evr, uint16_t reason);
 int evrRegisterListener(evrListener_fp f);
@@ -35,19 +41,19 @@ const char* evrToStr(uint16_t);
  Evr Lists for Information, Warnings, Errors and Fatal event reports.
  */
 enum evrInfoList {
-  EVR_NoEvrHere    = 0,
+  EVR_NoEvrHere    = 0U,
   EVR_NormalReset,
   EVR_StartingMain,
   };
 
 enum evrWarnList {
-  EVR_AbnormalReset = 0x4000,
+  EVR_AbnormalReset = 0x4000U,
   EVR_BatLow,
   EVR_BatVeryLow,
   };
 
 enum evrErrorList {
-  EVR_OutOfListeners = 0x8000,
+  EVR_OutOfListeners = 0x8000U,
   EVR_FailRegisterWatchdogFrameReset,
   EVR_FailRegisterWatchdogFrameLost,
   EVR_RxFrameLost,
