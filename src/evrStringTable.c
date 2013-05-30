@@ -7,10 +7,6 @@
 #include <inttypes.h>
 #include "evr.h"
 
-const char* evrSeverityStringTable[evrTypesNUM] =
-  {
-  "Information", "Warning", "Error", "Fatal"
-  };
 
 constStrArr_t evrInfo = {
     "None",
@@ -33,5 +29,12 @@ constStrArr_t evrFatal = {
     "",
     };
 
-const char **evrStringTable[] = {evrInfo,evrWarn,evrError,evrFatal} ;
+const evrStringTable_t evrStringTable[evrTypesNUM] =
+  {
+    { "Information", evrInfo,  sizeof(evrInfo)/sizeof(char*)  },
+    { "Warning",     evrWarn,  sizeof(evrWarn)/sizeof(char*)  },
+    { "Error",       evrError, sizeof(evrError)/sizeof(char*) },
+    { "Fatal",       evrFatal, sizeof(evrFatal)/sizeof(char*) }
+  };
+
 
