@@ -54,22 +54,24 @@ void batMonTick()
   int i;
 
   v = batteryVoltage() /  /* eepromConfig.*/ batteryNumCells ;
-
   if (0.0 == v_bat_ave)
     v_bat_ave = v;
-  else
+
+  if (v > 1.0 ) /* There is a battery connected */
+    {
     v_bat_ave = alpha * v_bat_ave + (1.0-alpha) * v;
 
-  for ( i = 0 ; i < thresholdsNUM; ++i )
-    if (v_bat_ave < thresholds[i].value )
-      {
-      if ( thresholdCount[i] < thresholdThreshold )
-        ++thresholdCount[i] ;
-      else if ( thresholdCount[i] > 0 )
-        --thresholdCount[i] ;
-      else
-        thresholds[i].func() ;
-      } 
+    for ( i = 0 ; i < thresholdsNUM; ++i )
+      if (v_bat_ave < thresholds[i].value )
+        {
+        if ( thresholdCount[i] < thresholdThreshold )
+          ++thresholdCount[i] ;
+        else if ( thresholdCount[i] > 0 )
+          --thresholdCount[i] ;
+        else
+          thresholds[i].func() ;
+        } 
+    }
   }
 
 void batMonLow()
