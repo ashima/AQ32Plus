@@ -24,6 +24,9 @@ constStrArr_t evrError = {
     "Failed to register Frame Lost Watchdog",
     "Recieve pilot command frame timeout!",
     "Battery dangeriously Low!",
+    "Flash CRC failed! (use eeprom cli to override)",
+    "Flash erase failed.",
+    "Flash programming failed."
     };
 constStrArr_t evrFatal = {
     "",

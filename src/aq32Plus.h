@@ -373,6 +373,7 @@ typedef struct eepromConfig_t
     int8_t signMY;
     int8_t signMZ;
 
+    uint32_t CRCAtEnd[1];
 } eepromConfig_t;
 
 extern eepromConfig_t eepromConfig;

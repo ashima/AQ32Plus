@@ -58,6 +58,9 @@ enum evrErrorList {
   EVR_FailRegisterWatchdogFrameLost,
   EVR_RxFrameLost,
   EVR_BatMaxLow,
+  EVR_FlashCRCFail,
+  EVR_FlashEraseFail,
+  EVR_FlashProgramFail,
   };
 
 //enum evrFatalList {
