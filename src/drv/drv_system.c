@@ -289,7 +289,7 @@ void systemInit(void)
 
     BLUE_LED_ON;
 
-    // adcInit();
+    adcInit();
     // gpsInit();
     // i2cInit(I2C1);
     i2cInit(I2C2);

@@ -62,12 +62,12 @@
 
 #ifdef ASHIMACORE
 #define VBATT_PIN     GPIO_Pin_0
-#define VBATT_GPIO    GPIOC
-#define VBATT_CHANNEL ADC_Channel_10
-#else
-#define VBATT_PIN     GPIO_Pin_0
 #define VBATT_GPIO    GPIOA
 #define VBATT_CHANNEL ADC_Channel_0
+#else
+#define VBATT_PIN     GPIO_Pin_0
+#define VBATT_GPIO    GPIOC
+#define VBATT_CHANNEL ADC_Channel_10
 #endif
 
 ///////////////////////////////////////
@@ -124,13 +124,18 @@ void adcInit(void)
 
     ///////////////////////////////////
 
-    GPIO_InitStructure.GPIO_Pin   = ADC2_PIN | ADC4_PIN | VBATT_PIN;
+    GPIO_InitStructure.GPIO_Pin   = ADC2_PIN | ADC4_PIN;
     GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AN;
   //GPIO_InitStructure.GPIO_Speed = GPIO_Seed_2MHz;
   //GPIO_InitStructrue.GPIO_OType = GPIO_OType_PP;
   //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL ;
-
     GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+    // FIXME: enabling the GPIOA clock is a bit hacky, but I didn't want to add a #define just yet
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+    GPIO_InitStructure.GPIO_Pin   = VBATT_PIN;
+    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AN;
+    GPIO_Init(VBATT_GPIO, &GPIO_InitStructure);
 
     ///////////////////////////////////
 
