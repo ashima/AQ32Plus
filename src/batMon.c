@@ -10,6 +10,7 @@
 #include <inttypes.h>
 #include "pid.h"
 #include "aq32Plus.h"
+#include "drv/drv_adc.h"
 #include "evr.h"
 
 
@@ -65,12 +66,11 @@ void batMonTick()
       if (v_bat_ave < thresholds[i].value )
         {
         if ( thresholdCount[i] < thresholdThreshold )
-          ++thresholdCount[i] ;
-        else if ( thresholdCount[i] > 0 )
+          if ( ++thresholdCount[i] == thresholdThreshold )
+            thresholds[i].func() ;
+        }
+      else if ( thresholdCount[i] > 0 )
           --thresholdCount[i] ;
-        else
-          thresholds[i].func() ;
-        } 
     }
   }
 
