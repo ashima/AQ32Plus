@@ -50,6 +50,7 @@ enum evrWarnList {
   EVR_AbnormalReset = 0x4000U,
   EVR_BatLow,
   EVR_BatVeryLow,
+  EVR_ConfigBadHistory,
   };
 
 enum evrErrorList {

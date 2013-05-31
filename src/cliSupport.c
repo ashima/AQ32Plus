@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "board.h"
+#include "evr.h"
 #include "drv/drv_crc.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1349,6 +1350,16 @@ void eepromCLI()
 
         switch(eepromQuery)
         {
+            case 'i':
+                cliPrint("Config structure infomation:\n");
+                cliPrintF("Version : %d", eepromConfig.version );
+                cliPrintF("Size : %d", sizeof(eepromConfig) );
+                cliPrint("CRC Flags :\n ");
+                cliPrintF("  History Bad : %s\n", eepromConfig.CRCFlags & CRC_HistoryBad ? "true" : "false" );
+                validQuery = false;
+                break;
+
+
             ///////////////////////////
 
             case 'a':
@@ -1364,12 +1375,17 @@ void eepromCLI()
                 zeroPIDintegralError();
                 zeroPIDstates();
 
+
+
                 eepromConfig_t copy = eepromConfig;
                 enum { line_length = 32, len = sizeof(eepromConfig_t) };
                 uint8_t *by = (uint8_t*)&copy;
                 int i, j;
 
                 copy.CRCAtEnd[0] = crc32B((uint32_t*)&copy, copy.CRCAtEnd);
+
+                if ( copy.CRCFlags & CRC_HistoryBad )
+                  evrPush(EVR_ConfigBadHistory,0);
                 
                 for (i = 0; i < ceil((float)len / line_length); i++)
                 {
@@ -1385,6 +1401,22 @@ void eepromCLI()
                     cliPrint("      eepromConfig since the last write to flash/eeprom.\n");
                 }
 
+                validQuery = false;
+                break;
+
+            ///////////////////////////
+
+            case 'C':
+                cliPrint("Clearing Bad History flag.\n");
+                eepromConfig.CRCFlags &= ~CRC_HistoryBad;
+                validQuery = false;
+                break;
+
+            ///////////////////////////
+
+            case 'R':
+                cliPrint("Re-reading EEPROM.\n");
+                readEEPROM();
                 validQuery = false;
                 break;
 
@@ -1414,8 +1446,10 @@ void eepromCLI()
 
             case '?':
                 cliPrint("\n");
-                cliPrint("'d' Dump eeprom struct as hex with crc32   'D' read in eeprom struct (not yet implemented)\n");
-                cliPrint("                                           'W' Write EEPROM Parameters\n");
+                cliPrint("'i' in-memory config information.\n");
+                cliPrint("'d' Dump in-memory config struct as hex    'D' read in config struct (not yet implemented)\n");
+                cliPrint("'R' Reread config from EEPROM              'W' Write config to EEPROM\n");
+                cliPrint("'C' Clear CRC Bad History flag\n");
                 cliPrint("'x' Exit EEPROM CLI                        '?' Command Summary\n");
                 cliPrint("\n");
                 break;
