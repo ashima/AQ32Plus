@@ -88,7 +88,7 @@ void readEEPROM(void)
 int writeEEPROM(void)
 {
     FLASH_Status status;
-    uint32_t i;
+    int i;
     uint32_t       *dst = (uint32_t*)FLASH_WRITE_EEPROM_ADDR;
     eepromConfig_t *src = &eepromConfig;
 
