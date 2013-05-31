@@ -1358,11 +1358,19 @@ void eepromCLI()
             ///////////////////////////
 
             case 'd':
-                ; // C89 means this statement cannot start off with the below
+                // we assume the flyer is not in the air, so that this is ok;
+                // these change randomly when not in flight and can mistakenly
+                // make one think that the in-memory eeprom sturct has changed
+                zeroPIDintegralError();
+                zeroPIDstates();
+
+                eepromConfig_t copy = eepromConfig;
                 enum { line_length = 32, len = sizeof(eepromConfig_t) };
-                uint8_t *by = (uint8_t*)&eepromConfig;
+                uint8_t *by = (uint8_t*)&copy;
                 int i, j;
 
+                copy.CRCAtEnd[0] = crc32B((uint32_t*)&copy, copy.CRCAtEnd);
+                
                 for (i = 0; i < ceil((float)len / line_length); i++)
                 {
                     for (j = 0; j < min(line_length, len - line_length * i); j++)
@@ -1370,9 +1378,13 @@ void eepromCLI()
 
                     cliPrint("\n");
                 }
-                eepromConfig_t *p = &eepromConfig;
-                cliPrintF("*%08X\n", crc32B((uint32_t*)&p[0], (uint32_t*)&p[1]));
-                                
+
+                if (copy.CRCAtEnd[0] != eepromConfig.CRCAtEnd[0])
+                {
+                    cliPrint("NOTE: in-memory CRC invalid; there have probably been changes to\n");
+                    cliPrint("      eepromConfig since the last write to flash/eeprom.\n");
+                }
+
                 validQuery = false;
                 break;
 

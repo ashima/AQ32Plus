@@ -87,6 +87,10 @@ void readEEPROM(void)
 
 int writeEEPROM(void)
 {
+	// there's no reason to write these values to EEPROM, they'll just be noise
+    zeroPIDintegralError();
+    zeroPIDstates();
+
     FLASH_Status status;
     int i;
     uint32_t       *dst = (uint32_t*)FLASH_WRITE_EEPROM_ADDR;
