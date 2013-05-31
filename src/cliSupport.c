@@ -35,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "board.h"
-#include "crc32.h"
+#include "drv/drv_crc.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // MAX7456 CLI
@@ -1317,8 +1317,9 @@ void gpsCLI()
 
 }
 #endif
+
 ///////////////////////////////////////////////////////////////////////////////
-// Receiver CLI
+// EEPROM CLI
 ///////////////////////////////////////////////////////////////////////////////
 
 int min(int a, int b)
@@ -1328,7 +1329,6 @@ int min(int a, int b)
 
 void eepromCLI()
 {
-    uint8_t  index;
     uint8_t  eepromQuery;
     uint8_t  validQuery = false;
 
@@ -1352,16 +1352,14 @@ void eepromCLI()
             ///////////////////////////
 
             case 'a':
-                //cliPrint("\nReceiver Type:                  ");
                 validQuery = false;
                 break;
 
             ///////////////////////////
 
             case 'd':
-                ; // C89 means this statement cannot start off with a variable decl
-                int line_length = 64;
-                int len = sizeof(eepromConfig_t);
+                ; // C89 means this statement cannot start off with the below
+                enum { line_length = 32, len = sizeof(eepromConfig_t) };
                 uint8_t *by = (uint8_t*)&eepromConfig;
                 int i, j;
 
@@ -1372,11 +1370,10 @@ void eepromCLI()
 
                     cliPrint("\n");
                 }
-                cliPrintF("\n%08X\n", crc32(0, by, len));
-                //cliPrintF("sizeof(eepromConfig_t): %d\n", crc32(0, by, len), len);
-
-                eepromQuery = 'a';
-                validQuery = true;
+                eepromConfig_t *p = &eepromConfig;
+                cliPrintF("*%08X\n", crc32B((uint32_t*)&p[0], (uint32_t*)&p[1]));
+                                
+                validQuery = false;
                 break;
 
             ///////////////////////////
@@ -1405,14 +1402,9 @@ void eepromCLI()
 
             case '?':
                 cliPrint("\n");
-                cliPrint("'a' Receiver Configuration Data            'A' Set RX Input Type                    AX, 1=Parallel, 2=Serial, 3=Spektrum\n");
-                cliPrint("'b' Set Maximum Rate Command               'B' Set RC Control Order                 BTAER1234\n");
-                cliPrint("'c' Set Maximum Attitude Command           'C' Set Spektrum Resolution              C0 or C1\n");
-                cliPrint("                                           'D' Set Number of Spektrum Channels      D6 thru D12\n");
-                cliPrint("                                           'E' Set RC Control Points                EmidCmd;minChk;maxChk;minThrot;maxThrot\n");
-                cliPrint("                                           'F' Set Arm/Disarm Counts                FarmCount;disarmCount\n");
+                cliPrint("'d' Dump eeprom struct as hex with crc32   'D' read in eeprom struct (not yet implemented)\n");
                 cliPrint("                                           'W' Write EEPROM Parameters\n");
-                cliPrint("'x' Exit Receiver CLI                      '?' Command Summary\n");
+                cliPrint("'x' Exit EEPROM CLI                        '?' Command Summary\n");
                 cliPrint("\n");
                 break;
 
