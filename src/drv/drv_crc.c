@@ -41,6 +41,6 @@ uint32_t crc32B(uint32_t* start, uint32_t* end)
   {
   crc32Reset();
   crc32Feed(start,end);
-  return crc32Read();
+  return ~crc32Read();
   }
 

@@ -72,7 +72,7 @@ void readEEPROM(void)
 
     *dst = *(eepromConfig_t*)FLASH_WRITE_EEPROM_ADDR ;
 
-    if (0UL != crc32B( (uint32_t*)&dst[0], (uint32_t*) &dst[1]) )
+    if ( crcCheckVal != crc32B( (uint32_t*)&dst[0], (uint32_t*) &dst[1]) )
       evrPush(EVR_FlashCRCFail,0);
     
     accConfidenceDecay = 1.0f / sqrt(eepromConfig.accelCutoff);

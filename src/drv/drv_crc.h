@@ -56,5 +56,7 @@ static inline vuint32_t crc32Read ()
 void crc32Feed(uint32_t* start, uint32_t* end);
 uint32_t crc32B(uint32_t* start, uint32_t* end);
 
+enum { crcCheckVal = 0xdebb20e3UL };
+
 // LIBSTM32F_CRC_H
 #endif
