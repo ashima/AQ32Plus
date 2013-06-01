@@ -1492,6 +1492,7 @@ void eepromCLI()
                 {
                     eepromConfig = e;
                     cliPrint("In-memory config updated!\n");
+                    cliPrint("NOTE: config not written to EEPROM; use 'W' to do so.\n");
                 }
 
                 validQuery = false;
