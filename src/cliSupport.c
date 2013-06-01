@@ -1328,6 +1328,40 @@ int min(int a, int b)
     return a < b ? a : b;
 }
 
+int8_t parse_hex(char c)
+{
+    if ('0' <= c && c <= '9')
+        return c - '0';
+    if ('a' <= c && c <= 'f')
+        return c - 'a' + 0x0A;
+    if ('A' <= c && c <= 'F')
+        return c - 'A' + 0x0A;
+    return -1;
+}
+
+void cliPrintEEPROM(eepromConfig_t *e)
+{
+    uint32_t old_crc = e->CRCAtEnd[0];
+    enum { line_length = 32, len = sizeof(eepromConfig_t) };
+    uint8_t *by = (uint8_t*)e;
+    int i, j;
+
+    e->CRCAtEnd[0] = crc32bEEPROM(e, false);
+
+    if (e->CRCFlags & CRC_HistoryBad)
+      evrPush(EVR_ConfigBadHistory, 0);
+    
+    for (i = 0; i < ceil((float)len / line_length); i++)
+    {
+        for (j = 0; j < min(line_length, len - line_length * i); j++)
+            cliPrintF("%02X", by[i * line_length + j]);
+
+        cliPrint("\n");
+    }
+
+    e->CRCAtEnd[0] = old_crc;
+}
+
 void eepromCLI()
 {
     uint8_t  eepromQuery;
@@ -1350,54 +1384,31 @@ void eepromCLI()
 
         switch(eepromQuery)
         {
-            case 'i':
+            // 'a' is the standard "print all the information" character
+            case 'a': // config struct data
+            case 'i': // config struct data
                 cliPrint("Config structure infomation:\n");
-                cliPrintF("Version : %d", eepromConfig.version );
-                cliPrintF("Size : %d", sizeof(eepromConfig) );
+                cliPrintF("Version : %d\n", eepromConfig.version );
+                cliPrintF("Size : %d\n", sizeof(eepromConfig) );
                 cliPrint("CRC Flags :\n ");
                 cliPrintF("  History Bad : %s\n", eepromConfig.CRCFlags & CRC_HistoryBad ? "true" : "false" );
                 validQuery = false;
                 break;
 
-
             ///////////////////////////
 
-            case 'a':
-                validQuery = false;
-                break;
-
-            ///////////////////////////
-
-            case 'd':
+            case 'd': // dump config struct to output
                 // we assume the flyer is not in the air, so that this is ok;
                 // these change randomly when not in flight and can mistakenly
                 // make one think that the in-memory eeprom sturct has changed
                 zeroPIDintegralError();
                 zeroPIDstates();
 
+                cliPrintEEPROM(&eepromConfig);
 
-
-                eepromConfig_t copy = eepromConfig;
-                enum { line_length = 32, len = sizeof(eepromConfig_t) };
-                uint8_t *by = (uint8_t*)&copy;
-                int i, j;
-
-                copy.CRCAtEnd[0] = crc32B((uint32_t*)&copy, copy.CRCAtEnd);
-
-                if ( copy.CRCFlags & CRC_HistoryBad )
-                  evrPush(EVR_ConfigBadHistory,0);
-                
-                for (i = 0; i < ceil((float)len / line_length); i++)
+                if (crcCheckVal != crc32bEEPROM(&eepromConfig, true))
                 {
-                    for (j = 0; j < min(line_length, len - line_length * i); j++)
-                        cliPrintF("%02X", by[i * line_length + j]);
-
-                    cliPrint("\n");
-                }
-
-                if (copy.CRCAtEnd[0] != eepromConfig.CRCAtEnd[0])
-                {
-                    cliPrint("NOTE: in-memory CRC invalid; there have probably been changes to\n");
+                    cliPrint("NOTE: in-memory config CRC invalid; there have probably been changes to\n");
                     cliPrint("      eepromConfig since the last write to flash/eeprom.\n");
                 }
 
@@ -1406,7 +1417,7 @@ void eepromCLI()
 
             ///////////////////////////
 
-            case 'C':
+            case 'C': // clear bad history flag
                 cliPrint("Clearing Bad History flag.\n");
                 eepromConfig.CRCFlags &= ~CRC_HistoryBad;
                 validQuery = false;
@@ -1414,7 +1425,81 @@ void eepromCLI()
 
             ///////////////////////////
 
-            case 'R':
+            case 'D': // read in config struct
+                ;
+                uint32_t sz = sizeof(eepromConfig);
+                eepromConfig_t e;
+                uint8_t *p = (uint8_t*)&e;
+                uint8_t *end = (uint8_t*)(&e + 1);
+                uint32_t t = millis();
+                enum { Timeout = 100 }; // timeout is in ms
+                int second_nibble = 0; // 0 or 1
+                char c;
+                uint32_t chars_encountered = 0;
+
+                cliPrintF("Ready to read in config. Expecting %d (0x%03X) bytes as %d\n",
+                    sz, sz, sz * 2);
+                cliPrintF("hexadecimal characters, optionally separated by [ \\n\\r_].\n");
+                cliPrintF("Times out if no character is received for %dms\n", Timeout);
+                
+                memset(p, 0, end - p);
+
+                while (p < end)
+                {
+                    while (!cliAvailable() && millis() - t < Timeout) {}
+                    t = millis();
+
+                    // if timed out, cliRead() returns 0, which will exit this loop
+                    c = cliRead();
+                    int8_t hex = parse_hex(c);
+                    int ignore = c == ' ' || c == '\n' || c == '\r' || c == '_' ? true : false;
+
+                    chars_encountered++;
+
+                    if (ignore)
+                        continue;
+                    if (hex == -1)
+                        break;
+
+                    *p |= second_nibble ? hex : hex << 4;
+                    p += second_nibble;
+                    second_nibble ^= 1;
+                }
+
+                // eat the next 100ms (or whatever Timeout is) of characters, 
+                // in case the person pasted too much by mistake or something
+                t = millis();
+                while (millis() - t < Timeout)
+                    cliRead();
+
+                if (c == 0)
+                {
+                    cliPrintF("Did not receive enough hex chars! (got %d, expected %d)\n",
+                        (p - (uint8_t*)&e) * 2 + second_nibble, sz * 2);                    
+                }
+                else if (p < end || second_nibble)
+                {
+                    cliPrintF("Invalid character found at position %d: '%c' (0x%02x)", 
+                        chars_encountered, c, c);
+                }
+                else if (crcCheckVal != crc32bEEPROM(&e, true))
+                {
+                    cliPrint("CRC mismatch! Not writing to in-memory config.\n");
+                    cliPrint("Here's what was received:\n\n");
+                    cliPrintEEPROM(&e);
+                }
+                else
+                {
+                    eepromConfig = e;
+                    cliPrint("In-memory config updated!\n");
+                }
+
+                validQuery = false;
+                break;
+
+            ///////////////////////////
+
+            case 'R': // re-read config struct from EEPROM
                 cliPrint("Re-reading EEPROM.\n");
                 readEEPROM();
                 validQuery = false;
@@ -1422,17 +1507,10 @@ void eepromCLI()
 
             ///////////////////////////
 
-            case 'x':
+            case 'x': // exit EEPROM CLI
                 cliPrint("\nExiting EEPROM CLI....\n\n");
                 cliBusy = false;
                 return;
-                break;
-
-            ///////////////////////////
-
-            case 'A':
-                
-
                 break;
 
             ///////////////////////////
@@ -1446,10 +1524,11 @@ void eepromCLI()
 
             case '?':
                 cliPrint("\n");
-                cliPrint("'i' in-memory config information.\n");
-                cliPrint("'d' Dump in-memory config struct as hex    'D' read in config struct (not yet implemented)\n");
-                cliPrint("'R' Reread config from EEPROM              'W' Write config to EEPROM\n");
-                cliPrint("'C' Clear CRC Bad History flag\n");
+                cliPrint("                                           'C' Clear CRC Bad History flag\n");
+                cliPrint("'d' Dump in-memory config struct as hex    'D' Read in config struct (as hex)\n");
+                cliPrint("'i' Display in-memory config information\n");
+                cliPrint("                                           'R' Reread config from EEPROM\n");
+                cliPrint("                                           'W' Write config to EEPROM\n");
                 cliPrint("'x' Exit EEPROM CLI                        '?' Command Summary\n");
                 cliPrint("\n");
                 break;
