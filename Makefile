@@ -23,7 +23,7 @@ $(SRC)/$(TARGET).elf:
 	cd $(SRC) ; make -j2 $(TARGET).elf
 
 clean:
-	-rm *.o */*.o $(patsubst %,$(BUILD)/$(TARGET).%,$(TARGETEXT))
+	cd $(SRC) ; make clean
 
 realclean: clean
 	-find . -name '*.o' | xargs rm
