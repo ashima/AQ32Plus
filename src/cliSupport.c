@@ -1392,18 +1392,25 @@ void eepromCLI(uartInterface_t *uart)
         {
             // 'a' is the standard "print all the information" character
             case 'a': // config struct data
-            case 'i': // config struct data
+            {
+                uint32_t c1 = eepromConfig.CRCAtEnd[0],
+                         c2 = crc32bEEPROM(&eepromConfig, false);
                 uart->printf("Config structure infomation:\n");
                 uart->printf("Version : %d\n", eepromConfig.version );
                 uart->printf("Size : %d\n", sizeof(eepromConfig) );
+                uart->printf("CRC on last read : %08x\n", c1 );
+                uart->printf("Current CRC      : %08x\n", c2 );
+                if ( c1 != c2 )
+                  uart->printf("  CRCs differ. Current Config has not yet been saved.\n");
                 uart->printf("CRC Flags :\n ");
                 uart->printf("  History Bad : %s\n", eepromConfig.CRCFlags & CRC_HistoryBad ? "true" : "false" );
                 validQuery = false;
                 break;
+            }
 
             ///////////////////////////
 
-            case 'd': // dump config struct to output
+            case 'c': // Write out to Console in Hex.  (RAM -> console)
                 // we assume the flyer is not in the air, so that this is ok;
                 // these change randomly when not in flight and can mistakenly
                 // make one think that the in-memory eeprom sturct has changed
@@ -1423,7 +1430,7 @@ void eepromCLI(uartInterface_t *uart)
 
             ///////////////////////////
 
-            case 'C': // clear bad history flag
+            case 'H': // clear bad history flag
                 uart->printf("Clearing Bad History flag.\n");
                 eepromConfig.CRCFlags &= ~CRC_HistoryBad;
                 validQuery = false;
@@ -1431,7 +1438,7 @@ void eepromCLI(uartInterface_t *uart)
 
             ///////////////////////////
 
-            case 'D': // read in config struct
+            case 'C': // Read in from Console in hex.  Console -> RAM
                 ;
                 uint32_t sz = sizeof(eepromConfig);
                 eepromConfig_t e;
@@ -1525,7 +1532,8 @@ void eepromCLI(uartInterface_t *uart)
 
             ///////////////////////////
 
-            case 'R': // re-read config struct from EEPROM
+            case 'E': // Read in from EEPROM.  (EEPROM -> RAM)
+
                 uart->printf("Re-reading EEPROM.\n");
                 readEEPROM();
                 validQuery = false;
@@ -1541,21 +1549,36 @@ void eepromCLI(uartInterface_t *uart)
 
             ///////////////////////////
 
-            case 'W': // Write EEPROM Parameters
+            case 'W':
+            case 'e': // Write out to EEPROM. (RAM -> EEPROM)
                 uart->printf("\nWriting EEPROM Parameters....\n\n");
                 writeEEPROM();
                 break;
 
             ///////////////////////////
 
+            case 'f': // Write out to sdCard FILE. (RAM -> FILE)
+                validQuery = false;
+                break;
+
+            ///////////////////////////
+            case 'F': // Read in from sdCard FILE. (FILE -> RAM)
+                validQuery = false;
+                break;
+
+            ///////////////////////////
+
             case '?':
+            //                0         1         2         3         4         5         6         7
+            //                01234567890123456789012345678901234567890123456789012345678901234567890123456789
                 uart->printf("\n");
-                uart->printf("                                           'C' Clear CRC Bad History flag\n");
-                uart->printf("'d' Dump in-memory config struct as hex    'D' Read in config struct (as hex)\n");
-                uart->printf("'i' Display in-memory config information\n");
-                uart->printf("                                           'R' Reread config from EEPROM\n");
-                uart->printf("                                           'W' Write config to EEPROM\n");
-                uart->printf("'x' Exit EEPROM CLI                        '?' Command Summary\n");
+                uart->printf("'a' Display in-RAM config information\n");
+                uart->printf("'c' Write in-RAM -> Console (as Hex)      'C' Read Console (as Hex) -> in-RAM\n");
+                uart->printf("'e' Write in-RAM -> EEPROM                'E' Read EEPROM -> in-RAM\n");
+                uart->printf("'f' Write in-RAM -> sd FILE (Not yet imp) 'F' Read sd FILE -> in-RAM (Not imp)\n");
+                uart->printf("                                          'H' Clear CRC Bad History flag\n");
+                uart->printf("'x' Exit EEPROM CLI                       '?' Command Summary\n");
+                uart->printf("\nFor compatability : 'W' Write in-RAM -> EEPROM\n");
                 uart->printf("\n");
                 break;
 
