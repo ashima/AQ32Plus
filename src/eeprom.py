@@ -136,7 +136,9 @@ if args.port and (args.upload or args.download):
 					args.download.write("%s\n" % binascii.hexlify(eeprom))
 					if not args.quiet:
 						print("CRC match; file written.")
+					time.sleep(0.500)
 					write_ser('x')
+					ser.flushOutput()
 			else:
 				error_and_exit("No dump received!")
 
