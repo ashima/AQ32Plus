@@ -53,6 +53,13 @@ uint8_t highSpeedTelem7Enabled = false;
 uint8_t highSpeedTelem8Enabled = false;
 uint8_t highSpeedTelem9Enabled = false;
 
+// the return types of telemetry vs. cli Rread/Available do not match!
+char trampoline_telemetryRead() { return (char)telemetryRead(); }
+uint8_t trampoline_telemetryAvailable() { return (uint8_t)telemetryAvailable(); }
+
+uartInterface_t cli_uart = {&cliPrintF, &cliRead, &cliAvailable};
+uartInterface_t telemetry_uart = {&telemetryPrintF, &trampoline_telemetryRead, &trampoline_telemetryAvailable};
+
 ///////////////////////////////////////////////////////////////////////////////
 // High Speed Telem Disable
 ///////////////////////////////////////////////////////////////////////////////
@@ -809,7 +816,7 @@ void cliCom(void)
         ///////////////////////////////
 
         case 'U': // EEPROM CLI
-            eepromCLI();
+            eepromCLI(&cli_uart);
 
             cliQuery = 'x';
            	validCliCommand = false;

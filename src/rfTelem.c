@@ -436,6 +436,15 @@ void rfCom(void)
 
         ///////////////////////////////
 
+        case 'U': // EEPROM CLI
+            eepromCLI(&telemetry_uart);
+
+            rfQueryType = 'x';
+            validRFCommand = false;
+            break;
+
+        ///////////////////////////////
+
         case 'W': // Write EEPROM Parameters
             telemetryPrint("\nWriting EEPROM Parameters....\n");
             writeEEPROM();

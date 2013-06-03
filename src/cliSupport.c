@@ -1339,7 +1339,7 @@ int8_t parse_hex(char c)
     return -1;
 }
 
-void cliPrintEEPROM(eepromConfig_t *e)
+void printEEPROM(eepromConfig_t *e, uartInterface_t *uart)
 {
     uint32_t old_crc = e->CRCAtEnd[0];
     enum { line_length = 32, len = sizeof(eepromConfig_t) };
@@ -1354,44 +1354,50 @@ void cliPrintEEPROM(eepromConfig_t *e)
     for (i = 0; i < ceil((float)len / line_length); i++)
     {
         for (j = 0; j < min(line_length, len - line_length * i); j++)
-            cliPrintF("%02X", by[i * line_length + j]);
+            uart->printf("%02X", by[i * line_length + j]);
 
-        cliPrint("\n");
+        uart->printf("\n");
+
+        // trying to get more reliable dump to XBee 802.15.4, but the
+        // problem may lie elsewhere; this won't hurt for now
+        delay(30); 
     }
 
     e->CRCAtEnd[0] = old_crc;
 }
 
-void eepromCLI()
+void eepromCLI(uartInterface_t *uart)
 {
     uint8_t  eepromQuery;
     uint8_t  validQuery = false;
 
     cliBusy = true;
 
-    cliPrint("\nEntering EEPROM CLI....\n\n");
+    uart->printf("\nEntering EEPROM CLI....\n\n");
 
     while(true)
     {
-        cliPrint("EEPROM CLI -> ");
+        uart->printf("EEPROM CLI -> ");
 
-        while ((cliAvailable() == false) && (validQuery == false));
+        while ((uart->available() == false) && (validQuery == false));
 
         if (validQuery == false)
-            eepromQuery = cliRead();
+            eepromQuery = uart->read();
 
-        cliPrint("\n");
+        //uart->printf("%c %s", eepromQuery, validQuery ? "true" : "false");
+
+        uart->printf("\n");
 
         switch(eepromQuery)
         {
             // 'a' is the standard "print all the information" character
             case 'a': // config struct data
             case 'i': // config struct data
-                cliPrint("Config structure infomation:\n");
-                cliPrintF("Version : %d\n", eepromConfig.version );
-                cliPrintF("Size : %d\n", sizeof(eepromConfig) );
-                cliPrint("CRC Flags :\n ");
-                cliPrintF("  History Bad : %s\n", eepromConfig.CRCFlags & CRC_HistoryBad ? "true" : "false" );
+                uart->printf("Config structure infomation:\n");
+                uart->printf("Version : %d\n", eepromConfig.version );
+                uart->printf("Size : %d\n", sizeof(eepromConfig) );
+                uart->printf("CRC Flags :\n ");
+                uart->printf("  History Bad : %s\n", eepromConfig.CRCFlags & CRC_HistoryBad ? "true" : "false" );
                 validQuery = false;
                 break;
 
@@ -1404,12 +1410,12 @@ void eepromCLI()
                 zeroPIDintegralError();
                 zeroPIDstates();
 
-                cliPrintEEPROM(&eepromConfig);
+                printEEPROM(&eepromConfig, uart);
 
                 if (crcCheckVal != crc32bEEPROM(&eepromConfig, true))
                 {
-                    cliPrint("NOTE: in-memory config CRC invalid; there have probably been changes to\n");
-                    cliPrint("      eepromConfig since the last write to flash/eeprom.\n");
+                    uart->printf("NOTE: in-memory config CRC invalid; there have probably been changes to\n");
+                    uart->printf("      eepromConfig since the last write to flash/eeprom.\n");
                 }
 
                 validQuery = false;
@@ -1418,7 +1424,7 @@ void eepromCLI()
             ///////////////////////////
 
             case 'C': // clear bad history flag
-                cliPrint("Clearing Bad History flag.\n");
+                uart->printf("Clearing Bad History flag.\n");
                 eepromConfig.CRCFlags &= ~CRC_HistoryBad;
                 validQuery = false;
                 break;
@@ -1437,25 +1443,24 @@ void eepromCLI()
                 char c;
                 uint32_t chars_encountered = 0;
 
-                cliPrintF("Ready to read in config. Expecting %d (0x%03X) bytes as %d\n",
+                uart->printf("Ready to read in config. Expecting %d (0x%03X) bytes as %d\n",
                     sz, sz, sz * 2);
-                cliPrintF("hexadecimal characters, optionally separated by [ \\n\\r_].\n");
-                cliPrintF("Times out if no character is received for %dms\n", Timeout);
+                uart->printf("hexadecimal characters, optionally separated by [ \\n\\r_].\n");
+                uart->printf("Times out if no character is received for %dms\n", Timeout);
                 
                 memset(p, 0, end - p);
 
                 while (p < end)
                 {
-                    while (!cliAvailable() && millis() - t < Timeout) {}
+                    while (!uart->available() && millis() - t < Timeout) {}
                     t = millis();
 
-                    // if timed out, cliRead() returns 0, which will exit this loop
-                    c = cliRead();
+                    c = uart->available() ? uart->read() : '\0';
                     int8_t hex = parse_hex(c);
                     int ignore = c == ' ' || c == '\n' || c == '\r' || c == '_' ? true : false;
 
-                    chars_encountered++;
-
+                    if (c != '\0') // assume the person isn't sending null chars
+                        chars_encountered++;
                     if (ignore)
                         continue;
                     if (hex == -1)
@@ -1464,36 +1469,56 @@ void eepromCLI()
                     *p |= second_nibble ? hex : hex << 4;
                     p += second_nibble;
                     second_nibble ^= 1;
+
+                    // if (0 == (chars_encountered % 32))
+                    //     uart->printf("+\n");
+                }
+
+                if (c == 0)
+                {
+                    uart->printf("Did not receive enough hex chars! (got %d, expected %d)\n",
+                        (p - (uint8_t*)&e) * 2 + second_nibble, sz * 2);                    
+                }
+                else if (p < end || second_nibble)
+                {
+                    uart->printf("Invalid character found at position %d: '%c' (0x%02x)", 
+                        chars_encountered, c, c);
+                }
+                else if (crcCheckVal != crc32bEEPROM(&e, true))
+                {
+                    uart->printf("CRC mismatch! Not writing to in-memory config.\n");
+                    uart->printf("Here's what was received:\n\n");
+                    printEEPROM(&e, uart);
+                }
+                else
+                {
+                    zeroPIDintegralError();
+                    zeroPIDstates();
+                    
+                    int i;
+                    for (i = 0; i < sz; i++)
+                        if (((uint8_t*)&e)[i] != ((uint8_t*)&eepromConfig)[i])
+                            break;
+
+                    if (i == sz)
+                    {
+                        uart->printf("NOTE: uploaded config was identical to in-memory config.\n");
+                    }
+                    else
+                    {
+                        eepromConfig = e;
+                        uart->printf("In-memory config updated!\n");
+                        uart->printf("NOTE: config not written to EEPROM; use 'W' to do so.\n");
+                    }
+
                 }
 
                 // eat the next 100ms (or whatever Timeout is) of characters, 
                 // in case the person pasted too much by mistake or something
                 t = millis();
                 while (millis() - t < Timeout)
-                    cliRead();
-
-                if (c == 0)
-                {
-                    cliPrintF("Did not receive enough hex chars! (got %d, expected %d)\n",
-                        (p - (uint8_t*)&e) * 2 + second_nibble, sz * 2);                    
-                }
-                else if (p < end || second_nibble)
-                {
-                    cliPrintF("Invalid character found at position %d: '%c' (0x%02x)", 
-                        chars_encountered, c, c);
-                }
-                else if (crcCheckVal != crc32bEEPROM(&e, true))
-                {
-                    cliPrint("CRC mismatch! Not writing to in-memory config.\n");
-                    cliPrint("Here's what was received:\n\n");
-                    cliPrintEEPROM(&e);
-                }
-                else
-                {
-                    eepromConfig = e;
-                    cliPrint("In-memory config updated!\n");
-                    cliPrint("NOTE: config not written to EEPROM; use 'W' to do so.\n");
-                }
+                    if (uart->available())
+                        uart->read();
 
                 validQuery = false;
                 break;
@@ -1501,7 +1526,7 @@ void eepromCLI()
             ///////////////////////////
 
             case 'R': // re-read config struct from EEPROM
-                cliPrint("Re-reading EEPROM.\n");
+                uart->printf("Re-reading EEPROM.\n");
                 readEEPROM();
                 validQuery = false;
                 break;
@@ -1509,7 +1534,7 @@ void eepromCLI()
             ///////////////////////////
 
             case 'x': // exit EEPROM CLI
-                cliPrint("\nExiting EEPROM CLI....\n\n");
+                uart->printf("\nExiting EEPROM CLI....\n\n");
                 cliBusy = false;
                 return;
                 break;
@@ -1517,21 +1542,21 @@ void eepromCLI()
             ///////////////////////////
 
             case 'W': // Write EEPROM Parameters
-                cliPrint("\nWriting EEPROM Parameters....\n\n");
+                uart->printf("\nWriting EEPROM Parameters....\n\n");
                 writeEEPROM();
                 break;
 
             ///////////////////////////
 
             case '?':
-                cliPrint("\n");
-                cliPrint("                                           'C' Clear CRC Bad History flag\n");
-                cliPrint("'d' Dump in-memory config struct as hex    'D' Read in config struct (as hex)\n");
-                cliPrint("'i' Display in-memory config information\n");
-                cliPrint("                                           'R' Reread config from EEPROM\n");
-                cliPrint("                                           'W' Write config to EEPROM\n");
-                cliPrint("'x' Exit EEPROM CLI                        '?' Command Summary\n");
-                cliPrint("\n");
+                uart->printf("\n");
+                uart->printf("                                           'C' Clear CRC Bad History flag\n");
+                uart->printf("'d' Dump in-memory config struct as hex    'D' Read in config struct (as hex)\n");
+                uart->printf("'i' Display in-memory config information\n");
+                uart->printf("                                           'R' Reread config from EEPROM\n");
+                uart->printf("                                           'W' Write config to EEPROM\n");
+                uart->printf("'x' Exit EEPROM CLI                        '?' Command Summary\n");
+                uart->printf("\n");
                 break;
 
             ///////////////////////////

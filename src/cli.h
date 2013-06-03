@@ -35,6 +35,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #pragma once
+#ifndef CLI_H
+#define CLI_H
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -75,3 +77,17 @@ char *readStringCLI(char *data, uint8_t length);
 void cliCom(void);
 
 ///////////////////////////////////////////////////////////////////////////////
+
+typedef struct {
+    void (*printf)(const char *, ...);
+    char (*read)();
+    uint8_t (*available)();
+} uartInterface_t;
+
+char trampoline_telemetryRead();
+uint8_t trampoline_telemetryAvailable();
+
+extern uartInterface_t cli_uart;
+extern uartInterface_t telemetry_uart;
+
+#endif
