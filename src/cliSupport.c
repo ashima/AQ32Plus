@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "board.h"
+#include "drv/drv_crc.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // MAX7456 CLI
@@ -1279,5 +1280,105 @@ void gpsCLI()
 	}
 
 }
+<<<<<<< HEAD
+=======
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+// EEPROM CLI
+///////////////////////////////////////////////////////////////////////////////
+
+int min(int a, int b)
+{
+    return a < b ? a : b;
+}
+
+void eepromCLI()
+{
+    uint8_t  eepromQuery;
+    uint8_t  validQuery = false;
+
+    cliBusy = true;
+
+    cliPrint("\nEntering EEPROM CLI....\n\n");
+
+    while(true)
+    {
+        cliPrint("EEPROM CLI -> ");
+
+        while ((cliAvailable() == false) && (validQuery == false));
+
+        if (validQuery == false)
+            eepromQuery = cliRead();
+
+        cliPrint("\n");
+
+        switch(eepromQuery)
+        {
+            ///////////////////////////
+
+            case 'a':
+                validQuery = false;
+                break;
+
+            ///////////////////////////
+
+            case 'd':
+                ; // C89 means this statement cannot start off with the below
+                enum { line_length = 32, len = sizeof(eepromConfig_t) };
+                uint8_t *by = (uint8_t*)&eepromConfig;
+                int i, j;
+
+                for (i = 0; i < ceil((float)len / line_length); i++)
+                {
+                    for (j = 0; j < min(line_length, len - line_length * i); j++)
+                        cliPrintF("%02X", by[i * line_length + j]);
+
+                    cliPrint("\n");
+                }
+                eepromConfig_t *p = &eepromConfig;
+                cliPrintF("*%08X\n", crc32B((uint32_t*)&p[0], (uint32_t*)&p[1]));
+                                
+                validQuery = false;
+                break;
+
+            ///////////////////////////
+
+            case 'x':
+                cliPrint("\nExiting EEPROM CLI....\n\n");
+                cliBusy = false;
+                return;
+                break;
+
+            ///////////////////////////
+
+            case 'A':
+                
+
+                break;
+
+            ///////////////////////////
+
+            case 'W': // Write EEPROM Parameters
+                cliPrint("\nWriting EEPROM Parameters....\n\n");
+                writeEEPROM();
+                break;
+
+            ///////////////////////////
+
+            case '?':
+                cliPrint("\n");
+                cliPrint("'d' Dump eeprom struct as hex with crc32   'D' read in eeprom struct (not yet implemented)\n");
+                cliPrint("                                           'W' Write EEPROM Parameters\n");
+                cliPrint("'x' Exit EEPROM CLI                        '?' Command Summary\n");
+                cliPrint("\n");
+                break;
+
+            ///////////////////////////
+        }
+    }
+
+}
+>>>>>>> c075eb8... fixed crc check val (needed NOTing), switched EEPROM CLI to HW crc32B
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -7,7 +7,7 @@ STDUSB=$(LIBS)/STM32_USB_Device_Library
 STDOTG=$(LIBS)/STM32_USB_OTG_Driver
 
 CFLAGS= -O3 -fsigned-char -mthumb -mthumb-interwork -mcpu=cortex-m4 \
-        -Wl,--gc-sections -ffunction-sections -fdata-sections 
+        -Wl,--gc-sections -ffunction-sections -fdata-sections -Wall
 
 INCDIRS=$(LIBS)/CMSIS/Include \
      $(LIBS)/CMSIS/Device/ST/STM32F4xx/Include \
@@ -24,7 +24,8 @@ INCS=$(patsubst %, -I %,$(INCDIRS))
 USBSRC= cdc/src/usbd_cdc_core.c 
 DRVSRC=drv_adc.c drv_cli.c drv_i2c.c drv_led.c drv_spi.c \
 	drv_pwmEsc.c drv_pwmServo.c drv_rx.c drv_system.c \
-	drv_telemetry.c drv_timingFunctions.c
+	drv_telemetry.c drv_timingFunctions.c \
+	drv_crc.c
 GPSSRC=drv/drv_gps.c $(wildcard gps/*.c)
 SENSRC=hmc5883.c ms5611_I2C.c mpu6000.c
 OSDSRC=drv/drv_max7456.c $(wildcard max7456/*.c)
@@ -60,6 +61,9 @@ $(TARGET).elf: $(OBJS)
  
 %.o: %.c
 	$(ARMCC) $(CFLAGS) $(DEFS) $(CMSISINC) $(INCS) -o $@ -c $^
+
+%.s: %.c
+	$(ARMCC) $(CFLAGS) $(DEFS) $(CMSISINC) $(INCS) -o $@ -S $^
 
 .PHONY: clean 
 

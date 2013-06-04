@@ -363,6 +363,7 @@ typedef struct eepromConfig_t
 
     ///////////////////////////////////
 
+    uint32_t CRCAtEnd[1];
 } eepromConfig_t;
 
 extern eepromConfig_t eepromConfig;

@@ -24,8 +24,10 @@ typedef volatile uint32_t vuint32_t;
             a dataregister write with the correct write stalling. In inlined
             code without the NOPs the first word was corrupted.
  */
-inline void crc32Reset()
+static inline void crc32Reset()
   {
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_CRC, ENABLE);
+
   CRC->CR = CRC_CR_RESET;
   __NOP(); // 4 Clocks to finish reset.
   __NOP();
@@ -37,7 +39,7 @@ inline void crc32Reset()
   \brief    Write a 32bit word to the STMs CRC engine.
   \param x  The 32bit word to write.
  */
-inline void crc32Write(vuint32_t x)
+static inline void crc32Write(vuint32_t x)
   {
   CRC->DR = __RBIT(x);
   }
@@ -46,10 +48,15 @@ inline void crc32Write(vuint32_t x)
   \brief   Read the STM32s CRC engine data register.
   \return  A 32 bit word read form the data register.
  */
-inline vuint32_t crc32Read ()
+static inline vuint32_t crc32Read ()
   {
   return __RBIT(CRC->DR);
   }
+
+void crc32Feed(uint32_t* start, uint32_t* end);
+uint32_t crc32B(uint32_t* start, uint32_t* end);
+
+enum { crcCheckVal = 0x2144DF1C };
 
 // LIBSTM32F_CRC_H
 #endif
