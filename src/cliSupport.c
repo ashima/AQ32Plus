@@ -1520,6 +1520,13 @@ void eepromCLI()
                 validQuery = false;
                 break;
 
+            case 'V': // Reset EEPROM Parameters
+                cliPrint( "\nEEPROM Parameters Reset....(not rebooting)\n" );
+                checkFirstTime(true);
+                validQuery = false;
+            break;
+
+
             ///////////////////////////
 
             case '?':
@@ -1531,6 +1538,7 @@ void eepromCLI()
                 cliPrintF("'e' Write in-RAM -> EEPROM                'E' Read EEPROM -> in-RAM\n");
                 cliPrintF("'f' Write in-RAM -> sd FILE (Not yet imp) 'F' Read sd FILE -> in-RAM (Not imp)\n");
                 cliPrintF("                                          'H' Clear CRC Bad History flag\n");
+                cliPrintF("                                          'V' Reset in-RAM config to default.\n");
                 cliPrintF("'x' Exit EEPROM CLI                       '?' Command Summary\n");
                 cliPrintF("\nFor compatability : 'W' Write in-RAM -> EEPROM\n");
                 cliPrintF("\n");
