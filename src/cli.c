@@ -803,9 +803,11 @@ void cliCom(void)
 
         ///////////////////////////////
 
-        case 'U': // Not Used
+        case 'U': // EEPROM CLI
+            eepromCLI();
+
             cliQuery = 'x';
-         	validCliCommand = false;
+           	validCliCommand = false;
          	break;
 
         ///////////////////////////////

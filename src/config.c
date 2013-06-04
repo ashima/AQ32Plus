@@ -64,6 +64,11 @@ void parseRcChannels(const char *input)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+uint32_t crc32bEEPROM(eepromConfig_t *e, int includeCRCAtEnd)
+{
+	return crc32B((uint32_t*)e, includeCRCAtEnd ? (uint32_t*)(e + 1) : e->CRCAtEnd);
+}
+
 enum { eepromConfigNUMWORD =  sizeof(eepromConfig_t)/sizeof(uint32_t) };
 
 void readEEPROM(void)
@@ -72,8 +77,13 @@ void readEEPROM(void)
 
     *dst = *(eepromConfig_t*)FLASH_WRITE_EEPROM_ADDR ;
 
-    if ( crcCheckVal != crc32B( (uint32_t*)&dst[0], (uint32_t*) &dst[1]) )
+    if ( crcCheckVal != crc32bEEPROM(dst, true) )
+      {
       evrPush(EVR_FlashCRCFail,0);
+      dst->CRCFlags |= CRC_HistoryBad;
+      }
+    else if ( dst->CRCFlags & CRC_HistoryBad )
+      evrPush(EVR_ConfigBadHistory,0);
     
     accConfidenceDecay = 1.0f / sqrt(eepromConfig.accelCutoff);
 
@@ -87,10 +97,17 @@ void readEEPROM(void)
 
 int writeEEPROM(void)
 {
+	// there's no reason to write these values to EEPROM, they'll just be noise
+    zeroPIDintegralError();
+    zeroPIDstates();
+
     FLASH_Status status;
     int i;
     uint32_t       *dst = (uint32_t*)FLASH_WRITE_EEPROM_ADDR;
     eepromConfig_t *src = &eepromConfig;
+
+    if ( src->CRCFlags & CRC_HistoryBad )
+      evrPush(EVR_ConfigBadHistory,0);
 
     src->CRCAtEnd[0] = crc32B( (uint32_t*)&src[0], src->CRCAtEnd);
 

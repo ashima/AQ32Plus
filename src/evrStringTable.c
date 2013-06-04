@@ -17,6 +17,7 @@ constStrArr_t evrWarn = {
     "Abnormal Reset",
     "Battery Low",
     "Battery Very Low",
+    "Config has CRC Bad History flag set! Use CLI to clear",
     };
 constStrArr_t evrError = {
     "Out of EVR Listener slots",
@@ -24,9 +25,9 @@ constStrArr_t evrError = {
     "Failed to register Frame Lost Watchdog",
     "Recieve pilot command frame timeout!",
     "Battery dangeriously Low!",
-    "Flash CRC failed! (use eeprom cli to override)",
-    "Flash erase failed.",
-    "Flash programming failed."
+    "Flash CRC failed! Bad History Set",
+    "Flash erase failed",
+    "Flash programming failed"
     };
 constStrArr_t evrFatal = {
     "",
