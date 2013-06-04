@@ -1566,6 +1566,13 @@ void eepromCLI(uartInterface_t *uart)
                 validQuery = false;
                 break;
 
+            case 'V': // Reset EEPROM Parameters
+                cliPrint( "\nEEPROM Parameters Reset....(not rebooting)\n" );
+                checkFirstTime(true);
+                validQuery = false;
+            break;
+
+
             ///////////////////////////
 
             case '?':
@@ -1577,6 +1584,7 @@ void eepromCLI(uartInterface_t *uart)
                 uart->printf("'e' Write in-RAM -> EEPROM                'E' Read EEPROM -> in-RAM\n");
                 uart->printf("'f' Write in-RAM -> sd FILE (Not yet imp) 'F' Read sd FILE -> in-RAM (Not imp)\n");
                 uart->printf("                                          'H' Clear CRC Bad History flag\n");
+                uart->printf("                                          'V' Reset in-RAM config to default.\n");
                 uart->printf("'x' Exit EEPROM CLI                       '?' Command Summary\n");
                 uart->printf("\nFor compatability : 'W' Write in-RAM -> EEPROM\n");
                 uart->printf("\n");
