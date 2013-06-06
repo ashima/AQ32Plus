@@ -68,6 +68,8 @@ int main(void)
 
     while (1)
     {
+        evrCheck();
+
     	///////////////////////////////
 
         if (frame_50Hz)
