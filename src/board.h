@@ -44,6 +44,12 @@
 #define MS5611_ONBOARD
 //#define MS5611_EXTERNAL
 
+//#define MPU_ACCEL
+#define MXR_ACCEL
+
+#define TELEM_PRINT 1
+#define TELEM_LOG   0
+
 ///////////////////////////////////////
 
 #if defined(HMC5883L_ONBOARD)
@@ -66,6 +72,16 @@
     #error "No MS5611 Definition!!"
 #endif
 
+///////////////////////////////////////
+
+#if defined(MPU_ACCEL) && defined(MXR_ACCEL)
+    #error "Can't define both MPU_ACCEL and MXR_ACCEL!!"
+#endif
+
+#if !defined(MPU_ACCEL) && !defined(MXR_ACCEL)
+    #error "Must define MPU_ACCEL or MXR_ACCEL!!"
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <stdbool.h>
@@ -81,10 +97,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stm32f4xx.h"
+
+#include "arm_math.h"
+
 #include "usbd_cdc_core.h"
 #include "usbd_cdc.h"
 #include "usbd_usr.h"
 #include "usbd_desc.h"
+
+#include "diskio.h"
+#include "ff.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -94,6 +116,7 @@
 
 #include "drv_adc.h"
 #include "drv_cli.h"
+#include "drv_crc.h"
 #include "drv_gps.h"
 #include "drv_i2c.h"
 #include "drv_led.h"
@@ -102,6 +125,7 @@
 #include "drv_pwmServo.h"
 #include "drv_rx.h"
 #include "drv_spi.h"
+#include "drv_sdCard.h"
 #include "drv_system.h"
 #include "drv_telemetry.h"
 #include "drv_timingFunctions.h"
@@ -110,19 +134,22 @@
 #include "mpu6000.h"
 #include "ms5611_I2C.h"
 
+#include "accelCalibration.h"
+#include "batMon.h"
 #include "cli.h"
 #include "cliSupport.h"
 #include "computeAxisCommands.h"
 #include "config.h"
 #include "coordinateTransforms.h"
 #include "escCalibration.h"
+#include "evr.h"
+#include "firstOrderFilter.h"
 #include "flightCommand.h"
 #include "gps.h"
 #include "gpsMediaTek19.h"
 #include "gpsNMEA.h"
 #include "gpsUblox.h"
-#include "linearAlgebra.h"
-#include "lowPassFilter.h"
+#include "log.h"
 #include "MargAHRS.h"
 #include "magCalibration.h"
 #include "mixer.h"
@@ -131,5 +158,6 @@
 #include "rfTelem.h"
 #include "utilities.h"
 #include "vertCompFilter.h"
+#include "watchDogs.h"
 
 ///////////////////////////////////////////////////////////////////////////////

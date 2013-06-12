@@ -41,7 +41,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #define DEADBAND       24
-#define DEADBAND_SLOPE 1000/(1000-DEADBAND)
+#define DEADBAND_SLOPE (1000/(1000-DEADBAND))
 
 extern float rxCommand[8];
 
@@ -63,8 +63,8 @@ extern uint8_t headingHoldEngaged;
 ///////////////////////////////////////////////////////////////////////////////
 
 extern semaphore_t armed;
-extern uint8_t armingTimer;
-extern uint8_t disarmingTimer;
+extern uint8_t     armingTimer;
+extern uint8_t     disarmingTimer;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Altitude Hold State Variables

@@ -48,26 +48,25 @@
 
 ///////////////////////////////////////
 
-uint32_t d1Average;
-
-uint32_t d1Sum = 0;
-
-uint16andUint8_t c1, c2, c3, c4,c5, c6;
+uint16andUint8_t c1, c2, c3, c4, c5, c6;
 
 uint32andUint8_t d1;
 
+uint32_t d1Value;
+
 uint32andUint8_t d2;
 
+uint32_t d2Value;
+
 int32_t dT;
-int32_t temp;
 
-int64_t offset;
-int64_t sensitivity;
+int32_t ms5611Temperature;
 
-int32_t p;
+uint8_t newPressureReading = false;
 
-uint8_t pressureAltValid = false;
-///////////////////////////////////////////////////////////////////////////////
+uint8_t newTemperatureReading = false;
+
+///////////////////////////////////////////////////////////////////////////////
 // Read Temperature Request Pressure
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -154,8 +153,8 @@ void readPressureRequestTemperature(I2C_TypeDef *I2Cx)
 
 void calculateTemperature(void)
 {
-    dT = d2.value - ((int32_t)c5.value << 8);
-    temp = 2000 + (int32_t)(((int64_t)dT * (int64_t)c6.value) >> 23);
+    dT                = (int32_t)d2Value - ((int32_t)c5.value << 8);
+    ms5611Temperature = 2000 + (int32_t)(((int64_t)dT * c6.value) >> 23);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -164,30 +163,45 @@ void calculateTemperature(void)
 
 void calculatePressureAltitude(void)
 {
-    int64_t offset2      = 0;
-    int64_t sensitivity2 = 0;
+    int64_t offset;
+	int64_t offset2 = 0;
 
-    offset      = ((uint32_t)c2.value << 16) + ((c4.value * (int64_t)dT) >> 7);
-	sensitivity = ((uint32_t)c1.value << 15) + ((c3.value * (int64_t)dT) >> 8);
+	int64_t sensitivity;
+	int64_t sensitivity2 = 0;
 
-	if (temp < 20)
+	int64_t f;
+
+	int32_t p;
+
+	int32_t ms5611Temp2  = 0;
+
+	offset      = ((int64_t)c2.value << 16) + (((int64_t)c4.value * dT) >> 7);
+	sensitivity = ((int64_t)c1.value << 15) + (((int64_t)c3.value * dT) >> 8);
+
+	if (ms5611Temperature < 2000)
 	{
-		offset2 = 5 * SQR(temp - 2000) / 2;
-		sensitivity2 = 5 * SQR(temp -2000) / 4;
+		ms5611Temp2  = SQR(dT) >> 31;
 
-		if (temp < -15)
+		f	 		 = SQR(ms5611Temperature - 2000);
+		offset2      = 5 * f >> 1;
+		sensitivity2 = 5 * f >> 2;
+
+		if (ms5611Temperature < -1500)
 		{
-			offset2 = offset2 + 7 * SQR(temp + 1500);
-			sensitivity2 = sensitivity2 + 11 * SQR(temp + 1500) / 2;
+			f 			  = SQR(ms5611Temperature + 1500);
+			offset2      +=  7 * f;
+			sensitivity2 += 11 * f >> 1;
 		}
+
+		ms5611Temperature -= ms5611Temp2;
+
+		offset -= offset2;
+		sensitivity -= sensitivity2;
 	}
 
-	offset = offset - offset2;
-	sensitivity = sensitivity - sensitivity2;
+	p = (((d1Value * sensitivity) >> 21) - offset) >> 15;
 
-	p = (((d1Average * sensitivity) >> 21) - offset) >> 15;
-
-    sensors.pressureAlt10Hz = (44330.0f * (1.0f - pow((float)p / 101325.0f, 0.190295f)));
+	sensors.pressureAlt50Hz = 44330.0f * (1.0f - pow((float)p / 101325.0f, 1.0f / 5.255f));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -242,6 +256,15 @@ void initPressure(I2C_TypeDef *I2Cx)
 
     readTemperatureRequestPressure(I2Cx);
     delay(10);
+
+    readPressureRequestTemperature(I2Cx);
+    delay(10);
+
+    d1Value = d1.value;
+    d2Value = d2.value;
+
+    calculateTemperature();
+    calculatePressureAltitude();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

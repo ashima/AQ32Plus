@@ -26,7 +26,7 @@ void crc32Feed(uint32_t* start, uint32_t* end)
   {
   while ( start < end )
     crc32Write(*start++);
-  //assert(start==end); 
+  //assert(start==end);
   }
 
 /*
@@ -43,4 +43,3 @@ uint32_t crc32B(uint32_t* start, uint32_t* end)
   crc32Feed(start,end);
   return ~crc32Read();
   }
-

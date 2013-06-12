@@ -119,6 +119,18 @@ void telemetryListenerCB(evr_t e)
     telemetryPrintF("EVR:%08x %04x %04x\n", e.time, e.evr, e.reason);
   }
 
+enum { expandEvr = 0 };
+
+void telemetryListenerCB(evr_t e)
+{
+    if (expandEvr)
+        telemetryPrintF("EVR-%s %8.3fs %s (%04x)\n", evrToSeverityStr(e.evr), (float)e.time/1000., evrToStr(e.evr), e.reason);
+    else
+        telemetryPrintF("EVR:%08x %04x %04x\n", e.time, e.evr, e.reason);
+}
+
+///////////////////////////////////////
+
 void telemetryInit(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
@@ -219,7 +231,7 @@ void telemetryInit(void)
 
     USART_Cmd(USART1, ENABLE);
 
-    evrRegisterListener(telemetryListenerCB);  
+    evrRegisterListener(telemetryListenerCB);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

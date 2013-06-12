@@ -1,3 +1,23 @@
+20130606 - Reallocated ADC input pins amoung ADC1 and ADC2, fixed EVR not displaying error,
+           minor reformatting of EVR messages, commented out disarm commands for battery error
+           and Spektrum watchdog timeout, added some test code for the MXR9150
+           
+20130605 - Added remaining ADC pins, added improvements from the Ashima Groups AQ32 fork, see:
+           https://github.com/ashima/AQ32Plus/wiki/Possible-Contribs-Back-to-AQ32Plus-Master
+
+20130604 - Fix sign error on MXR9150 Y axis, add MS5611 temperature to telemetry, change accel sum
+           variables in accel calibration from floats to doubles, fix DMA conflict between ADC and
+           SD Card SPI.
+           
+20130530 - Many updates to clean up bugs, thanks to all involved.  No new functionality
+
+20130528 - MXR9150 calibration fixes, pressureAlt low pass filter, remove linear algebra files (need
+           replaced by DSP function calls)
+
+20130526 - Synchronized main loop and Systick ISR functions, floating point conversion of MS5611 data,
+           MXR9150 acclerometer interface, MXR9150 calibration, switchover to MXR 9150 accelerometer,
+           DSP Libraries
+
 20130515 - Removed .cproject from GIT project root and saved in new setup folder
 
 20130515 - Upgraded to CMSIS v3.2

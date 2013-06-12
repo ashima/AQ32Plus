@@ -128,6 +128,8 @@ int16andUint8_t rawGyro[3];
 
 ///////////////////////////////////////
 
+uint8_t accelCalibrating = false;
+
 uint8_t mpu6000Calibrating = false;
 
 float   mpu6000Temperature;
@@ -142,59 +144,59 @@ void initMPU6000(void)
 {
     ///////////////////////////////////
 
-    GPIO_ResetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    ENABLE_MPU6000;
     spiTransfer(MPU6000_SPI, MPU6000_PWR_MGMT_1);          // Device Reset
     spiTransfer(MPU6000_SPI, BIT_H_RESET);
-    GPIO_SetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    DISABLE_MPU6000;
 
     delay(150);
 
-    GPIO_ResetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    ENABLE_MPU6000;
     spiTransfer(MPU6000_SPI, MPU6000_PWR_MGMT_1);          // Clock Source PPL with Z axis gyro reference
     spiTransfer(MPU6000_SPI, MPU_CLK_SEL_PLLGYROZ);
-    GPIO_SetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    DISABLE_MPU6000;
 
     delayMicroseconds(1);
 
-    GPIO_ResetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    ENABLE_MPU6000;
     spiTransfer(MPU6000_SPI, MPU6000_USER_CTRL);           // Disable Primary I2C Interface
     spiTransfer(MPU6000_SPI, BIT_I2C_IF_DIS);
-    GPIO_SetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    DISABLE_MPU6000;
 
     delayMicroseconds(1);
 
-    GPIO_ResetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    ENABLE_MPU6000;
     spiTransfer(MPU6000_SPI, MPU6000_PWR_MGMT_2);
     spiTransfer(MPU6000_SPI, 0x00);
-    GPIO_SetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    DISABLE_MPU6000;
 
     delayMicroseconds(1);
 
-    GPIO_ResetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    ENABLE_MPU6000;
     spiTransfer(MPU6000_SPI, MPU6000_SMPLRT_DIV);          // Accel Sample Rate 1000 Hz, Gyro Sample Rate 8000 Hz
     spiTransfer(MPU6000_SPI, 0x00);
-    GPIO_SetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    DISABLE_MPU6000;
 
     delayMicroseconds(1);
 
-    GPIO_ResetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    ENABLE_MPU6000;
     spiTransfer(MPU6000_SPI, MPU6000_CONFIG);              // Accel and Gyro DLPF Setting
     spiTransfer(MPU6000_SPI, eepromConfig.dlpfSetting);
-    GPIO_SetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    DISABLE_MPU6000;
 
     delayMicroseconds(1);
 
-    GPIO_ResetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    ENABLE_MPU6000;
     spiTransfer(MPU6000_SPI, MPU6000_ACCEL_CONFIG);        // Accel +/- 4 G Full Scale
     spiTransfer(MPU6000_SPI, BITS_FS_4G);
-    GPIO_SetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    DISABLE_MPU6000;
 
     delayMicroseconds(1);
 
-    GPIO_ResetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    ENABLE_MPU6000;
     spiTransfer(MPU6000_SPI, MPU6000_GYRO_CONFIG);         // Gyro +/- 1000 DPS Full Scale
     spiTransfer(MPU6000_SPI, BITS_FS_1000DPS);
-    GPIO_SetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    DISABLE_MPU6000;
 
     ///////////////////////////////////
 
@@ -213,7 +215,7 @@ void initMPU6000(void)
 
 void readMPU6000(void)
 {
-    GPIO_ResetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    ENABLE_MPU6000;
 
                                      spiTransfer(MPU6000_SPI, MPU6000_ACCEL_XOUT_H | 0x80);
 
@@ -234,7 +236,7 @@ void readMPU6000(void)
     rawGyro[YAW  ].bytes[1]        = spiTransfer(MPU6000_SPI, 0x00);
     rawGyro[YAW  ].bytes[0]        = spiTransfer(MPU6000_SPI, 0x00);
 
-    GPIO_SetBits(MPU6000_CS_GPIO, MPU6000_CS_PIN);
+    DISABLE_MPU6000;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -246,8 +248,9 @@ void computeMPU6000RTData(void)
     uint8_t  axis;
     uint16_t samples;
 
-    float accelSum[3] = { 0.0f, 0.0f, 0.0f };
-    float gyroSum[3]  = { 0.0f, 0.0f, 0.0f };
+    double accelSum[3]    = { 0.0f, 0.0f, 0.0f };
+    double gyroSum[3]     = { 0.0f, 0.0f, 0.0f };
+    double accelSumMXR[3] = { 0.0f, 0.0f, 0.0f };
 
     mpu6000Calibrating = true;
 
@@ -265,6 +268,10 @@ void computeMPU6000RTData(void)
         gyroSum[PITCH]  += (float)rawGyro[PITCH].value  - gyroTCBias[PITCH];
         gyroSum[YAW  ]  += (float)rawGyro[YAW  ].value  - gyroTCBias[YAW  ];
 
+        accelSumMXR[XAXIS] += mxr9150Xaxis();
+        accelSumMXR[YAXIS] += mxr9150Yaxis();
+        accelSumMXR[ZAXIS] += mxr9150Zaxis();
+
         delayMicroseconds(1000);
     }
 
@@ -272,11 +279,17 @@ void computeMPU6000RTData(void)
     {
         accelSum[axis]   = accelSum[axis] / 5000.0f * ACCEL_SCALE_FACTOR;
         gyroRTBias[axis] = gyroSum[axis]  / 5000.0f;
+
+        accelSumMXR[axis] = (accelSumMXR[axis] / 5000.0f - eepromConfig.accelBiasMXR[axis]) * eepromConfig.accelScaleFactorMXR[axis];
     }
 
-    accelOneG = sqrt(accelSum[XAXIS] * accelSum[XAXIS] +
-                     accelSum[YAXIS] * accelSum[YAXIS] +
-                     accelSum[ZAXIS] * accelSum[ZAXIS]);
+    #if defined(MPU_ACCEL)
+        accelOneG = sqrt(SQR(accelSum[XAXIS]) + SQR(accelSum[YAXIS]) + SQR(accelSum[ZAXIS]));
+    #endif
+
+    #if defined(MXR_ACCEL)
+        accelOneG = sqrt(SQR(accelSumMXR[XAXIS]) + SQR(accelSumMXR[YAXIS]) + SQR(accelSumMXR[ZAXIS]));
+    #endif
 
     mpu6000Calibrating = false;
 }

@@ -38,18 +38,21 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define     PI 3.14159265f
-#define TWO_PI 6.28318531f
+#ifndef PI
+    #define PI  3.14159265358979f
+#endif
 
-#define D2R (PI / 180.0f)
+#define TWO_PI (2.0f * PI)
 
-#define R2D (180.0f / PI)
+#define D2R  (PI / 180.0f)
+
+#define R2D  (180.0f / PI)
 
 #define KNOTS2MPS 0.51444444f
 
 #define EARTH_RADIUS 6371000f
 
-#define SQR(x)  (x * x)
+#define SQR(x)  ((x) * (x))
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -94,6 +97,8 @@ typedef union {
 	 uint8_t bytes[4];
 } uint32andUint8_t;
 
+///////////////////////////////////////
+
 typedef volatile uint8_t semaphore_t;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -107,7 +112,10 @@ typedef struct sensors_t
     float    attitude500Hz[3];
     float    gyro500Hz[3];
     float    mag10Hz[3];
-    float    pressureAlt10Hz;
+    float    pressureAlt50Hz;
+
+    float    accel500HzMXR[3];
+    float    accel100HzMXR[3];
 
     float    gpsLatitude;
     float    gpsLongitude;
@@ -363,8 +371,14 @@ typedef struct eepromConfig_t
 
     ///////////////////////////////////
 
+    float   accelBiasMXR[3];          // Bias for MXR9150 Accel
+    float   accelScaleFactorMXR[3];   // Scale factor for MXR9150 Accel
+
+    ///////////////////////////////////
+
     uint8_t  CRCFlags;
     uint32_t CRCAtEnd[1];
+
 } eepromConfig_t;
 
 enum crcFlags { CRC_HistoryBad = 1 };

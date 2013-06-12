@@ -7,13 +7,14 @@
   \remark     Ported for AQ32Plus.
 */
 
-#include <inttypes.h>
-#include "stm32f4xx.h"
+///////////////////////////////////////////////////////////////////////////////
 
-#include "evr.h"
+#include "board.h"
+
+///////////////////////////////////////////////////////////////////////////////
 
 enum evrConstants
-  { 
+  {
   evrBITS         = 16, /*!< size of evr message. */
   evrSeverityBITS = 2,  /*!< by convention top two bits are severity */
   evrBuffBITS     = 4,  /*!< size of ring buffer in bits */
@@ -24,7 +25,7 @@ enum evrConstants
   evrBuffMASK     = evrBuffMAX - 1,
   evrMessageBITS  = evrBITS - evrSeverityBITS,
   evrMessageMAX   = 1 << evrMessageBITS,
-  evrMessageMASK  = evrMessageMAX - 1, 
+  evrMessageMASK  = evrMessageMAX - 1,
   evrSeverityMAX  = 1 << evrSeverityBITS,
   evrSeverityMASK = evrSeverityMAX - 1,
   };
@@ -36,6 +37,7 @@ static uint32_t  evrHead = 0;
 static uint32_t  evrTail = 0;
 static uint32_t  evrListenerTop = 0;
 
+///////////////////////////////////////////////////////////////////////////////
 /*
   \brief         Push an Event Report. IRQ states are protected, so an EVR
                  can be pushed from anywhere, includeing IRQ Handlers.
@@ -52,8 +54,9 @@ void evrPush(uint16_t evr, uint16_t reason)
   evrRingBuff[ i ] = e;
   }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
-  \brief      Register a Listener function to be called in user mode 
+  \brief      Register a Listener function to be called in user mode
               whenever and EVR occurred.
   \param f    The call back function.
   \return     0 on success, 1 otherwise.
@@ -69,6 +72,7 @@ int evrRegisterListener(evrListener_fp f)
   return !r;
   }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
   \brief    Broadcast and Event Report to all listeners.
   \param e  The event to be broadcast.
@@ -80,6 +84,7 @@ void evrBroadcast(evr_t e)
     (*(evrListeners[i]))(e);
   }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
   \brief   Check the EVR queue for unbroadcast EVRs, and broadcast them.
  */
@@ -92,6 +97,7 @@ void evrCheck()
     }
   }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
   \brief    Rebroadcast all EVRs that have been in the queue to a
             specific listener function.
@@ -102,11 +108,12 @@ void evrHistory(evrListener_fp f)
   uint32_t i = evrHead;
   do
     {
-    (*f)(evrRingBuff[i]); 
+    (*f)(evrRingBuff[i]);
     i = (i + 1) & evrBuffMASK;
     } while ( i != evrTail ) ;
   }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
   \brief     Return the severity of an EVR.
   \param evr
@@ -116,6 +123,7 @@ uint16_t evrSeverity(uint16_t evr)
   return  (evr >> evrMessageBITS);
   }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
   \brief     Return the constant string pointer associated with this Severity.
   \param s
@@ -125,6 +133,7 @@ const char *evrSeverityToStr(uint16_t s)
   return evrStringTable[ s & evrSeverityMASK ].severity;
   }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
   \brief     Return the severity of an EVR as const string pointer.
   \param evr
@@ -134,6 +143,7 @@ const char *evrToSeverityStr(uint16_t evr)
   return evrSeverityToStr(evrSeverity(evr));
   }
 
+///////////////////////////////////////////////////////////////////////////////
 /*
   \brief      Return the constant string pointer associated with this EVR.
   \param evr
@@ -149,3 +159,4 @@ const char *evrToStr(uint16_t evr)
     return (const char*)0;
   }
 
+///////////////////////////////////////////////////////////////////////////////

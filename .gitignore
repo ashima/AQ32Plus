@@ -1,4 +1,6 @@
 /Release
+/Debug
+/.cproject
 *.o
 *.obj
 *.hex
@@ -9,4 +11,3 @@
 *.swp
 \#*
 *~
-

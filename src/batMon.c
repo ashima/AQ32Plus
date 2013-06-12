@@ -7,16 +7,15 @@
   \remark     Ported for AQ32Plus.
 */
 
-#include <inttypes.h>
-#include "pid.h"
-#include "aq32Plus.h"
-#include "drv/drv_adc.h"
-#include "evr.h"
+///////////////////////////////////////////////////////////////////////////////
 
+#include "board.h"
+
+///////////////////////////////////////////////////////////////////////////////
 
 typedef void (*batMonCB_t)(void);
 
-typedef struct thresholds_t 
+typedef struct thresholds_t
   {
     float value;
     batMonCB_t func;
@@ -46,6 +45,7 @@ static const float alpha = 1.0/( 1.0+0.1 );
 static float v_bat_ave = 0.0;
 static int thresholdCount[thresholdsNUM]; /* Will be inited to zero */
 
+///////////////////////////////////////////////////////////////////////////////
 /*
   \brief  battery Monitor Tick function.
  */
@@ -74,30 +74,38 @@ void batMonTick()
     }
   }
 
+///////////////////////////////////////////////////////////////////////////////
+
 void batMonLow()
   {
-  /* need to do slow beeping here, push back in telem to flash controler 
+  /* need to do slow beeping here, push back in telem to flash controler
    * lights, etc.
    */
   evrPush(EVR_BatLow, (int)(v_bat_ave*1000.0));
   }
 
+///////////////////////////////////////////////////////////////////////////////
+
 void batMonVeryLow()
   {
-  /* need to do fast beeping here, push back in telem to flash controler 
+  /* need to do fast beeping here, push back in telem to flash controler
    * lights, etc.
    * User needs to decsend now ...
    */
   evrPush(EVR_BatVeryLow, (int)(v_bat_ave*1000.0));
   }
 
-extern semaphore_t armed;
+///////////////////////////////////////////////////////////////////////////////
 
+// extern semaphore_t armed;
 void batMonMaxLow()
   {
   /* User isn't listening flyer needs to auto-descend now ....
    */
   evrPush(EVR_BatMaxLow, (int)(v_bat_ave*1000.0));
-  armed = 0;
+
+  // Maybe do something more interesting like auto-descent or hover-hold.
+  // armed = false;
   }
 
+///////////////////////////////////////////////////////////////////////////////

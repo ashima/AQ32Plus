@@ -66,8 +66,10 @@ void parseRcChannels(const char *input)
 
 uint32_t crc32bEEPROM(eepromConfig_t *e, int includeCRCAtEnd)
 {
-	return crc32B((uint32_t*)e, includeCRCAtEnd ? (uint32_t*)(e + 1) : e->CRCAtEnd);
+    return crc32B((uint32_t*)e, includeCRCAtEnd ? (uint32_t*)(e + 1) : e->CRCAtEnd);
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 enum { eepromConfigNUMWORD =  sizeof(eepromConfig_t)/sizeof(uint32_t) };
 
@@ -78,10 +80,10 @@ void readEEPROM(void)
     *dst = *(eepromConfig_t*)FLASH_WRITE_EEPROM_ADDR ;
 
     if ( crcCheckVal != crc32bEEPROM(dst, true) )
-      {
-      evrPush(EVR_FlashCRCFail,0);
-      dst->CRCFlags |= CRC_HistoryBad;
-      }
+    {
+        evrPush(EVR_FlashCRCFail,0);
+        dst->CRCFlags |= CRC_HistoryBad;
+    }
     else if ( dst->CRCFlags & CRC_HistoryBad )
       evrPush(EVR_ConfigBadHistory,0);
     
@@ -94,20 +96,20 @@ void readEEPROM(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-
 int writeEEPROM(void)
 {
-	// there's no reason to write these values to EEPROM, they'll just be noise
+    // there's no reason to write these values to EEPROM, they'll just be noise
     zeroPIDintegralError();
     zeroPIDstates();
 
     FLASH_Status status;
+
     int i;
     uint32_t       *dst = (uint32_t*)FLASH_WRITE_EEPROM_ADDR;
     eepromConfig_t *src = &eepromConfig;
 
     if ( src->CRCFlags & CRC_HistoryBad )
-      evrPush(EVR_ConfigBadHistory,0);
+        evrPush(EVR_ConfigBadHistory,0);
 
     src->CRCAtEnd[0] = crc32B( (uint32_t*)&src[0], src->CRCAtEnd);
 
@@ -117,7 +119,9 @@ int writeEEPROM(void)
                     FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
 
     i = -1;
+
     status = FLASH_EraseSector(FLASH_Sector_1, VoltageRange_3);
+
     while ( FLASH_COMPLETE == status && i++ < eepromConfigNUMWORD )
         status = FLASH_ProgramWord((uint32_t)&dst[i], ((uint32_t*)src)[i]);
 
@@ -127,6 +131,7 @@ int writeEEPROM(void)
     FLASH_Lock();
 
     readEEPROM();
+
     return status;
 }
 
@@ -438,12 +443,20 @@ void checkFirstTime(bool eepromReset)
 
         eepromConfig.gpsType               =  NO_GPS;
         eepromConfig.gpsBaudRate           =  38400;
-        eepromConfig.magVar                =  9.033333f * D2R;  // Albuquerque, NM Mag Var 9 degrees 2 minutes (+East, - West)
+        eepromConfig.magVar                =  9.033333f * D2R;  // Albuquerque, NM Mag Var 9 degrees 2 minutes (+ East, - West)
 
         eepromConfig.batteryVoltageDivider = (10.0f + 1.5f) / 1.5f;
 
         eepromConfig.armCount              = 50;
         eepromConfig.disarmCount           = 0;
+
+        eepromConfig.accelBiasMXR[XAXIS]        = 2048.0f;
+        eepromConfig.accelBiasMXR[YAXIS]        = 2048.0f;
+        eepromConfig.accelBiasMXR[ZAXIS]        = 2048.0f;
+
+        eepromConfig.accelScaleFactorMXR[XAXIS] = 0.04937965f;  // (3.3 / 4096) / 0.16 * 9.8065
+        eepromConfig.accelScaleFactorMXR[YAXIS] = 0.04937965f;  // (3.3 / 4096) / 0.16 * 9.8065
+        eepromConfig.accelScaleFactorMXR[ZAXIS] = 0.04937965f;  // (3.3 / 4096) / 0.16 * 9.8065
 
         writeEEPROM();
 	}

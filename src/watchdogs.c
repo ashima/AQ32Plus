@@ -6,8 +6,7 @@
   \remark     Ported for AQ32Plus.
 */
 
-#include <inttypes.h>
-#include "watchdogs.h"
+#include "board.h"
 
 typedef struct {
   uint32_t ticks;     /*!< System ticks at last reset. */
@@ -16,7 +15,7 @@ typedef struct {
   } watchDogs_t;
 
 enum watchDogConsts
-  { 
+  {
   watchDogNUM = 16,
   disabledFlag = 0xffffffff,
   } ;
@@ -26,12 +25,12 @@ static uint32_t    watchDogTop   = 0;
 static uint32_t    watchDogTicks = 0;
 
 /*
-  \brief          Resgister and initialize a watch dog timer.
+  \brief          Register and initialize a watch dog timer.
   \param hnd      Output; Pointer to storage for new timer's handle
   \param timeout  Input: Trigger function after 'timeout' ticks.
   \param func     Input: function to call on timeout.
-  \param sd      Input: boolean - start disabled.
- */
+  \param sd       Input: boolean - start disabled.
+*/
 int watchDogRegister(uint32_t* hnd, uint32_t timeout, timeout_fp func,int sd)
   {
   if (watchDogTop < watchDogNUM)
@@ -57,7 +56,7 @@ void watchDogsTick()
   ++watchDogTicks;
 
   for ( i = 0 ; i < watchDogTop ; ++i )
-    if (watchDogTicks - watchDog[i].ticks > watchDog[i].timeout 
+    if (watchDogTicks - watchDog[i].ticks > watchDog[i].timeout
         && watchDog[i].ticks != disabledFlag)
       {
       (*(watchDog[i].func))();
@@ -67,7 +66,7 @@ void watchDogsTick()
   }
 
 /*
-  \brief      Temporarily disable a timer. 
+  \brief      Temporarily disable a timer.
   \param hnd  Input: Handle of timer to disable.
  */
 void watchDogDisable(uint32_t hnd)
@@ -83,4 +82,3 @@ void watchDogReset(uint32_t hnd)
   {
   watchDog[hnd].ticks = watchDogTicks;
   }
-

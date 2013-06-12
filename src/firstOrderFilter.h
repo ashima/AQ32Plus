@@ -34,43 +34,47 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "board.h"
-
-///////////////////////////////////////////////////////////////////////////////
-// Vertical Complementary Filter Defines and Variables
-///////////////////////////////////////////////////////////////////////////////
-
-float   accelZ;
-float   estimationError = 0.0f;
-float   hDotEstimate    = 0.0f;
-float   hEstimate;
-uint8_t previousExecUp  = false;
-
-///////////////////////////////////////////////////////////////////////////////
-// Vertical Complementary Filter
-///////////////////////////////////////////////////////////////////////////////
-
-void vertCompFilter(float dt)
-{
-    if ((execUp == true) && (previousExecUp == false))
-    	hEstimate = sensors.pressureAlt50Hz;
-
-    previousExecUp = execUp;
-
-	if (execUp == true)
-    {
-    	accelZ = -earthAxisAccels[ZAXIS] + eepromConfig.compFilterB * estimationError;
-
-        hDotEstimate += accelZ * dt;
-
-        hEstimate += (hDotEstimate + eepromConfig.compFilterA * estimationError) * dt;
-
-        estimationError = sensors.pressureAlt50Hz - hEstimate;
-    }
-}
+#pragma once
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#define NUMBER_OF_FIRST_ORDER_FILTERS 10
+
+#define ACCEL500HZ_X_LOWPASS 0
+#define ACCEL500HZ_Y_LOWPASS 1
+#define ACCEL500HZ_Z_LOWPASS 2
+
+#define ACCEL100HZ_X_LOWPASS 3
+#define ACCEL100HZ_Y_LOWPASS 4
+#define ACCEL100HZ_Z_LOWPASS 5
+
+#define PRESSURE_ALT_LOWPASS 6
+
+#define EARTH_AXIS_ACCEL_X_HIGHPASS 7
+#define EARTH_AXIS_ACCEL_Y_HIGHPASS 8
+#define EARTH_AXIS_ACCEL_Z_HIGHPASS 9
+
+///////////////////////////////////////////////////////////////////////////////
+
+typedef struct firstOrderFilterData {
+  float   gx1;
+  float   gx2;
+  float   gx3;
+  float   previousInput;
+  float   previousOutput;
+} firstOrderFilterData_t;
+
+firstOrderFilterData_t firstOrderFilters[NUMBER_OF_FIRST_ORDER_FILTERS];
+
+///////////////////////////////////////////////////////////////////////////////
+
+void initFirstOrderFilter();
+
+///////////////////////////////////////////////////////////////////////////////
+
+float firstOrderFilter(float input, struct firstOrderFilterData *filterParameters);
+
+///////////////////////////////////////////////////////////////////////////////
 
 
 

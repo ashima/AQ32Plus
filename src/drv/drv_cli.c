@@ -54,6 +54,18 @@ void cliListenerCB(evr_t e)
     cliPrintF("EVR:%08x %04x %04x\n", e.time, e.evr, e.reason);
   }
 
+enum { expandEvr = 1 };
+
+void cliListenerCB(evr_t e)
+{
+    if (expandEvr)
+        cliPrintF("EVR-%s %8.3fs %s (%04x)\n", evrToSeverityStr(e.evr), (float)e.time/1000., evrToStr(e.evr), e.reason);
+    else
+        cliPrintF("EVR:%08x %04x %04x\n", e.time, e.evr, e.reason);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 void cliInit(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
@@ -77,6 +89,7 @@ void cliInit(void)
 	GPIO_SetBits(USB_DISCONNECT_GPIO, USB_DISCONNECT_PIN);
 
 	USBD_Init(&USB_OTG_dev,	USB_OTG_FS_CORE_ID, &USR_desc, &USBD_CDC_cb, &USR_cb);
+
 	evrRegisterListener(cliListenerCB);
 }
 

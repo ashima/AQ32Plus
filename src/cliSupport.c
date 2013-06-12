@@ -971,6 +971,14 @@ void sensorCLI()
 
                 cliPrintF("Battery Voltage Divider:   %9.4f\n\n", eepromConfig.batteryVoltageDivider);
 
+                cliPrintF("MXR Accel Bias:            %9.4f, %9.4f, %9.4f\n",   eepromConfig.accelBiasMXR[XAXIS],
+				                                                		        eepromConfig.accelBiasMXR[YAXIS],
+				                                                		        eepromConfig.accelBiasMXR[ZAXIS]);
+				cliPrintF("MXR Accel Scale Factor:    %9.4f, %9.4f, %9.4f\n",   eepromConfig.accelScaleFactorMXR[XAXIS],
+								                                                eepromConfig.accelScaleFactorMXR[YAXIS],
+				                                                		        eepromConfig.accelScaleFactorMXR[ZAXIS]);
+
+
                 validQuery = false;
                 break;
 
@@ -987,6 +995,15 @@ void sensorCLI()
 
             case 'c': // Magnetometer Calibration
                 magCalibration(HMC5883L_I2C);
+
+                sensorQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'd': // Accel Bias and Scale Factor Calibration
+                accelCalibration();
 
                 sensorQuery = 'a';
                 validQuery = true;
@@ -1106,9 +1123,9 @@ void sensorCLI()
 			case '?':
 			   	cliPrint("\n");
 			   	cliPrint("'a' Display Sensor Data                    'A' Set MPU6000 DLPF                     A0 thru 3, see aq32Plus.h\n");
-			   	cliPrint("'b' MPU6000 Calibration                    'B' Set Accel Cutoff                     BAccelCutoff\n");
+			   	cliPrint("'b' MPU6000 Temp Calibration               'B' Set Accel Cutoff                     BAccelCutoff\n");
 			   	cliPrint("'c' Magnetometer Calibration               'C' Set kpAcc/kiAcc                      CkpAcc;kiAcc\n");
-			   	cliPrint("                                           'D' Set kpMag/kiMag                      DkpMag;kiMag\n");
+			   	cliPrint("'d' Accel Bias and SF Calibraiton          'D' Set kpMag/kiMag                      DkpMag;kiMag\n");
 			   	cliPrint("                                           'E' Set h dot est/h est Comp Filter A/B  EA;B\n");
 			   	cliPrint("                                           'M' Set Mag Variation (+ East, - West)   MMagVar\n");
 			   	cliPrint("                                           'V' Set Battery Voltage Divider          VbatVoltDivider\n");
@@ -1291,6 +1308,8 @@ int min(int a, int b)
     return a < b ? a : b;
 }
 
+///////////////////////////////////////
+
 int8_t parse_hex(char c)
 {
     if ('0' <= c && c <= '9')
@@ -1301,6 +1320,8 @@ int8_t parse_hex(char c)
         return c - 'A' + 0x0A;
     return -1;
 }
+
+///////////////////////////////////////
 
 void cliPrintEEPROM(eepromConfig_t *e)
 {
@@ -1313,7 +1334,7 @@ void cliPrintEEPROM(eepromConfig_t *e)
 
     if (e->CRCFlags & CRC_HistoryBad)
       evrPush(EVR_ConfigBadHistory, 0);
-    
+
     for (i = 0; i < ceil((float)len / line_length); i++)
     {
         for (j = 0; j < min(line_length, len - line_length * i); j++)
@@ -1324,6 +1345,8 @@ void cliPrintEEPROM(eepromConfig_t *e)
 
     e->CRCAtEnd[0] = old_crc;
 }
+
+///////////////////////////////////////
 
 void eepromCLI()
 {
@@ -1349,18 +1372,19 @@ void eepromCLI()
         {
             // 'a' is the standard "print all the information" character
             case 'a': // config struct data
-            	;
+                ;
                 uint32_t c1 = eepromConfig.CRCAtEnd[0],
                          c2 = crc32bEEPROM(&eepromConfig, false);
-                cliPrintF("Config structure infomation:\n");
-                cliPrintF("Version : %d\n", eepromConfig.version );
-                cliPrintF("Size : %d\n", sizeof(eepromConfig) );
+
+                cliPrintF("Config structure information:\n");
+                cliPrintF("Version          : %d\n", eepromConfig.version );
+                cliPrintF("Size             : %d\n", sizeof(eepromConfig) );
                 cliPrintF("CRC on last read : %08x\n", c1 );
                 cliPrintF("Current CRC      : %08x\n", c2 );
                 if ( c1 != c2 )
-                  cliPrintF("  CRCs differ. Current Config has not yet been saved.\n");
-                cliPrintF("CRC Flags :\n ");
-                cliPrintF("  History Bad : %s\n", eepromConfig.CRCFlags & CRC_HistoryBad ? "true" : "false" );
+                    cliPrintF("  CRCs differ. Current Config has not yet been saved.\n");
+                cliPrintF("CRC Flags :\n");
+                cliPrintF("  History Bad    : %s\n", eepromConfig.CRCFlags & CRC_HistoryBad ? "true" : "false" );
                 validQuery = false;
                 break;
 
@@ -1410,7 +1434,7 @@ void eepromCLI()
                     sz, sz, sz * 2);
                 cliPrintF("hexadecimal characters, optionally separated by [ \\n\\r_].\n");
                 cliPrintF("Times out if no character is received for %dms\n", Timeout);
-                
+
                 memset(p, 0, end - p);
 
                 while (p < end)
@@ -1437,11 +1461,11 @@ void eepromCLI()
                 if (c == 0)
                 {
                     cliPrintF("Did not receive enough hex chars! (got %d, expected %d)\n",
-                        (p - (uint8_t*)&e) * 2 + second_nibble, sz * 2);                    
+                        (p - (uint8_t*)&e) * 2 + second_nibble, sz * 2);
                 }
                 else if (p < end || second_nibble)
                 {
-                    cliPrintF("Invalid character found at position %d: '%c' (0x%02x)", 
+                    cliPrintF("Invalid character found at position %d: '%c' (0x%02x)",
                         chars_encountered, c, c);
                 }
                 else if (crcCheckVal != crc32bEEPROM(&e, true))
@@ -1452,11 +1476,11 @@ void eepromCLI()
                 }
                 else
                 {
-                    // check to see if the newly received eeprom config 
+                    // check to see if the newly received eeprom config
                     // actually differs from what's in-memory
                     zeroPIDintegralError();
                     zeroPIDstates();
-                    
+
                     int i;
                     for (i = 0; i < sz; i++)
                         if (((uint8_t*)&e)[i] != ((uint8_t*)&eepromConfig)[i])
@@ -1475,7 +1499,7 @@ void eepromCLI()
 
                 }
 
-                // eat the next 100ms (or whatever Timeout is) of characters, 
+                // eat the next 100ms (or whatever Timeout is) of characters,
                 // in case the person pasted too much by mistake or something
                 t = millis();
                 while (millis() - t < Timeout)
@@ -1516,9 +1540,12 @@ void eepromCLI()
                 break;
 
             ///////////////////////////
+
             case 'F': // Read in from sdCard FILE. (FILE -> RAM)
                 validQuery = false;
                 break;
+
+            ///////////////////////////
 
             case 'V': // Reset EEPROM Parameters
                 cliPrint( "\nEEPROM Parameters Reset....(not rebooting)\n" );
@@ -1540,7 +1567,8 @@ void eepromCLI()
                 cliPrintF("                                          'H' Clear CRC Bad History flag\n");
                 cliPrintF("                                          'V' Reset in-RAM config to default.\n");
                 cliPrintF("'x' Exit EEPROM CLI                       '?' Command Summary\n");
-                cliPrintF("\nFor compatability : 'W' Write in-RAM -> EEPROM\n");
+                cliPrintF("\n");
+                cliPrintF("For compatability:                        'W' Write in-RAM -> EEPROM\n");
                 cliPrintF("\n");
                 break;
 
