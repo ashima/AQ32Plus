@@ -231,19 +231,6 @@ void TIM1_CC_IRQHandler(void)
 //  Spektrum Satellite Receiver UART Interrupt Handler
 ///////////////////////////////////////////////////////////////////////////////
 extern semaphore_t armed;
-void rxFrameLost()
-{ 
-  // Maybe do something more interesting like auto-descent or hover-hold.
-  armed = false;
-  evrPush(EVR_RxFrameLost,0);
-}
-
-void rxFrameReset()
-{
-  spektrumFramePosition = 0;
-}
-uint32_t frameReset;
-uint32_t frameLost;
 
 void rxFrameLost()
 {

@@ -5,19 +5,24 @@ LIBS=../Libraries
 STDPERIPH=$(LIBS)/STM32F4xx_StdPeriph_Driver
 STDUSB=$(LIBS)/STM32_USB_Device_Library
 STDOTG=$(LIBS)/STM32_USB_OTG_Driver
+CMSIS=$(LIBS)/CMSIS
 
 CFLAGS= -O3 -fsigned-char -mthumb -mthumb-interwork -mcpu=cortex-m4 \
         -Wl,--gc-sections -ffunction-sections -fdata-sections -Wall
 
-INCDIRS=$(LIBS)/CMSIS/Include \
-     $(LIBS)/CMSIS/Device/ST/STM32F4xx/Include \
+INCDIRS=$(CMSIS)/Include \
+     $(CMSIS)/Device/ST/STM32F4xx/Include \
      $(STDUSB)/Core/inc \
      $(wildcard $(STDUSB)/Class/*/inc/) \
      $(STDOTG)/inc \
      $(STDPERIPH)/inc \
+     $(LIBS)/fat_fs/ \
      vcp drv sensors calibration gps max7456 .
      
-DEFS=-DUSE_USB_OTG_FS -DUSE_STDPERIPH_DRIVER -DSTM32F40XX -DHSE_VALUE=20000000
+DEFS=-DUSE_USB_OTG_FS -DUSE_STDPERIPH_DRIVER -DSTM32F40XX \
+     -DARM_MATH_CM4 -DSTM32F407VG \
+     -DHSE_VALUE=20000000
+
 #DEFS+=-DASHIMACORE -DNOSPI -DNOGPS
 
 INCS=$(patsubst %, -I %,$(INCDIRS))
@@ -25,7 +30,7 @@ USBSRC= cdc/src/usbd_cdc_core.c
 DRVSRC=drv_adc.c drv_cli.c drv_i2c.c drv_led.c drv_spi.c \
 	drv_pwmEsc.c drv_pwmServo.c drv_rx.c drv_system.c \
 	drv_telemetry.c drv_timingFunctions.c \
-	drv_crc.c
+	drv_crc.c drv_sdCard.c
 GPSSRC=drv/drv_gps.c $(wildcard gps/*.c)
 SENSRC=hmc5883.c ms5611_I2C.c mpu6000.c
 OSDSRC=drv/drv_max7456.c $(wildcard max7456/*.c)
@@ -41,6 +46,9 @@ SRCS=$(wildcard *.c) \
      $(wildcard $(STDUSB)/Core/src/*.c) \
      $(patsubst %, $(STDUSB)/Class/%, $(USBSRC) ) \
      $(wildcard $(STDPERIPH)/src/*.c)\
+     $(LIBS)/fat_fs/ff.c \
+     $(CMSIS)/DSP_Lib/Source/MatrixFunctions/arm_mat_init_f32.c \
+     $(CMSIS)/DSP_Lib/Source/MatrixFunctions/arm_mat_mult_f32.c \
      $(GPSSRC) $(OSDSRC) 
 
 
