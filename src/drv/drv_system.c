@@ -172,20 +172,23 @@ void SysTick_Handler(void)
                 accelSum100Hz[index] = 0.0f;
             }
 
-            // if (frameCounter == COUNT_100HZ)
-            // {
-            //     readTemperatureRequestPressure(MS5611_I2C);
-            // }
-            // else if (frameCounter == FRAME_COUNT)
-            // {
-            //     readPressureRequestTemperature(MS5611_I2C);
-            // }
-            // else
-            // {
-            //     readPressureRequestPressure(MS5611_I2C);
-            // }
+            if ((frameCounter % COUNT_10HZ) == 0)
+            {
+                if (frameCounter == COUNT_10HZ)
+                {
+                    readTemperatureRequestPressure(I2C2);
+                }
+                else if (frameCounter == FRAME_COUNT)
+                {
+                    readPressureRequestTemperature(I2C2);
+                }
+                else
+                {
+                    readPressureRequestPressure(I2C2);
+                }
 
-            d1Sum += d1.value;
+                d1Sum += d1.value;
+            }
         }
 
         ///////////////////////////////
@@ -313,7 +316,7 @@ void systemInit(void)
 
     initMPU6000();
     // initMag(HMC5883L_I2C);
-    // initPressure(MS5611_I2C);
+    initPressure(I2C2);
 #ifdef HAVEOSD
     initMax7456();
 #endif

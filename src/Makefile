@@ -27,7 +27,7 @@ DRVSRC=drv_adc.c drv_cli.c drv_i2c.c drv_led.c \
 	drv_telemetry.c drv_timingFunctions.c \
 	drv_crc.c
 GPSSRC=drv/drv_gps.c $(wildcard gps/*.c)
-SENSRC=hmc5883.c ms5611_I2C.c mpu6000_I2C.c
+SENSRC=hmc5883.c bmp085.c mpu6000_I2C.c
 OSDSRC=$(wildcard max7456/*.c)
 
 SRCS=$(wildcard *.c) \

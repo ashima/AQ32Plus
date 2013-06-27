@@ -110,7 +110,7 @@
 
 #include "hmc5883.h"
 #include "mpu6000_I2C.h"
-#include "ms5611_I2C.h"
+#include "bmp085.h"
 
 #include "cli.h"
 #include "cliSupport.h"
