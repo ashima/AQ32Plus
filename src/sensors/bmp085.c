@@ -121,17 +121,17 @@ void initPressure(I2C_TypeDef *I2Cx)
   //i2cWrite(I2Cx, BMP085_I2C_ADDRESS, );
   //Wire.requestFrom(BMP085_I2C_ADDRESS, 22);
   uint8_t addr = 0xAA/2 - 1;
-  ac1 = readShortI2C(I2Cx, addr++ * 2);
-  ac2 = readShortI2C(I2Cx, addr++ * 2);
-  ac3 = readShortI2C(I2Cx, addr++ * 2);
-  ac4 = readWordI2C(I2Cx, addr++ * 2);
-  ac5 = readWordI2C(I2Cx, addr++ * 2);
-  ac6 = readWordI2C(I2Cx, addr++ * 2);
-  b1 = readShortI2C(I2Cx, addr++ * 2);
-  b2 = readShortI2C(I2Cx, addr++ * 2);
-  mb = readShortI2C(I2Cx, addr++ * 2);
-  mc = readShortI2C(I2Cx, addr++ * 2);
-  md = readShortI2C(I2Cx, addr++ * 2);
+  ac1 = readShortI2C(I2Cx, ++addr * 2);
+  ac2 = readShortI2C(I2Cx, ++addr * 2);
+  ac3 = readShortI2C(I2Cx, ++addr * 2);
+  ac4 = readWordI2C(I2Cx, ++addr * 2);
+  ac5 = readWordI2C(I2Cx, ++addr * 2);
+  ac6 = readWordI2C(I2Cx, ++addr * 2);
+  b1 = readShortI2C(I2Cx, ++addr * 2);
+  b2 = readShortI2C(I2Cx, ++addr * 2);
+  mb = readShortI2C(I2Cx, ++addr * 2);
+  mc = readShortI2C(I2Cx, ++addr * 2);
+  md = readShortI2C(I2Cx, ++addr * 2);
   // requestRawTemperature(); // setup up next measure() for temperature
   // measureBaro();
   // delay(5); // delay for temperature
