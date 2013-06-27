@@ -132,6 +132,12 @@ void initPressure(I2C_TypeDef *I2Cx)
   mb = readShortI2C(I2Cx, ++addr * 2);
   mc = readShortI2C(I2Cx, ++addr * 2);
   md = readShortI2C(I2Cx, ++addr * 2);
+
+  cliPrintF("BMP085 config values: %d %d %d %d %d %d %d %d %d %d %d %d\n", 
+    ac1, ac2, ac3, ac4, ac5, ac6,
+    b1, b2,
+    mb, mc, md,
+    overSamplingSetting);
   // requestRawTemperature(); // setup up next measure() for temperature
   // measureBaro();
   // delay(5); // delay for temperature
