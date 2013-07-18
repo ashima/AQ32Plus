@@ -154,16 +154,20 @@ void processFlightCommands(void)
 		}
 
 		// Check for arm command ( low throttle, right yaw)
-		if ((rxCommand[YAW] > (eepromConfig.maxCheck - MIDCOMMAND) ) && (armed == false) && (execUp == true))
+		if ((rxCommand[YAW] > (eepromConfig.maxCheck - MIDCOMMAND) ) && (execUp == true))
 		{
-			armingTimer++;
+			zeroPIDintegralError();
+			zeroPIDstates();
 
-			if (armingTimer > eepromConfig.armCount)
+			if (armed == false)
 			{
-				zeroPIDintegralError();
-				zeroPIDstates();
-				armed = true;
-				armingTimer = 0;
+				armingTimer++;
+
+				if (armingTimer > eepromConfig.armCount)
+				{
+					armed = true;
+					armingTimer = 0;
+				}
 			}
 		}
 		else
