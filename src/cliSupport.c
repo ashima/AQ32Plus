@@ -863,6 +863,45 @@ void receiverCLI()
 
             ///////////////////////////
 
+            case 'T': // motor testing
+                cliPrint("\nTesting motors. Attempting to read which motor to command (defaults to 0).\n");
+                uint8_t m = (uint8_t)readFloatCLI();
+                enum { MinRec = 2000, MaxRec = 4000 };//, MinMot = 2100, MaxMot = 2400 };
+                uint16_t MinMot = eepromConfig.minThrottle, MaxMot = eepromConfig.maxThrottle;
+                cliPrintF("Reading receiver values from %d - %d, translating to motor commands %d - %d\n",
+                	MinRec, MaxRec, MinMot, MaxMot);
+                uint8_t counter = 0;
+                while (!cliAvailable())
+                {
+                	uint32_t throttle = rxRead(eepromConfig.rcMap[THROTTLE]);
+                	int16_t yaw = rxRead(eepromConfig.rcMap[YAW]) - eepromConfig.midCommand;
+
+                	if (throttle < MinRec || MaxRec < throttle)
+                	{
+                		cliPrintF("Throttle not between min and max (curr val: %d)\n", throttle);
+                		continue;
+                	}
+                	if (yaw < -250 || 250 < yaw)
+                	{
+                		cliPrintF("Yaw is out of bounds (%d); exiting test.\n", yaw);
+                		break;
+                	}
+                	uint32_t scaled = (throttle - MinRec) / (float)(MaxRec - MinRec) * (MaxMot - MinMot) + MinMot;
+
+                	if ((counter++ % 16) == 0)
+                		cliPrintF("setting motor %d to %d (raw throttle: %d)\n", m, scaled, throttle);
+
+                	motor[m] = scaled;
+                	writeMotors();
+                	delay(4);
+                }
+                motor[m] = (float)MINCOMMAND;
+                writeMotors();
+                validQuery = false;
+                break;
+
+            ///////////////////////////
+
             case 'W': // Write EEPROM Parameters
                 cliPrint("\nWriting EEPROM Parameters....\n\n");
                 writeEEPROM();
