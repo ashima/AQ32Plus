@@ -400,10 +400,12 @@ void cliCom(void)
         ///////////////////////////////
 
         case 'p': // Not Used
-        	cliPrintF("%1.3f %1.3f %1.3f  %1.0f %1.0f %1.0f %1.0f  %1.0f %1.0f %1.0f %1.0f  %1.2f %1.2f %1.2f\n",
-        		sensors.attitude500Hz[ROLL], sensors.attitude500Hz[PITCH], sensors.attitude500Hz[YAW],
+        	;uint32_t mot_avg = (motor[0] + motor[1] + motor[2] + motor[3]) / 4;
+        	cliPrintF("%1.4f %1.4f %1.4f %1.4f  %1.0f %1.0f %1.0f %1.0f  %1d  %1.0f %1.0f %1.0f %1.0f  %1.2f %1.2f %1.2f\n",
+        		q0, q1, q2, q3, 
         		rxCommand[ROLL], rxCommand[PITCH], rxCommand[YAW], rxCommand[THROTTLE], 
-        		motor[0], motor[1], motor[2], motor[3],
+        		mot_avg,
+        		motor[0]-mot_avg, motor[1]-mot_avg, motor[2]-mot_avg, motor[3]-mot_avg,
         		eepromConfig.PID[ROLL_RATE_PID].iTerm, eepromConfig.PID[PITCH_RATE_PID].iTerm, eepromConfig.PID[YAW_RATE_PID].iTerm);
         	validCliCommand = false;
         	break;
