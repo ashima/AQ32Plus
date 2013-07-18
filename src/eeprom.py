@@ -22,10 +22,10 @@ parser.add_argument('--port', nargs='?',
 	help="serial port name for uploading/downloading")
 parser.add_argument('--baud', type=int, default=115200,
 	help="baud rate for serial port")
-parser.add_argument('-d', nargs='?', dest='download', type=argparse.FileType('wb'),
+parser.add_argument('-c', nargs='?', dest='download', type=argparse.FileType('wb'),
 	help="download eeprom config to file (see 'd' command in EEPROM CLI)")
-parser.add_argument('-D', nargs='?', dest='upload', type=argparse.FileType('rb'),
-	help="upload file to in-memory eeprom config (see 'D' command in EEPROM CLI)")
+parser.add_argument('-C', nargs='?', dest='upload', type=argparse.FileType('rb'),
+	help="upload file to in-memory eeprom config (see 'C' command in EEPROM CLI)")
 parser.add_argument('-q', action='store_true', dest='quiet',
 	help="output no text, just return 0 for success and nonzero otherwise")
 parser.add_argument('-v', action='store_true', dest='verbose',
@@ -77,7 +77,6 @@ if args.input:
 			print('%08x <-- CRC32B from recomputation' % computed_crc32b, file=sys.stderr)
 		exit(1)
 
-
 if args.port and (args.upload or args.download):
 	try:
 		ser = None # otherwise we get NameError in the finally statement if the port is invalid
@@ -119,7 +118,7 @@ if args.port and (args.upload or args.download):
 			error_and_exit(error)
 
 		if args.download:
-			write_ser('d') # EEPROM CLI command: dump in-memory eeprom contents
+			write_ser('c') # EEPROM CLI command: dump in-memory eeprom contents
 			by = ser_read_with_timeout(10000, 0.300)
 			if len(by) > 0:
 				if args.verbose:
@@ -148,7 +147,7 @@ if args.port and (args.upload or args.download):
 			if crc32b != computed_crc32b:
 				error_and_exit("CRC mismatch!")
 
-			write_ser('D') # EEPROM CLI command: upload eeprom as hexadecimal
+			write_ser('C') # EEPROM CLI command: upload eeprom as hexadecimal
 
 			# four lines are sent if the 'D' command were processed properly
 			t = time.time()
