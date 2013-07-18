@@ -154,7 +154,7 @@
 /* PLL_VCO = (HSE_VALUE or HSI_VALUE / PLL_M) * PLL_N */
 // AKA #define PLL_M      25
 #ifdef ASHIMACORE
-#define PLL_M      20
+#define PLL_M      16
 #else
 #define PLL_M      8
 #endif
