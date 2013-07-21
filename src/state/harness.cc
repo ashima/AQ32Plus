@@ -11,7 +11,7 @@
 
 #include "filter.h"
 
-float_tt filter[ 32 ] ;
+float_tt filter[ 64 ] ;
 
 typedef filter_t<float_tt,ns,no> f_t;
 
