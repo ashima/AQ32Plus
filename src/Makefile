@@ -54,7 +54,7 @@ all:
 	@echo '  env TARGET=<target> make <target>.elf'
 
 $(TARGET).elf: $(OBJS)
-	$(ARMCCC) $(CFLAGS) -T $(LINKFILE) \
+	$(ARMCC) $(CFLAGS) -T $(LINKFILE) \
 	-o $@ $^  -Wl,--print-map > $(TARGET).mapfile
 
 %.o: %.S

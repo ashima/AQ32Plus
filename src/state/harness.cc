@@ -11,12 +11,14 @@
 
 #include "filter.h"
 
-filter_t<float_tt,ns,no> filter;
+float_tt filter[ 32 ] ;
+
+typedef filter_t<float_tt,ns,no> f_t;
 
 void hsf_init(float dt)
   {
   filterSetParams();
-  filterInit(filter, dt);
+  filterInit(*(f_t*)filter, dt);
   }
 
 extern long rawPressure;
@@ -24,11 +26,11 @@ extern long rawTemperature;
 
 void hsf_step()
   {
-  filterStep(filter,rawTemperature,rawPressure);
+  filterStep(*(f_t*)filter,rawTemperature,rawPressure);
   }
 
 float *hsf_getState()
   {
-  return &(filter.x(0,0));
+  return &( (*(f_t*)(filter)).x(0,0));
   }
 
