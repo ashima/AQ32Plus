@@ -91,6 +91,11 @@ caddr_t _sbrk(int incr)
     return (caddr_t) prev_heap_end;
 }
 
+int _kill (int p, int s)              { return 0;}
+int _getpid()                         { return 0;}
+void _exit(int x)                     { while(1){} } 
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //  Least Squares Fit a Sphere to 3D Data
 ////////////////////////////////////////////////////////////////////////////////

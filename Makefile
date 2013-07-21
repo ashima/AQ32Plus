@@ -4,6 +4,7 @@ export SRC=src
 export BUILD=build
 
 export ARMCC=arm-none-eabi-gcc
+export ARMCCC=arm-none-eabi-g++
 export ARMAR=arm-none-eabi-ar
 export ARMOBJCOPY=arm-none-eabi-objcopy
 export ARMOBJDUMP=arm-none-eabi-objdump

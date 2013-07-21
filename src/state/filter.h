@@ -10,13 +10,8 @@
 #ifndef H_FILTER_H
 #define H_FILTER_H
 #pragma once
-
+#include <inttypes.h>
 #include "matDumb.h"
-
-struct bmp_params_t {
- int32_t ac1, ac2, ac3, ac4, ac5, ac6, b1, b2, mb, mc, md, oss ;
- } ;
-
 
 template<typename T,int NS, int NO>
 struct filter_t
@@ -31,12 +26,12 @@ struct filter_t
   filter_t() : x(0.) , P(0.), F(0.), dF(0.), Q(0.), R(0.) {}
   };
 
-typedef double float_tt ;
+typedef float float_tt ;
 enum { ns = 4, no = 2};
 
-void filter_step( filter_t<float_tt,ns,no> &f, uint32_t theta, uint32_t phi);
+void filterStep( filter_t<float_tt,ns,no> &f, uint32_t theta, uint32_t phi);
 void filterInit(filter_t<float_tt,ns,no> &f , float_tt dt);
-void set_params(bmp_params_t &x);
+void filterSetParams() ; //bmp_params_t &x);
 
 
 

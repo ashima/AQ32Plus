@@ -9,7 +9,6 @@
 
 #include <inttypes.h>
 #include <string>
-#include <iostream>
 #include <math.h>
 using namespace std;
 
@@ -18,19 +17,25 @@ using namespace std;
 #include "state_constants.h"
 #include "model_eqs.c"
 
-void set_params(bmp_params_t &x)
+extern uint8_t overSamplingSetting;
+extern int ac1 , ac2 , ac3;
+extern unsigned int ac4 , ac5 , ac6 ;
+extern int b1 , b2 , mb , mc , md ;
+
+
+void filterSetParams()  //bmp_params_t &x)
  {
- c3  = 160.0 * EX(15) * (float_tt) x.ac3 ;
- c4  = 0.001 * EX(15) * (float_tt) x.ac4  ;
- b1_ = 160. * 160. * EX(30) * (float_tt) x.b1 ;
- c5  = (float_tt) x.ac5 * EX(15) / 160.0  ;
- c6  = (float_tt) x.ac6 ;
- mc_ = (float_tt) x.mc * (float_tt)(1<<11) / (160. * 160.) ;
- md_ = (float_tt) x.md / 160. ;
- ps  = 1.0 / (float_tt (1 << x.oss) ) ;
- x0 = (float_tt) x.ac1 ;
- x1 = (float_tt) x.ac2 * 160.0 * EX(13) ;
- x2 = (float_tt) x.b2  * 160.0 * 160. * EX(25) ;
+ c3  = 160.0 * EX(15) * (float_tt) ac3 ;
+ c4  = 0.001 * EX(15) * (float_tt) ac4  ;
+ b1_ = 160. * 160. * EX(30) * (float_tt) b1 ;
+ c5  = (float_tt) ac5 * EX(15) / 160.0  ;
+ c6  = (float_tt) ac6 ;
+ mc_ = (float_tt) mc * (float_tt)(1<<11) / (160. * 160.) ;
+ md_ = (float_tt) md / 160. ;
+ ps  = 1.0 / (float_tt (1 << overSamplingSetting) ) ;
+ x0 = (float_tt) ac1 ;
+ x1 = (float_tt) ac2 * 160.0 * EX(13) ;
+ x2 = (float_tt) b2  * 160.0 * 160. * EX(25) ;
  y0_ = c4 * (float_tt)(1<<15) ;
  y1_ = c4 * c3 ;
  y2 = c4 * b1_ ;
@@ -140,7 +145,7 @@ void filterInit(filter_t<float_tt,ns,no> &f , float_tt dt)
   make_QR(f.Q,f.R, 0.1, 28.0, 33.0, 1.0, dt);
   }
 
-void filter_step( filter_t<float_tt,ns,no> &f, uint32_t theta, uint32_t phi)
+void filterStep( filter_t<float_tt,ns,no> &f, uint32_t theta, uint32_t phi)
   {
   matrix<float_tt,no,1>  y;
   matrix<float_tt,no,ns> h;

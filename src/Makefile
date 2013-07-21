@@ -15,7 +15,7 @@ INCDIRS=$(LIBS)/CMSIS/Include \
      $(wildcard $(STDUSB)/Class/*/inc/) \
      $(STDOTG)/inc \
      $(STDPERIPH)/inc \
-     vcp drv sensors calibration gps max7456 .
+     vcp drv sensors calibration gps max7456 state .
      
 DEFS=-DUSE_USB_OTG_FS -DUSE_STDPERIPH_DRIVER -DSTM32F40XX -DHSE_VALUE=16000000
 DEFS+=-DASHIMACORE -DNOGPS -DNOSPI
@@ -40,9 +40,12 @@ SRCS=$(wildcard *.c) \
      $(STDOTG)/src/usb_dcd.c \
      $(wildcard $(STDUSB)/Core/src/*.c) \
      $(patsubst %, $(STDUSB)/Class/%, $(USBSRC) ) \
-     $(wildcard $(STDPERIPH)/src/*.c)
+     $(wildcard $(STDPERIPH)/src/*.c)\
+     state/harness.c
 
-OBJS=$(SRCS:.c=.o) startup/startup_stm32f40xx.o
+CCSRCS=$(wildcard state/*.cc)
+
+OBJS=$(CCSRCS:.cc=.o) $(SRCS:.c=.o) startup/startup_stm32f40xx.o
 LINKFILE=../stm32_flash.ld
 
 all:
@@ -51,7 +54,7 @@ all:
 	@echo '  env TARGET=<target> make <target>.elf'
 
 $(TARGET).elf: $(OBJS)
-	$(ARMCC) $(CFLAGS) -T $(LINKFILE) \
+	$(ARMCCC) $(CFLAGS) -T $(LINKFILE) \
 	-o $@ $^  -Wl,--print-map > $(TARGET).mapfile
 
 %.o: %.S
@@ -60,8 +63,14 @@ $(TARGET).elf: $(OBJS)
 %.o: %.c
 	$(ARMCC) $(CFLAGS) $(DEFS) $(CMSISINC) $(INCS) -o $@ -c $^
 
+%.o: %.cc
+	$(ARMCCC) $(CFLAGS) $(DEFS) $(CMSISINC) $(INCS) -o $@ -c $^
+
 %.s: %.c
 	$(ARMCC) $(CFLAGS) $(DEFS) $(CMSISINC) $(INCS) -o $@ -S $^
+
+%.s: %.cc
+	$(ARMCCC) $(CFLAGS) $(DEFS) $(CMSISINC) $(INCS) -o $@ -S $^
 
 .PHONY: clean 
 

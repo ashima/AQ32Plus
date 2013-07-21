@@ -37,6 +37,7 @@
 #include "board.h"
 #include "evr.h"
 #include "batMon.h"
+#include "harness.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -132,6 +133,7 @@ int main(void)
         	d1Sum = 0;
         	calculateTemperature();
         	calculatePressureAltitude();
+                hsf_step();
 
         	pressureAltValid = true;
 #ifndef NOGPS
@@ -334,13 +336,15 @@ int main(void)
         {
             if ( highSpeedTelem6Enabled == true )
             {
+            float *st = hsf_getState();
                 ;uint32_t mot_avg = (motor[0] + motor[1] + motor[2] + motor[3]) / 4;
-                telemetryPrintF("%1.4f %1.4f %1.4f %1.4f  %1.0f %1.0f %1.0f %1.0f  %1d  %1.0f %1.0f %1.0f %1.0f  %1.2f %1.2f %1.2f\n",
+                telemetryPrintF("%1.4f %1.4f %1.4f %1.4f  %1.0f %1.0f %1.0f %1.0f  %1d  %1.0f %1.0f %1.0f %1.0f  %1.2f %1.2f %1.2f %f %f %f %f\n",
                     q0, q1, q2, q3, 
                     rxCommand[ROLL], rxCommand[PITCH], rxCommand[YAW], rxCommand[THROTTLE], 
                     mot_avg,
                     motor[0]-mot_avg, motor[1]-mot_avg, motor[2]-mot_avg, motor[3]-mot_avg,
-                    eepromConfig.PID[ROLL_RATE_PID].iTerm, eepromConfig.PID[PITCH_RATE_PID].iTerm, eepromConfig.PID[YAW_RATE_PID].iTerm);
+                    eepromConfig.PID[ROLL_RATE_PID].iTerm, eepromConfig.PID[PITCH_RATE_PID].iTerm, eepromConfig.PID[YAW_RATE_PID].iTerm,
+                    st[0], st[1],st[2],st[3] );
             }
         }
 

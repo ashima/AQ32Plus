@@ -23,13 +23,13 @@ class matrix
 public:
   T &operator()(uint i, uint j)
     {
-    assert( i < N && j < M );
+   // assert( i < N && j < M );
     return this->data[i][j];
     }
 
   const T &operator()(uint i, uint j) const
     {
-    assert( i < N && j < M );
+  //  assert( i < N && j < M );
     return this->data[i][j];
     }
 
