@@ -40,8 +40,7 @@ SRCS=$(wildcard *.c) \
      $(STDOTG)/src/usb_dcd.c \
      $(wildcard $(STDUSB)/Core/src/*.c) \
      $(patsubst %, $(STDUSB)/Class/%, $(USBSRC) ) \
-     $(wildcard $(STDPERIPH)/src/*.c)\
-     state/harness.c
+     $(wildcard $(STDPERIPH)/src/*.c)
 
 CCSRCS=$(wildcard state/*.cc)
 

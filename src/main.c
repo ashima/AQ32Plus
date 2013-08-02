@@ -133,7 +133,14 @@ int main(void)
         	d1Sum = 0;
         	calculateTemperature();
         	calculatePressureAltitude();
-                hsf_step();
+                hsf_step_tp();
+#if 0
+extern long rawPressure, rawTemperature ;
+
+                float *st = hsf_getState();
+                cliPrintF( "%d %d %f %f %f %f\n", rawTemperature, 
+                      rawPressure, st[0], st[1], st[2], st[3] );
+#endif
 
         	pressureAltValid = true;
 #ifndef NOGPS

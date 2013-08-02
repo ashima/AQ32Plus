@@ -11,26 +11,26 @@
 
 #include "filter.h"
 
-float_tt filter[ 64 ] ;
+typedef filter_t<float_tt,ns,no> F;
 
-typedef filter_t<float_tt,ns,no> f_t;
+float_tt filter[ sizeof(F)/sizeof(float_tt) ] ;
+//float_tt filter[ 128 ] ;
 
-void hsf_init(float dt)
+void hsf_init()
   {
   filterSetParams();
-  filterInit(*(f_t*)filter, dt);
+  filterInit(*(F*)filter,0.001/*just a default*/);
   }
 
 extern long rawPressure;
 extern long rawTemperature;
 
-void hsf_step()
-  {
-  filterStep(*(f_t*)filter,rawTemperature,rawPressure);
-  }
+void hsf_step_tp() { filter_step_tp(*(F*)filter, rawTemperature, rawPressure); }
+void hsf_step_t()  { filter_step_t (*(F*)filter, rawTemperature); }
+void hsf_step_p()  { filter_step_p (*(F*)filter, rawPressure); }
 
 float *hsf_getState()
   {
-  return &( (*(f_t*)(filter)).x(0,0));
+  return &( (*(F*)(filter)).x(0,0));
   }
 
