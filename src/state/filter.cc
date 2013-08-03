@@ -77,11 +77,11 @@ matrix<T,NS,NS> &Q )
   }
 
 extern "C" uint32_t micros();
+extern uint32_t lt;
 
 template<typename T, uint NS, uint NO>
 void filterFwd(filter_t<T,NS,NO> &f, matrix<T,NS,NS> &Q)
   {
-  static uint32_t lt = 0;
   uint32_t now = micros();
   float_tt dt;
 

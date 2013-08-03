@@ -14,6 +14,8 @@
 typedef filter_t<float_tt,ns,no> F;
 
 float_tt filter[ sizeof(F)/sizeof(float_tt) ] ;
+uint32_t lt;
+
 //float_tt filter[ 128 ] ;
 
 void hsf_init()
