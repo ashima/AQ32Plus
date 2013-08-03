@@ -271,6 +271,16 @@ extern long rawPressure, rawTemperature ;
         {
         	frame_100Hz = false;
 
+            if ( 0 ==  frameCounter % COUNT_10HZ ) {
+              hsf_step_p();
+              }
+            else if ( 1 == frameCounter % COUNT_10HZ ) {
+              hsf_step_t();
+              }
+            else {
+              hsf_step_p();
+              }
+
         	currentTime       = micros();
 			deltaTime100Hz    = currentTime - previous100HzTime;
 			previous100HzTime = currentTime;
@@ -330,10 +340,13 @@ extern long rawPressure, rawTemperature ;
             if ( highSpeedTelem7Enabled == true )
             {
                	// Vertical Variables
-            	telemetryPrintF("%9.4f, %9.4f, %9.4f, %9.4f\n", earthAxisAccels[ZAXIS],
+                float *st = hsf_getState();
+           /* 	telemetryPrintF("%9.4f, %9.4f, %9.4f, %9.4f\n", earthAxisAccels[ZAXIS],
             			                                        sensors.pressureAlt10Hz,
             			                                        hDotEstimate,
-            			                                        hEstimate);
+            			                                        hEstimate); */
+            	telemetryPrintF("%f %f %f %f %f\n", 
+                    st[0],st[1],st[2],st[3] );
             }
 
             executionTime100Hz = micros() - currentTime;

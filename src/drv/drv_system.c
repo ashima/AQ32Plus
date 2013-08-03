@@ -173,8 +173,20 @@ void SysTick_Handler(void)
                 accelSum100Hz[index] = 0.0f;
             }
 
+            if ( 0 ==  frameCounter % COUNT_10HZ ) {
+              readPressureRequestTemperature(I2C2);
+              }
+            else if ( 1 == frameCounter % COUNT_10HZ ) {
+              readTemperatureRequestPressure(I2C2);
+              }
+            else {
+              readPressureRequestPressure(I2C2);
+              }
+ 
+
             if ((frameCounter % (COUNT_10HZ/2)) == 0)
             {
+#if 0
                 if ((frameCounter % COUNT_10HZ) == 0)
                     readTemperatureRequestPressure(I2C2);
                 else
@@ -192,7 +204,7 @@ void SysTick_Handler(void)
                 // {
                 //     readPressureRequestPressure(I2C2);
                 // }
-
+#endif
                 d1Sum += d1.value;
             }
         }
