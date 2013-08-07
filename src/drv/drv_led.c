@@ -67,6 +67,18 @@ void ledInit(void)
 
 	GPIO_Init(GPIOD, &GPIO_InitStructure);
 #endif
+#ifdef GPIOB_LEDS
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+
+	GPIO_InitStructure.GPIO_Pin   = GPIOB_LEDS;
+	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  //GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+#endif
+        RED_LED_ON;
 	BLUE_LED_OFF;
 	GREEN_LED_OFF;
 

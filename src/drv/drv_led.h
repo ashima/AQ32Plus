@@ -40,12 +40,16 @@
 // LED Defines
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef ASHIMACORE
-#define BLUE_LED_GPIO    GPIOE
-#define BLUE_LED_PIN     GPIO_Pin_0
+#define RED_LED_GPIO     GPIOE
+#define RED_LED_PIN      GPIO_Pin_1
 #define GREEN_LED_GPIO   GPIOE
-#define GREEN_LED_PIN    GPIO_Pin_1
+#define GREEN_LED_PIN    GPIO_Pin_0
 
-#define GPIOE_LEDS BLUE_LED_PIN | GREEN_LED_PIN
+#define BLUE_LED_GPIO    GPIOB
+#define BLUE_LED_PIN     GPIO_Pin_9
+
+#define GPIOE_LEDS RED_LED_PIN | GREEN_LED_PIN
+#define GPIOB_LEDS BLUE_LED_PIN
 #else
 #define BLUE_LED_GPIO    GPIOE
 #define BLUE_LED_PIN     GPIO_Pin_5
@@ -64,6 +68,16 @@
 #define GPIOD_LEDS LED1_PIN | LED4_PIN
 #endif
 ///////////////////////////////////////
+
+#ifdef RED_LED_PIN
+#define RED_LED_OFF     GPIO_ResetBits(RED_LED_GPIO,   RED_LED_PIN)
+#define RED_LED_ON      GPIO_SetBits(RED_LED_GPIO,     RED_LED_PIN)
+#define RED_LED_TOGGLE  GPIO_ToggleBits(RED_LED_GPIO,  RED_LED_PIN)
+#else
+#define RED_LED_OFF
+#define RED_LED_ON
+#define RED_LED_TOGGLE
+#endif
 
 #ifdef BLUE_LED_PIN
 #define BLUE_LED_OFF     GPIO_ResetBits(BLUE_LED_GPIO,   BLUE_LED_PIN)
