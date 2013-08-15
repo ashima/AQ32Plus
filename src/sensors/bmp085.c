@@ -39,6 +39,7 @@ int ac1 = 0, ac2 = 0, ac3 = 0;
 unsigned int ac4 = 0, ac5 = 0, ac6 = 0;
 int b1 = 0, b2 = 0, mb = 0, mc = 0, md = 0;
 long pressure = 0;
+long temperature = 0;
 long rawPressure = 0, rawTemperature = 0;
 uint8_t pressureCount = 0;
 float pressureFactor = 1/5.255;
@@ -53,7 +54,8 @@ uint8_t pressureAltValid;
 
 uint8_t readByteI2C(I2C_TypeDef *I2Cx, uint8_t address)
 {
-  uint8_t data[1];
+  //uint8_t data[1];
+  uint8_t data[2];
 
   i2cRead(I2Cx, BMP085_I2C_ADDRESS, address, 2, data);    // Request temperature read
 
@@ -182,7 +184,7 @@ void calculatePressureAltitude() {
   x1 = ((long)rawTemperature - ac6) * ac5 >> 15;
   x2 = ((long) mc << 11) / (x1 + md);
   b5 = x1 + x2;
-  long temperature = ((b5 + 8) >> 4);
+  temperature = ((b5 + 8) >> 4);
 
   // if (rawPressureSumCount == 0) { // it may occur at init time that no pressure has been read yet!
   //   return;
