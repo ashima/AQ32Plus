@@ -12,6 +12,8 @@
 
 #include "evr.h"
 
+uint32_t millis(void);
+
 enum evrConstants
   { 
   evrBITS         = 16, /*!< size of evr message. */

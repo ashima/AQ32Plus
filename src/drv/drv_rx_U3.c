@@ -36,6 +36,7 @@
 
 #include "board.h"
 #include "evr.h"
+#include "watchdogs.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Receiver Defines and Variables
