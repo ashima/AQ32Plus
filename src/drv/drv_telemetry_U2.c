@@ -36,6 +36,7 @@
 
 #include "board.h"
 #include "evr.h"
+#include "char_telem.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -48,19 +49,34 @@
 // UART2 Defines and Variables
 ///////////////////////////////////////////////////////////////////////////////
 
+#define UART2_RTS_PIN        GPIO_Pin_3
+#define UART2_CTS_PIN        GPIO_Pin_4
 #define UART2_TX_PIN        GPIO_Pin_5
 #define UART2_RX_PIN        GPIO_Pin_6
 #define UART2_GPIO          GPIOD
+#define UART2_RTS_PINSOURCE  GPIO_PinSource3
+#define UART2_CTS_PINSOURCE  GPIO_PinSource4
 #define UART2_TX_PINSOURCE  GPIO_PinSource5
 #define UART2_RX_PINSOURCE  GPIO_PinSource6
 
 #define UART2_BUFFER_SIZE    2048
 
+enum {
+  u2TxBuffBITS = 13, // 8192
+
+  // Derived constants
+  u2TxBuffMAX  = 1 << u2TxBuffBITS,
+  u2TxBuffMASK = u2TxBuffMAX -1
+  };
+
 // Receive buffer, circular DMA
+uint8_t tx2Buffer[u2TxBuffMAX];
+uint32_t u2TxOverflow = 0;
+
 volatile uint8_t rx2Buffer[UART2_BUFFER_SIZE];
 uint32_t rx2DMAPos = 0;
 
-volatile uint8_t tx2Buffer[UART2_BUFFER_SIZE];
+//volatile uint8_t tx2Buffer[UART2_BUFFER_SIZE];
 volatile uint16_t tx2BufferTail = 0;
 volatile uint16_t tx2BufferHead = 0;
 
@@ -69,21 +85,30 @@ volatile uint8_t  tx2DmaEnabled = false;
 ///////////////////////////////////////////////////////////////////////////////
 // UART2 Transmit via DMA
 ///////////////////////////////////////////////////////////////////////////////
+uint32_t uart2TxBuffInUse(void)
+  {
+  int x = (int)tx2BufferHead -(int) tx2BufferTail;
+  if (x < 0) 
+    x += u2TxBuffMAX;
+  x += DMA_GetCurrDataCounter(DMA1_Stream6);
+  return x;
+  }
 
 static void uart2TxDMA(void)
 {
-	if ((tx2DmaEnabled == true) || (tx2BufferHead == tx2BufferTail))  // Ignore call if already active or no new data in buffer
+  uint32_t hd = tx2BufferHead;
+	if ((tx2DmaEnabled == true) || (hd == tx2BufferTail))  // Ignore call if already active or no new data in buffer
     	return;
-
+    
     DMA1_Stream6->M0AR = (uint32_t)&tx2Buffer[tx2BufferTail];
-    if (tx2BufferHead > tx2BufferTail)
+    if (hd > tx2BufferTail)
     {
-	    DMA_SetCurrDataCounter(DMA1_Stream6, tx2BufferHead - tx2BufferTail);
-	    tx2BufferTail = tx2BufferHead;
+	    DMA_SetCurrDataCounter(DMA1_Stream6, hd - tx2BufferTail);
+	    tx2BufferTail = hd;
     }
     else
     {
-	    DMA_SetCurrDataCounter(DMA1_Stream6, UART2_BUFFER_SIZE - tx2BufferTail);
+	    DMA_SetCurrDataCounter(DMA1_Stream6, u2TxBuffMAX - tx2BufferTail);
 	    tx2BufferTail = 0;
     }
 
@@ -108,7 +133,7 @@ void DMA1_Stream6_IRQHandler(void)
 ///////////////////////////////////////////////////////////////////////////////
 // GPS Initialization
 ///////////////////////////////////////////////////////////////////////////////
-enum { expandEvr = 1 };
+enum { expandEvr = 0 };
 void telemetryListenerCB(evr_t e)
   {
   if (expandEvr)
@@ -133,7 +158,7 @@ void telemetryInit(void)
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1,   ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
 
-    GPIO_InitStructure.GPIO_Pin   = UART2_TX_PIN | UART2_RX_PIN;
+    GPIO_InitStructure.GPIO_Pin   = UART2_TX_PIN |UART2_RX_PIN |UART2_CTS_PIN |UART2_RTS_PIN;
     GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -141,6 +166,8 @@ void telemetryInit(void)
 
     GPIO_PinAFConfig(UART2_GPIO, UART2_TX_PINSOURCE, GPIO_AF_USART2);
     GPIO_PinAFConfig(UART2_GPIO, UART2_RX_PINSOURCE, GPIO_AF_USART2);
+    GPIO_PinAFConfig(UART2_GPIO, UART2_CTS_PINSOURCE, GPIO_AF_USART2);
+    GPIO_PinAFConfig(UART2_GPIO, UART2_RTS_PINSOURCE, GPIO_AF_USART2);
 
     GPIO_Init(UART2_GPIO, &GPIO_InitStructure);
 
@@ -157,7 +184,7 @@ void telemetryInit(void)
   //USART_InitStructure.USART_StopBits            = USART_StopBits_1;
   //USART_InitStructure.USART_Parity              = USART_Parity_No;
   //USART_InitStructure.USART_Mode                = USART_Mode_Rx | USART_Mode_Tx;
-  //USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_RTS_CTS;
 
     USART_Init(USART2, &USART_InitStructure);
 
@@ -196,7 +223,7 @@ void telemetryInit(void)
   //DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART2->DR;
     DMA_InitStructure.DMA_Memory0BaseAddr    = (uint32_t)tx2Buffer;
     DMA_InitStructure.DMA_DIR                = DMA_DIR_MemoryToPeripheral;
-  //DMA_InitStructure.DMA_BufferSize         = UART_BUFFER_SIZE;
+    DMA_InitStructure.DMA_BufferSize         = u2TxBuffMAX;
   //DMA_InitStructure.DMA_PeripheralInc      = DMA_PeripheralInc_Disable;
   //DMA_InitStructure.DMA_MemoryInc          = DMA_MemoryInc_Enable;
   //DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
@@ -284,13 +311,23 @@ uint8_t telemetryReadPoll(void)
 ///////////////////////////////////////////////////////////////////////////////
 // GPS Write
 ///////////////////////////////////////////////////////////////////////////////
+inline void u2PutChar(uint8_t x)
+  {
+    tx2Buffer[tx2BufferHead] = x;
+    tx2BufferHead = (tx2BufferHead + 1) & u2TxBuffMASK;
+  }
 
 void telemetryWrite(uint8_t ch)
 {
-    tx2Buffer[tx2BufferHead] = ch;
-    tx2BufferHead = (tx2BufferHead + 1) % UART2_BUFFER_SIZE;
+    if ( uart2TxBuffInUse() < u2TxBuffMASK) {
+        u2PutChar(ch);
+    //tx2Buffer[tx2BufferHead] = ch;
+    //tx2BufferHead = (tx2BufferHead + 1) % UART2_BUFFER_SIZE;
 
-    uart2TxDMA();
+        uart2TxDMA();
+        }
+    else
+        u2TxOverflow++;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -299,11 +336,18 @@ void telemetryWrite(uint8_t ch)
 
 void telemetryPrint(char *str)
 {
-    while (*str)
+    uint32_t n = uart2TxBuffInUse();
+
+    while (*str && n < u2TxBuffMASK) 
     {
-    	tx2Buffer[tx2BufferHead] = *str++;
-    	tx2BufferHead = (tx2BufferHead + 1) % UART2_BUFFER_SIZE;
+        u2PutChar(*str++);
+    	n++;
+    	//tx2Buffer[tx2BufferHead] = *str++;
+    	//tx2BufferHead = (tx2BufferHead + 1) % UART2_BUFFER_SIZE;
     }
+
+    if (*str)
+      u2TxOverflow++;
 
 	uart2TxDMA();
 }
