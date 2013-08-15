@@ -211,9 +211,11 @@ void initMPU6000()//I2C_TypeDef *I2Cx)
 
 void readMPU6000()//I2C_TypeDef *I2Cx)
 {
-    uint8_t buf[3*1*3*sizeof(int16_t)];
+    enum { mpuBytes = (3+3+3+1) * 2 };
+    //uint8_t buf[3*1*3*sizeof(int16_t)];
+    uint8_t buf[ mpuBytes ];
 
-    i2cRead(I2Cx, MPU9150_ADDR, MPU9150_RA_ACCEL_XOUT_H, sizeof(buf), buf);
+    i2cRead(I2Cx, MPU9150_ADDR, MPU9150_RA_ACCEL_XOUT_H, mpuBytes, buf);
 
     int i = -1;
 
