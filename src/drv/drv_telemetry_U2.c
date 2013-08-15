@@ -76,7 +76,6 @@ uint32_t u2TxOverflow = 0;
 volatile uint8_t rx2Buffer[UART2_BUFFER_SIZE];
 uint32_t rx2DMAPos = 0;
 
-//volatile uint8_t tx2Buffer[UART2_BUFFER_SIZE];
 volatile uint16_t tx2BufferTail = 0;
 volatile uint16_t tx2BufferHead = 0;
 
@@ -129,7 +128,6 @@ void DMA1_Stream6_IRQHandler(void)
 
     uart2TxDMA();
 }
-
 ///////////////////////////////////////////////////////////////////////////////
 // GPS Initialization
 ///////////////////////////////////////////////////////////////////////////////
@@ -140,7 +138,9 @@ void telemetryListenerCB(evr_t e)
     telemetryPrintF("EVR-%s: %1.3fs %s (%04x)\n", evrToSeverityStr(e.evr),
               (float)e.time/1000., evrToStr(e.evr), e.reason);
   else 
-    telemetryPrintF("EVR:%08x %04x %04x\n", e.time, e.evr, e.reason);
+    //telemetryPrintF("EVR:%08x %04x %04x\n", e.time, e.evr, e.reason);
+    ctPushSMB( ctIDEVR, sizeof(e), (uint8_t*)&e );
+    
   }
 
 void telemetryInit(void)
