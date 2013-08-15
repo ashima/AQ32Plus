@@ -1,12 +1,13 @@
 /Release
 *.o
+*.s
 *.obj
 *.hex
 *.bin
 *.elf
 *.mapfile
 *.lst
-*.swp
+*.sw?
 \#*
 *~
 
