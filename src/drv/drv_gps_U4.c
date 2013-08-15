@@ -77,18 +77,18 @@ static void uart4TxDMA(void)
     DMA1_Stream6->M0AR = (uint32_t)&tx4Buffer[tx4BufferTail];
     if (tx4BufferHead > tx4BufferTail)
     {
-	    DMA_SetCurrDataCounter(DMA1_Stream6, tx4BufferHead - tx4BufferTail);
+	    DMA_SetCurrDataCounter(DMA1_Stream4, tx4BufferHead - tx4BufferTail);
 	    tx4BufferTail = tx4BufferHead;
     }
     else
     {
-	    DMA_SetCurrDataCounter(DMA1_Stream6, UART4_BUFFER_SIZE - tx4BufferTail);
+	    DMA_SetCurrDataCounter(DMA1_Stream4, UART4_BUFFER_SIZE - tx4BufferTail);
 	    tx4BufferTail = 0;
     }
 
     tx4DmaEnabled = true;
 
-    DMA_Cmd(DMA1_Stream6, ENABLE);
+    DMA_Cmd(DMA1_Stream4, ENABLE);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@ static void uart4TxDMA(void)
 
 void DMA1_Stream4_IRQHandler(void)
 {
-    DMA_ClearITPendingBit(DMA1_Stream4, DMA_IT_TCIF6);
+    DMA_ClearITPendingBit(DMA1_Stream4, DMA_IT_TCIF4);
 
     tx4DmaEnabled = false;
 
