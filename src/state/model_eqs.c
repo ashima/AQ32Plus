@@ -33,7 +33,7 @@ inline float_tt xi_T(float_tt T)
   }
 
 inline float_tt gamma_T(float_tt T) {
-  return sqrt( sqr(T + md_) - 4.0 * mc_ );
+  return sqrtf( sqr(T + md_) - 4.0 * mc_ );
   }
 
 inline float_tt theta_T(float_tt T) {
@@ -41,7 +41,7 @@ inline float_tt theta_T(float_tt T) {
   }
 
 inline float_tt gamma_P(float_tt P) {
-  return sqrt(sqr(z1) - 4.0 * z2 * (z0 - P) );
+  return sqrtf(sqr(z1) - 4.0 * z2 * (z0 - P) );
   }
 
 inline float_tt phi_PT(float_tt P, float_tt T) {

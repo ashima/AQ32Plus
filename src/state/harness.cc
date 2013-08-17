@@ -14,18 +14,18 @@
 typedef filter_t<float_tt,ns,no> F;
 
 float_tt filter[ sizeof(F)/sizeof(float_tt) ] ;
-uint32_t lt;
-
-//float_tt filter[ 128 ] ;
+uint32_t lt = 0;
+int32_t filter_dt;
 
 void hsf_init()
   {
+  float dt = 0.001f;
   filterSetParams();
-  filterInit(*(F*)filter,0.001/*just a default*/);
+  filterInit(*(F*)filter,dt);
   }
 
-extern long rawPressure;
-extern long rawTemperature;
+extern uint32_t rawPressure;
+extern uint32_t rawTemperature;
 
 void hsf_step_tp() { filter_step_tp(*(F*)filter, rawTemperature, rawPressure); }
 void hsf_step_t()  { filter_step_t (*(F*)filter, rawTemperature); }

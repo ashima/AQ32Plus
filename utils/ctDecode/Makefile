@@ -1,0 +1,5 @@
+
+
+evrstrings.py:
+	../evr/evrPy > $@
+

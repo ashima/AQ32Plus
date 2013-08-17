@@ -36,6 +36,7 @@
 
 #include "board.h"
 #include "evr.h"
+#include "watchdogs.h"
 #include "harness.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -176,7 +177,7 @@ void SysTick_Handler(void)
             if ( 0 ==  frameCounter % COUNT_10HZ ) {
               readPressureRequestTemperature(I2C2);
               }
-            else if ( 1 == frameCounter % COUNT_10HZ ) {
+            else if ( 10 == frameCounter % COUNT_10HZ ) {
               readTemperatureRequestPressure(I2C2);
               }
             else {
@@ -311,7 +312,7 @@ void systemInit(void)
     BLUE_LED_ON;
 
     adcInit();
-    // gpsInit();
+    gpsInit();
     // i2cInit(I2C1);
     i2cInit(I2C2);
     pwmEscInit(eepromConfig.escPwmRate);
@@ -340,7 +341,6 @@ void systemInit(void)
 #endif
     initPID();
 
-    hsf_init();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

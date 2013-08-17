@@ -44,7 +44,6 @@ public:
     for (uint i = 0 ; i < N*M ; ++i)
       ((T*)data)[i] = v;
     }
-
   matrix()                 {};
   matrix(matrix<T,N,M> &s) { blit(s); }
   matrix(T v)              { fill(v); }
@@ -139,6 +138,20 @@ void m_ncc(matrix<T,A,B> &d, matrix<T,A,B> &a)
   }
 /* Find L D L' = A
  */
+
+template<typename T, uint A>
+void m_symify(matrix<T,A,A> &x)
+    {
+    uint32_t i,j;
+    T a;
+    for (i = 0; i < A-1 ; ++i)
+    for (j = i+1; j < A ; ++j)
+      {
+      a = 0.5 * ( x(i,j) + x(j,i) );
+      x(i,j) = x(j,i) = a;
+      } 
+    }
+
 template<typename T, uint A>
 void m_ldlT(matrix<T,A,A> &l, matrix<T,A,A> &m)
   {

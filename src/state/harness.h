@@ -4,6 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+  extern int32_t filter_dt;
 
   extern void hsf_init();
   extern float* hsf_getState();

@@ -38,6 +38,7 @@
 #include "evr.h"
 #include "batMon.h"
 #include "harness.h"
+#include "state/char_telem.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -54,6 +55,62 @@ heading_t      heading;
 uint16_t       timerValue;
 
 ///////////////////////////////////////////////////////////////////////////////
+void pushInitTelem()
+  {
+  extern uint8_t overSamplingSetting;
+  extern int ac1 , ac2 , ac3;
+  extern unsigned int ac4 , ac5 , ac6 ;
+  extern int b1 , b2 , mb , mc , md ;
+
+  union 
+    {
+    struct  __attribute__((__packed__))
+      {
+      int16_t ac1;
+      int16_t ac2;
+      int16_t ac3;
+      uint16_t ac4;
+      uint16_t ac5;
+      uint16_t ac6;
+      int16_t b1;
+      int16_t b2;
+      int16_t mb;
+      int16_t mc;
+      int16_t md;
+      int16_t oss;
+      };
+    uint8_t c_ptr[1];
+    } bmp = {{ ac1, ac2, ac3, ac4, ac5, ac6, b1, b2, mb, mc, md, overSamplingSetting }} ;
+
+  evrPush(EVR_StartingMain,0);
+  ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
+  ctPushSMTB(ctIDBMP180Params, sizeof(bmp), bmp.c_ptr );
+  }
+
+uint32_t uart2TxBuffInUse(void);
+
+extern uint32_t rawPressure, rawTemperature ;
+
+extern uint16_t i2c2ErrorCount;
+extern uint32_t u2TxOverflow ;
+
+typedef union {
+  struct __attribute__((__packed__)) {
+    uint16_t t;
+    int16_t dt; 
+    } ;
+  uint8_t c_ptr[1];
+  } rawT_t;
+
+typedef union {
+  struct __attribute__((__packed__)) {
+    uint32_t p;
+    int16_t dt; 
+    } ;
+  uint8_t c_ptr[1];
+  } rawP_t;
+
+
 
 int main(void)
 {
@@ -74,8 +131,18 @@ int main(void)
     systemInit();
 
     systemReady = true;
+    delay(200);
+    hsf_init();
+    pushInitTelem();
 
-    evrPush(EVR_StartingMain,0);
+    hsf_step_t();
+    ctPushSMTB(ctIDTemperature, sizeof(rawT_t), ((rawT_t){{rawTemperature, filter_dt}}).c_ptr);
+    ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
+    hsf_step_p();
+    ctPushSMTB(ctIDPressure, sizeof(rawP_t), ((rawP_t){{ rawPressure, filter_dt }}.c_ptr) );
+    ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
+    delay(10);
+
 
     while (1)
     {
@@ -133,17 +200,14 @@ int main(void)
         	d1Sum = 0;
         	calculateTemperature();
         	calculatePressureAltitude();
-                hsf_step_tp();
-#if 0
-extern long rawPressure, rawTemperature ;
+                //hsf_step_tp();
 
-                float *st = hsf_getState();
-                cliPrintF( "%d %d %f %f %f %f\n", rawTemperature, 
-                      rawPressure, st[0], st[1], st[2], st[3] );
-#endif
+                //float *st = hsf_getState();
+                //cliPrintF( "%d %d %f %f %f %f\n", rawTemperature, 
+                //      rawPressure, st[0], st[1], st[2], st[3] );
 
         	pressureAltValid = true;
-#ifndef NOGPS
+#if !defined(NOGPS) && !defined(STVGPS)
         	switch (eepromConfig.gpsType)
 			{
 			    ///////////////////////
@@ -179,6 +243,8 @@ extern long rawPressure, rawTemperature ;
             batMonTick();
 
             executionTime10Hz = micros() - currentTime;
+              uint32_t tCnt = uart2TxBuffInUse() | ( u2TxOverflow << 16);
+              ctPushSMTB( ctIDTelemTxBuffInUse,4, (uint8_t*)&tCnt );
         }
 
         ///////////////////////////////
@@ -272,15 +338,20 @@ extern long rawPressure, rawTemperature ;
         	frame_100Hz = false;
 
             if ( 0 ==  frameCounter % COUNT_10HZ ) {
+              ctPushSMTB(ctIDPressure, 3, (uint8_t*)&rawPressure);
               hsf_step_p();
               }
-            else if ( 1 == frameCounter % COUNT_10HZ ) {
-              hsf_step_t();
+            else if ( 10 == frameCounter % COUNT_10HZ ) {
+              hsf_step_t(); 
+              ctPushSMTB(ctIDTemperature, sizeof(rawT_t), ((rawT_t){{rawTemperature, filter_dt}}).c_ptr);
+RED_LED_TOGGLE;
               }
             else {
               hsf_step_p();
+              ctPushSMTB(ctIDPressure, sizeof(rawP_t), ((rawP_t){{ rawPressure, filter_dt }}.c_ptr) );
               }
 
+            ctPushSMTB(ctIDHSFState, sizeof(float)*(4), (uint8_t*) hsf_getState() );
         	currentTime       = micros();
 			deltaTime100Hz    = currentTime - previous100HzTime;
 			previous100HzTime = currentTime;
@@ -300,6 +371,9 @@ extern long rawPressure, rawTemperature ;
         	bodyAccelToEarthAccel();
         	vertCompFilter(dt100Hz);
 
+            ctPushSMTB(ctIDWAcc100, sizeof(float)*3, (uint8_t*) &earthAxisAccels );
+            ctPushSMTB(ctIDComHeight, sizeof(float), (uint8_t*) &hEstimate );
+         
         	if ( highSpeedTelem1Enabled == true )
             {
             	// 500 Hz Accels
@@ -345,7 +419,7 @@ extern long rawPressure, rawTemperature ;
             			                                        sensors.pressureAlt10Hz,
             			                                        hDotEstimate,
             			                                        hEstimate); */
-            	telemetryPrintF("%f %f %f %f %f\n", 
+            	telemetryPrintF("%f %f %f %f\n", 
                     st[0],st[1],st[2],st[3] );
             }
 
@@ -407,6 +481,12 @@ extern long rawPressure, rawTemperature ;
         }
 
         ////////////////////////////////
+#ifndef NOGPS
+void skytraqStepState(uint8_t c);
+
+        while ( gpsAvailable() )
+          skytraqStepState( gpsRead() );
+#endif
     }
 
     ///////////////////////////////////////////////////////////////////////////

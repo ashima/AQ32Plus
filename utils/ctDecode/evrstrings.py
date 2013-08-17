@@ -1,0 +1,18 @@
+evrStringTable = {
+0x0000:"None",
+0x0001:"Normal Reset",
+0x0002:"Starting Main Loop",
+0x4000:"Abnormal Reset",
+0x4001:"Battery Low",
+0x4002:"Battery Very Low",
+0x4003:"Config has CRC Bad History flag set! Use CLI to clear",
+0x8000:"Out of EVR Listener slots",
+0x8001:"Failed to register Frame Reset Watchdog",
+0x8002:"Failed to register Frame Lost Watchdog",
+0x8003:"Recieve pilot command frame timeout!",
+0x8004:"Battery dangeriously Low!",
+0x8005:"Flash CRC failed! Bad History Set",
+0x8006:"Flash erase failed",
+0x8007:"Flash programming failed",
+0xc000:"",
+}

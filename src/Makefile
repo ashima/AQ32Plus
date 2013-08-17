@@ -8,8 +8,8 @@ STDOTG=$(LIBS)/STM32_USB_OTG_Driver
 
 CFLAGS= -O3 -fsigned-char -mthumb -mthumb-interwork -mcpu=cortex-m4 \
         -Wl,--gc-sections -ffunction-sections -fdata-sections -Wall \
-	-mfpu=fpv4-sp-d16 -mfloat-abi=hard -fsingle-precision-constant \
-	-march=armv7e-m --fast-math -fno-math-errno -fno-trapping-math -fno-signaling-nans
+	-march=armv7e-m -fno-math-errno -fno-trapping-math -fno-signaling-nans 
+#-mfpu=fpv4-sp-d16 -mfloat-abi=hard -fsingle-precision-constant --fast-math 
 
 CCFLAGS= -fno-rtti -Wnoexcept -fno-exceptions -Weffc++ -fnothrow-opt -std=c++11
 
@@ -23,7 +23,7 @@ INCDIRS=$(LIBS)/CMSIS/Include \
      
 DEFS=-DUSE_USB_OTG_FS -DUSE_STDPERIPH_DRIVER -DSTM32F40XX -DHSE_VALUE=16000000
 DEFS+=-DASHIMACORE -DSTVGPS -DNOSPI
-DEFS+=-D__FPU_PRESENT=1 -D__FPU_USED=1
+#DEFS+=-D__FPU_PRESENT=1 -D__FPU_USED=1
 
 INCS=$(patsubst %, -I %,$(INCDIRS))
 USBSRC= cdc/src/usbd_cdc_core.c 

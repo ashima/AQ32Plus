@@ -24,19 +24,20 @@ struct filter_t
   matrix<T,1UL,1UL> Rts ;
   matrix<T,1UL,1UL> Rps ;
 
-  filter_t() : x(0.) , P(0.), F(0.), dF(0.), Q(0.), R(0.) {}
+  filter_t() : x(0.0f) , P(0.0f), F(0.0f), dF(0.0f), Q(0.0f), R(0.0f), Rts(0.0f), Rps(0.0f) {}
   };
 
 typedef float float_tt ;
 enum { ns = 4UL, no = 2UL};
 
 //void filterStep( filter_t<float_tt,ns,no> &f, uint32_t theta, uint32_t phi);
-void filter_step_tp( filter_t<float_tt,ns,no> &f, uint32_t theta, uint32_t phi);
-void filter_step_t ( filter_t<float_tt,ns,no> &f, uint32_t theta);
-void filter_step_p ( filter_t<float_tt,ns,no> &f, uint32_t phi);
+void filter_step_tp( filter_t<float_tt,ns,no> &f, uint32_t theta, uint32_t phi) throw();
+void filter_step_t ( filter_t<float_tt,ns,no> &f, uint32_t theta) throw();
+void filter_step_p ( filter_t<float_tt,ns,no> &f, uint32_t phi) throw();
 
-void filterInit(filter_t<float_tt,ns,no> &f, float_tt dt);
-void filterSetParams() ; //bmp_params_t &x);
+void filterInit(filter_t<float_tt,ns,no> &f, float_tt dt) throw();
+void filterSetParams() throw() ;
+ //bmp_params_t &x);
 
 // H_FILTER_H
 #endif
