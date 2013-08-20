@@ -40,6 +40,21 @@
 // MPU6000 Defines and Variables
 ///////////////////////////////////////////////////////////////////////////////
 
+// AK-8975 (built into the MPU-9150 as an I2C device)
+#define AK8975_ADDRESS_00         0x0C
+
+#define AK8975_RA_WIA             0x00
+  #define AK8975_WHO_AM_I         0x48
+#define AK8975_RA_HXL             0x03
+#define AK8975_RA_HXH             0x04
+#define AK8975_RA_HYL             0x05
+#define AK8975_RA_HYH             0x06
+#define AK8975_RA_HZL             0x07
+#define AK8975_RA_HZH             0x08
+
+#define AK8975_RA_CNTL            0x0A
+  #define AK8975_MODE_SINGLE        0x1
+
 // Registers
 
 #define MPU9150_RA_SMPLRT_DIV       0x19
@@ -202,6 +217,28 @@ void initMPU6000()//I2C_TypeDef *I2Cx)
 
     delay(100);
 
+    i2cWrite(I2Cx, MPU9150_ADDR, MPU9150_RA_INT_PIN_CFG, 0 << MPU9150_INTCFG_I2C_BYPASS_EN_BIT);
+
+    // read mag x,y,z
+    i2cWrite(I2Cx, MPU9150_ADDR, MPU9150_RA_I2C_SLV0_ADDR, (1 << MPU9150_I2C_SLV_RW_BIT) 
+                                           | (AK8975_ADDRESS_00 << MPU9150_I2C_SLV_ADDR_BIT));
+    i2cWrite(I2Cx, MPU9150_ADDR, MPU9150_RA_I2C_SLV0_REG, AK8975_RA_HXL);
+    i2cWrite(I2Cx, MPU9150_ADDR, MPU9150_RA_I2C_SLV0_CTRL, (1 << MPU9150_I2C_SLV_EN_BIT) 
+                                           | (1 << MPU9150_I2C_SLV_BYTE_SW_BIT) 
+                                           | (1 << MPU9150_I2C_SLV_GRP_BIT) 
+                                           | (sizeof(short)*3 << MPU9150_I2C_SLV_LEN_BIT));
+
+    // tell the mag to take another sample
+    i2cWrite(I2Cx, MPU9150_ADDR, MPU9150_RA_I2C_SLV1_ADDR, (0 << MPU9150_I2C_SLV_RW_BIT) 
+                                           | (AK8975_ADDRESS_00 << MPU9150_I2C_SLV_ADDR_BIT));
+    i2cWrite(I2Cx, MPU9150_ADDR, MPU9150_RA_I2C_SLV1_REG, AK8975_RA_CNTL);
+    i2cWrite(I2Cx, MPU9150_ADDR, MPU9150_RA_I2C_SLV1_DO, AK8975_MODE_SINGLE);
+    i2cWrite(I2Cx, MPU9150_ADDR, MPU9150_RA_I2C_SLV1_CTRL, (1 << MPU9150_I2C_SLV_EN_BIT) 
+                                           | (sizeof(uint8_t) << MPU9150_I2C_SLV_LEN_BIT));
+
+    // enable the slave I2C devices  
+    i2cWrite(I2Cx, MPU9150_ADDR, MPU9150_RA_USER_CTRL, 1 << MPU9150_USERCTRL_I2C_MST_EN_BIT);    
+
     computeMPU6000RTData();
 }
 
@@ -235,6 +272,16 @@ void readMPU6000()//I2C_TypeDef *I2Cx)
     rawGyro[PITCH].bytes[0]        = buf[++i];
     rawGyro[YAW  ].bytes[1]        = buf[++i];
     rawGyro[YAW  ].bytes[0]        = buf[++i];
+
+    rawMag[XAXIS].bytes[1]         = buf[++i];
+    rawMag[XAXIS].bytes[0]         = buf[++i];
+    rawMag[YAXIS].bytes[1]         = buf[++i];
+    rawMag[YAXIS].bytes[0]         = buf[++i];
+    rawMag[ZAXIS].bytes[1]         = buf[++i];
+    rawMag[ZAXIS].bytes[0]         = buf[++i];
+
+    // HACK
+    magScaleFactor[0] = magScaleFactor[1] = magScaleFactor[2] = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
