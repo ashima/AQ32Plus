@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "board.h"
+#include "state/harness.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -42,13 +43,15 @@ float   attCmd[3];
 
 float   attPID[3];
 
-float   axisPID[3];
+float   axisPID[4];
 
-float   rateCmd[3];
+float   rateCmd[4];
 
 float   headingReference;
+float   heightReference;
 
 uint8_t previousHeadingHoldEngaged = false;
+uint8_t previousAltitudeHoldState = false;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Compute Axis Commands
@@ -109,6 +112,27 @@ void computeAxisCommands(float dt)
     axisPID[ROLL ] = updatePID( rateCmd[ROLL ],  sensors.gyro500Hz[ROLL ], dt, holdIntegrators, &eepromConfig.PID[ROLL_RATE_PID ] );
     axisPID[PITCH] = updatePID( rateCmd[PITCH], -sensors.gyro500Hz[PITCH], dt, holdIntegrators, &eepromConfig.PID[PITCH_RATE_PID] );
     axisPID[YAW  ] = updatePID( rateCmd[YAW  ],  sensors.gyro500Hz[YAW  ], dt, holdIntegrators, &eepromConfig.PID[YAW_RATE_PID  ] );
+
+    if ( altitudeHoldState == ENGAGED )
+      {
+      float *hsf = hsf_getState();
+      if ( previousAltitudeHoldState != ENGAGED )
+        {
+        setPIDintegralError(H_PID,0.0f);
+        setPIDintegralError(HDOT_PID,0.0f);
+        setPIDstates(H_PID,0.0f);
+        setPIDstates(HDOT_PID,0.0f);
+        heightReference = hsf[ hsfZ ];
+        }
+      rateCmd[THROTTLE] = updatePID( heightReference,   hsf[ hsfZ    ] , dt, holdIntegrators, &eepromConfig.PID[H_PID] );
+      axisPID[THROTTLE] = altitudeHoldThrottleValue + 
+                          updatePID( rateCmd[THROTTLE], hsf[ hsfZdot ] , dt, holdIntegrators, &eepromConfig.PID[HDOT_PID] );
+      }
+    else
+      axisPID[THROTTLE ] = rxCommand[THROTTLE];
+
+   previousAltitudeHoldState = altitudeHoldState;
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////

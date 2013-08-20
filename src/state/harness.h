@@ -13,6 +13,14 @@ extern "C" {
   extern void hsf_update_t();
   extern void hsf_update_p();
 
+  enum hsfStateBits { 
+    hsfBMPTemp = 0,
+    hsfBMPTempDot = 1, 
+    hsfZ = 2,
+    hsfZdot = 3,
+    hsfZ2dot = 4,
+    hsfZ3dot = 5,
+    };
 
 #ifdef __cplusplus
 }
