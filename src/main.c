@@ -135,14 +135,17 @@ int main(void)
     hsf_init();
     pushInitTelem();
 
-    hsf_step_t();
+    hsf_step();
+    hsf_update_t();
     ctPushSMTB(ctIDTemperature, sizeof(rawT_t), ((rawT_t){{rawTemperature, filter_dt}}).c_ptr);
     ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
-    hsf_step_p();
+
+    hsf_step();
+    hsf_update_p();
     ctPushSMTB(ctIDPressure, sizeof(rawP_t), ((rawP_t){{ rawPressure, filter_dt }}.c_ptr) );
     ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
-    delay(10);
 
+    delay(10);
 
     while (1)
     {
@@ -339,15 +342,18 @@ int main(void)
 
             if ( 0 ==  frameCounter % COUNT_10HZ ) {
               ctPushSMTB(ctIDPressure, 3, (uint8_t*)&rawPressure);
-              hsf_step_p();
+              hsf_step();
+              hsf_update_p();
               }
             else if ( 10 == frameCounter % COUNT_10HZ ) {
-              hsf_step_t(); 
+              hsf_step();
+              hsf_update_t(); 
               ctPushSMTB(ctIDTemperature, sizeof(rawT_t), ((rawT_t){{rawTemperature, filter_dt}}).c_ptr);
 RED_LED_TOGGLE;
               }
             else {
-              hsf_step_p();
+              hsf_step();
+              hsf_update_p();
               ctPushSMTB(ctIDPressure, sizeof(rawP_t), ((rawP_t){{ rawPressure, filter_dt }}.c_ptr) );
               }
 

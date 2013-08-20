@@ -26,13 +26,14 @@ void hsf_init()
 
 extern uint32_t rawPressure;
 extern uint32_t rawTemperature;
+extern float earthAxisAccels[3];
+extern float accelOneG;
 
-void hsf_step_tp() { filter_step_tp(*(F*)filter, rawTemperature, rawPressure); }
-void hsf_step_t()  { filter_step_t (*(F*)filter, rawTemperature); }
-void hsf_step_p()  { filter_step_p (*(F*)filter, rawPressure); }
+void   hsf_update_t()   { filter_update_t(*(F*)filter, rawTemperature); }
+void   hsf_update_p()   { filter_update_p(*(F*)filter, rawPressure); }
+void   hsf_update_a()   { filter_update_a(*(F*)filter, 
+                                          earthAxisAccels[2] * accelOneG);}
+void   hsf_step()       { filter_step    (*(F*)filter ) ; }
 
-float *hsf_getState()
-  {
-  return &( (*(F*)(filter)).x(0,0));
-  }
+float *hsf_getState()   { return &((*(F*)(filter)).x(0,0)); }
 

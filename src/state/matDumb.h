@@ -44,6 +44,13 @@ public:
     for (uint i = 0 ; i < N*M ; ++i)
       ((T*)data)[i] = v;
     }
+
+  void scale(T v)
+    {
+    for (uint i = 0 ; i < N*M ; ++i)
+      ((T*)data)[i] *= v;
+    }
+
   matrix()                 {};
   matrix(matrix<T,N,M> &s) { blit(s); }
   matrix(T v)              { fill(v); }
