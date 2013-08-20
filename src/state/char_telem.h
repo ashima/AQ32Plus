@@ -32,6 +32,9 @@ enum {
   ctIDHSFState = 0x20,
   ctIDBMP180Params = 0x21,
   ctIDComHeight = 0x22,
+
+// Commands
+  ctIDMotorCommands = 0x30,
 };
 
 #endif

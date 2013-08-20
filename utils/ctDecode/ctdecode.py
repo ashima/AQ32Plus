@@ -43,6 +43,7 @@ msgFmts = {
   0x20 : ("<HLffffxx", "HSF"),
   0x21 : ("<HLhhhHHHhhhhhh", "BMP180"),
   0x22 : ("<HLfxx", "Height"),
+  0x30 : ("<HLffffxx", "MotCmd"),
 }
 
 msgLenths = dict([ (i, 4*int((struct.calcsize(msgFmts[i][0])+2)/3)) for i in msgFmts ])

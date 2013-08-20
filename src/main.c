@@ -177,6 +177,7 @@ int main(void)
 #endif
 
 			executionTime50Hz = micros() - currentTime;
+            ctPushSMTB(ctIDMotorCommands, sizeof(float)*4, (uint8_t*)motor );
         }
 
         ///////////////////////////////
@@ -378,8 +379,8 @@ RED_LED_TOGGLE;
         	vertCompFilter(dt100Hz);
 
             ctPushSMTB(ctIDWAcc100, sizeof(float)*3, (uint8_t*) &earthAxisAccels );
-            ctPushSMTB(ctIDComHeight, sizeof(float), (uint8_t*) &hEstimate );
-         
+            //ctPushSMTB(ctIDComHeight, sizeof(float), (uint8_t*) &hEstimate );
+
         	if ( highSpeedTelem1Enabled == true )
             {
             	// 500 Hz Accels
