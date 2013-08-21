@@ -31,9 +31,9 @@ extern float accelOneG;
 
 void   hsf_update_t()   { filter_update_t(*(F*)filter, rawTemperature); }
 void   hsf_update_p()   { filter_update_p(*(F*)filter, rawPressure); }
-void   hsf_update_a()   { filter_update_a(*(F*)filter, 
-                                          earthAxisAccels[2] * accelOneG);}
+void   hsf_update_a()   { filter_update_a(*(F*)filter, earthAxisAccels ); } 
 void   hsf_step()       { filter_step    (*(F*)filter ) ; }
 
-float *hsf_getState()   { return &((*(F*)(filter)).x(0,0)); }
+float *hsf_getStatePos() { return &((*(F*)(filter)).S.x(0,0)); }
+float *hsf_getStatePT()  { return &((*(F*)(filter)).S.pTemp);  }
 

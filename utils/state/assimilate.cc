@@ -27,13 +27,29 @@ extern uint32_t lt;
 
 void dump_filter()
   {
-  float *st = hsf_getState();
+  float *st = hsf_getStatePos();
+  printf("%f %f %f :\n", st[0],st[1],st[2] );
+
+#if 0
   printf("%f %f %f %f :\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n",
 st[0], st[1], st[2], st[3],
 st[4], st[5], st[6], st[7],
 st[8], st[9], st[10], st[11],
 st[12], st[13], st[14], st[15],
 st[16], st[17], st[18], st[19] );
+#endif
+  }
+
+void dump_hsf()
+  {
+  float *stpt = hsf_getStatePT();
+  printf("%f %f ",stpt[0],stpt[1]);
+  float *stp = hsf_getStatePos();
+  printf("%f %f %f ", stp[0], stp[1], stp[2] );
+  printf("%f %f %f ", stp[3], stp[4], stp[5] );
+  printf("%f %f %f ", stp[6], stp[7], stp[8] );
+  printf("%f %f %f ", stp[9], stp[10], stp[11] );
+  printf("\n");
   }
 
 int main()
@@ -49,7 +65,8 @@ int main()
   } b;
 
   int n; int dt;
-  float *st = hsf_getState();
+  //float *stp = hsf_getStatePos();
+  //float *stpt = hsf_getStatePT();
 
   while (!feof(stdin) )
     {
@@ -78,24 +95,30 @@ int main()
 
           hsf_init();
           //printf("%10d %5d %6d HSF(p): %f %f %f %f %f %f\n",lastTimeSeen, 1, 0, st[0], st[1], st[2], st[3], st[4], st[5] );
+          //printf("%10d %5d %6d HSF(p): %f %f %f %f %f\n",lastTimeSeen, dt, rawPressure, stpt[0], stpt[1], stp[0], stp[1], stp[2] );
+          //dump_hsf();
           break;
         case 16: //pruessure
           rawPressure = b.c_ptr[6] | (b.c_ptr[7] << 8) | (b.c_ptr[8] << 16) ;
           dt = b.s_ptr[5];
           lastTimeCode = lt + dt;
           hsf_step();
-          hsf_update_p();
-          printf("%10d %5d %6d HSF(p): %f %f %f %f %f %f\n",lastTimeSeen, dt, rawPressure, st[0], st[1], st[2], st[3], st[4], st[5] );
+          //hsf_update_p();
+          printf("%10d %5d %6d HSF(p): ",lastTimeSeen, dt,rawPressure);
+          dump_hsf();
           break;
         case 17: //Temperature
           rawTemperature = b.s_ptr[3];
           dt = b.s_ptr[4];
           lastTimeCode = lt + dt;
           hsf_step();
-          hsf_update_t();
-          printf("%10d %5d %6d HSF(t): %f %f %f %f %f %f\n",lastTimeSeen, dt, rawTemperature, st[0], st[1], st[2], st[3], st[4], st[5] );
+          //hsf_update_t();
+          printf("%10d %5d %6d HSF(t): ",lastTimeSeen, dt, rawTemperature);
+          dump_hsf();
           break;
         case 24: //Temperature
+          earthAxisAccels[0] = *((float*) (&b.s_ptr[3]) );
+          earthAxisAccels[1] = *((float*) (&b.s_ptr[5]) );
           earthAxisAccels[2] = *((float*) (&b.s_ptr[7]) );
           hsf_update_a();
           break;
