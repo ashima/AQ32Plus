@@ -116,6 +116,8 @@ void computeAxisCommands(float dt)
     if ( altitudeHoldState == ENGAGED )
       {
       float *hsf = hsf_getState();
+      float hDelta;
+
       if ( previousAltitudeHoldState != ENGAGED )
         {
         setPIDintegralError(H_PID,0.0f);
@@ -124,7 +126,10 @@ void computeAxisCommands(float dt)
         setPIDstates(HDOT_PID,0.0f);
         heightReference = hsf[ hsfZ ];
         }
-      rateCmd[THROTTLE] = updatePID( heightReference,   hsf[ hsfZ    ] , dt, holdIntegrators, &eepromConfig.PID[H_PID] );
+
+      hDelta = (rxCommand[THROTTLE] - altitudeHoldThrottleValue) * 0.01 ; // Command to meters scaling.
+
+      rateCmd[THROTTLE] = updatePID( heightReference + hDelta,  hsf[ hsfZ    ] , dt, holdIntegrators, &eepromConfig.PID[H_PID] );
       axisPID[THROTTLE] = altitudeHoldThrottleValue + 
                           updatePID( rateCmd[THROTTLE], hsf[ hsfZdot ] , dt, holdIntegrators, &eepromConfig.PID[HDOT_PID] );
       }
