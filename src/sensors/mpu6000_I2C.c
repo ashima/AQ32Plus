@@ -239,7 +239,21 @@ void initMPU6000()//I2C_TypeDef *I2Cx)
     // enable the slave I2C devices  
     i2cWrite(I2Cx, MPU9150_ADDR, MPU9150_RA_USER_CTRL, 1 << MPU9150_USERCTRL_I2C_MST_EN_BIT);    
 
+    // HACK: this should be done somewhere else, and magScaleFactor should be defined locally,
+    //       not in hmc5883.c/h
+    magScaleFactor[0] = magScaleFactor[1] = magScaleFactor[2] = 1;
+
+    float min[3] = { -335, -170,  15 };
+    float max[3] = { -140,   10, 195 };
+    int i;
+
+    for (i = 0; i < 3; i++) {
+        magScaleFactor[i] = 2.0 / (max[i] - min[i]);
+        eepromConfig.magBias[i] = (max[i] + min[i]) / 2.0 * magScaleFactor[i];
+    }
+
     computeMPU6000RTData();
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -273,15 +287,15 @@ void readMPU6000()//I2C_TypeDef *I2Cx)
     rawGyro[YAW  ].bytes[1]        = buf[++i];
     rawGyro[YAW  ].bytes[0]        = buf[++i];
 
-    rawMag[XAXIS].bytes[1]         = buf[++i];
-    rawMag[XAXIS].bytes[0]         = buf[++i];
+    // swap X and Y because the mag is not aligned with accel/gyro on 9150
     rawMag[YAXIS].bytes[1]         = buf[++i];
     rawMag[YAXIS].bytes[0]         = buf[++i];
+    rawMag[XAXIS].bytes[1]         = buf[++i];
+    rawMag[XAXIS].bytes[0]         = buf[++i];
     rawMag[ZAXIS].bytes[1]         = buf[++i];
     rawMag[ZAXIS].bytes[0]         = buf[++i];
 
-    // HACK
-    magScaleFactor[0] = magScaleFactor[1] = magScaleFactor[2] = 1;
+    newMagData = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

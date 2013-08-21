@@ -197,7 +197,7 @@ int main(void)
 			    sensors.mag10Hz[ZAXIS] = eepromConfig.signMZ * -((float)rawMag[ZAXIS].value * magScaleFactor[ZAXIS] - eepromConfig.magBias[ZAXIS]);
 
 			    newMagData = false;
-			    magDataUpdate = true;
+			    //magDataUpdate = true;
 			}
 
         	d1Average = d1Sum / 10;

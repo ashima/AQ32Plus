@@ -986,6 +986,9 @@ void sensorCLI()
                 cliPrintF("Mag Bias:                  %9.4f, %9.4f, %9.4f\n",   eepromConfig.magBias[XAXIS],
                                                    		                        eepromConfig.magBias[YAXIS],
                                                    		                        eepromConfig.magBias[ZAXIS]);
+                cliPrintF("Mag Scale Factor:          %9.4f, %9.4f, %9.4f\n",   magScaleFactor[XAXIS],
+                                                   		                        magScaleFactor[YAXIS],
+                                                   		                        magScaleFactor[ZAXIS]);
                 cliPrintF("Accel One G:               %9.4f\n",   accelOneG);
                 cliPrintF("Accel Cutoff:              %9.4f\n",   eepromConfig.accelCutoff);
                 cliPrintF("KpAcc (MARG):              %9.4f\n",   eepromConfig.KpAcc);
@@ -1126,6 +1129,26 @@ void sensorCLI()
             case 'E': // h dot est/h est Comp Filter A/B
                 eepromConfig.compFilterA = readFloatCLI();
                 eepromConfig.compFilterB = readFloatCLI();
+
+                sensorQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'G': // mag manual cal
+                ;float min[3], max[3];
+                int i;
+
+                for (i = 0; i < 3; i++) {
+                    min[i] = readFloatCLI();
+                    max[i] = readFloatCLI();
+                }
+
+                for (i = 0; i < 3; i++) {
+                    magScaleFactor[i] = 2.0 / (max[i] - min[i]);
+                    eepromConfig.magBias[i] = (max[i] + min[i]) / 2.0 * magScaleFactor[i];
+                }
 
                 sensorQuery = 'a';
                 validQuery = true;
