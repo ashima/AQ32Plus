@@ -35,6 +35,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "board.h"
+#include <core_cmInstr.h>
+#include "eMatAxisPerm.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // MPU6000 Defines and Variables
@@ -188,6 +190,15 @@ float   mpu6000Temperature;
 
 int16andUint8_t rawMPU6000Temperature;
 
+///////////////////////////////////////
+
+typedef struct {
+  int32_t x,y,z;
+  } xyz_t;
+
+xyz_t iRawAcc, iRawGyro, iRawMag ;
+int32_t iRawAGTemp;
+
 ///////////////////////////////////////////////////////////////////////////////
 // MPU6000 Initialization
 ///////////////////////////////////////////////////////////////////////////////
@@ -239,32 +250,53 @@ void initMPU6000()//I2C_TypeDef *I2Cx)
     // enable the slave I2C devices  
     i2cWrite(I2Cx, MPU9150_ADDR, MPU9150_RA_USER_CTRL, 1 << MPU9150_USERCTRL_I2C_MST_EN_BIT);    
 
-    // HACK: this should be done somewhere else, and magScaleFactor should be defined locally,
-    //       not in hmc5883.c/h
-    magScaleFactor[0] = magScaleFactor[1] = magScaleFactor[2] = 1;
-
-    float min[3] = { -335, -170,  15 };
-    float max[3] = { -140,   10, 195 };
-    int i;
-
-    for (i = 0; i < 3; i++) {
-        magScaleFactor[i] = 2.0 / (max[i] - min[i]);
-        eepromConfig.magBias[i] = (max[i] + min[i]) / 2.0 * magScaleFactor[i];
-    }
-
     computeMPU6000RTData();
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Read MPU6000
 ///////////////////////////////////////////////////////////////////////////////
 
+static inline int16_t HL(uint8_t h, uint8_t l) { return (int16_t)((h << 8) | l) ; }
+
+typedef struct __attribute__((__packed__)) {
+  uint8_t ax_h; uint8_t ax_l;
+  uint8_t ay_h; uint8_t ay_l;
+  uint8_t az_h; uint8_t az_l;
+
+  uint8_t t_h;  uint8_t t_l;
+
+  uint8_t gx_h; uint8_t gx_l;
+  uint8_t gy_h; uint8_t gy_l;
+  uint8_t gz_h; uint8_t gz_l;
+
+  uint8_t mx_h; uint8_t mx_l;
+  uint8_t my_h; uint8_t my_l;
+  uint8_t mz_h; uint8_t mz_l;
+} mpuraw_t;
+
+// Board orientation is X+ points forward, Y+ points left, Z+ is up.
+// Chip orientation is X+ through the pin 24 side, Z+ is up.
+// Acc and gyro orientation match chip orientation.
+// Mag orientation swaps X and Y and Z+ is down WRT chip orientation.
+// The Chip is mounted with chip and board orientation identical.
+
+EMAT_DECLARE_PERM_EMAT( BoardChip, P_XYZ | P_PPP );
+EMAT_DECLARE_PERM_EMAT( ChipAcc,   P_XYZ | P_PPP );
+EMAT_DECLARE_PERM_EMAT( ChipGyro,  P_XYZ | P_PPP );
+EMAT_DECLARE_PERM_EMAT( ChipMag,   P_YXZ | P_PPN );
+
+EMAT_MUL_EMAT_EMAT( BoardAcc,  BoardChip, ChipAcc  );
+EMAT_MUL_EMAT_EMAT( BoardGyro, BoardChip, ChipGyro );
+EMAT_MUL_EMAT_EMAT( BoardMag,  BoardChip, ChipMag  );
+
 void readMPU6000()//I2C_TypeDef *I2Cx)
 {
     enum { mpuBytes = (3+3+3+1) * 2 };
     //uint8_t buf[3*1*3*sizeof(int16_t)];
-    uint8_t buf[ mpuBytes ];
+    //uint8_t buf[ mpuBytes ];
+    mpuraw_t r; 
+    uint8_t *buf = (uint8_t*)&r;
 
     i2cRead(I2Cx, MPU9150_ADDR, MPU9150_RA_ACCEL_XOUT_H, mpuBytes, buf);
 
@@ -287,15 +319,31 @@ void readMPU6000()//I2C_TypeDef *I2Cx)
     rawGyro[YAW  ].bytes[1]        = buf[++i];
     rawGyro[YAW  ].bytes[0]        = buf[++i];
 
-    // swap X and Y because the mag is not aligned with accel/gyro on 9150
-    rawMag[YAXIS].bytes[1]         = buf[++i];
-    rawMag[YAXIS].bytes[0]         = buf[++i];
     rawMag[XAXIS].bytes[1]         = buf[++i];
     rawMag[XAXIS].bytes[0]         = buf[++i];
+    rawMag[YAXIS].bytes[1]         = buf[++i];
+    rawMag[YAXIS].bytes[0]         = buf[++i];
     rawMag[ZAXIS].bytes[1]         = buf[++i];
     rawMag[ZAXIS].bytes[0]         = buf[++i];
 
-    newMagData = true;
+    // HACK
+    magScaleFactor[0] = magScaleFactor[1] = magScaleFactor[2] = 1;
+
+// ijm version
+
+__NOP();
+__NOP();
+
+  EMAT_MUL_EMAT_VEC(iRawAcc,  BoardAcc,
+      ((xyz_t){ HL(r.ax_h, r.ax_l), HL(r.ay_h, r.ay_l), HL(r.az_h, r.az_l)}) ) ;
+
+  EMAT_MUL_EMAT_VEC(iRawGyro, BoardGyro,
+      ((xyz_t){ HL(r.gx_h, r.gx_l), HL(r.gy_h, r.gy_l), HL(r.gz_h, r.gz_l)}) ) ;
+
+  EMAT_MUL_EMAT_VEC(iRawMag,  BoardMag,
+      ((xyz_t){ HL(r.mx_h, r.mx_l), HL(r.my_h, r.my_l), HL(r.mz_h, r.mz_l)}) ) ;
+
+  iRawAGTemp = HL(r.t_h, r.t_l);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

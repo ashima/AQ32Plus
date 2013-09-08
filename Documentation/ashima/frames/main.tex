@@ -1,0 +1,138 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\setlength{\parindent}{0pt}
+\begin{document}
+\title{Ashima Flight Co-ordinate Frames}
+\section{Ashima Flight Co-ordinate Frames}
+\subsection{Overview}
+Each sensor is in its own coordinate frame, relative to their
+packages, which in turn can be places on a board in a number of
+configurations. The board can be oriented differenty in different
+flyer designes etc.
+\\
+We assume that chip dies and board layouts are all aligned up to
+an axis and handedness permutation, and will not change for any
+given board. These fixed transforms can be precomputed and compiled
+into the build for that board.
+\\
+Note that this assumption is valid because placing chips in a
+non-rectangular way is often probematic for layout programs and can
+cause increases in manufacturing expenses. The possible exception
+to this is the 45-degree arangment often seen on very small boards,
+where this extra expense is offset by localy improved track layout.
+This arangement only breaks the above assumption if there is a mix of
+some sensors at 45-degrees and some not. If everything is at
+45-degrees, then the board can be rotated by 45-degrees, the sensors
+treated as on a square grid and the board orientation combined into the
+generalized vehicle to board transform.
+\\
+The board to vehicle transform should be aligned up to an axis and
+handedness permutation, but (as above) might need to be more general in the
+futrue and either way should be stored in EEPROM config.
+\\
+The vehicle to world, and world transforms need to be dynamicly calculated.
+\\
+We will seek transform representations that are compact, and easy to specify in code
+or configurations.
+\\
+Figure 1. Shows the relationships between the various coordinate
+systems ($\Sigma$) used in the flyer and the transforms between them ($\Omega$).
+\\
+$\begin{matrix}
+\Sigma_{Vehicle} & \xrightarrow{\Omega_{V,B}} & \Sigma_{Board} & \xrightarrow{\Omega_{B,C}} &
+  \Sigma_{Chip} & \xrightarrow{\Omega_{C,A}} & \Sigma_{Accel} \\
+&&&&&\xrightarrow{\Omega_{C,G}} & \Sigma_{Gyro}\\
+&&&&&\xrightarrow{\Omega_{C,M}} & \Sigma_{Mag}\\
+&\xrightarrow{\Omega_{V,L}} & \Sigma_{LTP} & \xrightarrow{\Omega_{L,E}} & \Sigma_{ECEF}\\
+\end{matrix}$\\
+\subsection{Specifying Axis Transforms}
+We're only concerned with solid body transforms in euclidian
+$\mathbb{R}^3$, althought the space of the encoding may be very
+different, and for this discution we can ignore the possition
+transform (to first order, even in full flight), leaving the rotations
+and reflections.
+\\
+A 3x3 matrix is the most generalalizable transform, and fairly easy
+to understand, but contains a lot of redundancy.[expand]
+\\
+A unit quaternion is harder to understand, and requires two-sided
+products to use. It is more compact that a matrix but still contains
+redundancy. It is, arguably, the most apropriate space to work
+in.[expand]
+\\
+A bivector is a compact representation of an area element, but also
+can specify an instantanious rotaion, via the exponential map (which
+yeilds a quaternion). bivrctors are commutative.[expand]
+\\
+\subsection{Specifying fixed axis and handedness permutations} 
+Alignments up to an axis and handedness permutation can be specifiedy
+by which of the six axis permutations to use, and which axis to
+negate, giving $6 \times 8 = 48$ possible combinations. All of which
+can be specified with a permutation matrix and a sign matrix.
+\\
+Table 1. Shows the posible axis permutions and a nice mostly compact 4-bit encoding for
+the permutation matrix.
+\begin{table}[ht]
+\caption{Axis Permutations}
+\centering
+\begin{tabular}{c c c c c c}
+\hline
+0&1&2&3&4&5\\
+XYZ & YXZ & ZYX & 
+XZY & YZX & ZXY \\
+\hline
+\noalign{\smallskip}
+${}^z\uparrow\nearrow^y$ &
+${}^z\uparrow\nearrow^x$ &
+${}^x\uparrow\nearrow^y$ &
+${}^y\uparrow\nearrow^z$ &
+${}^x\uparrow\nearrow^z$ &
+${}^y\uparrow\nearrow^x$ \\
+$\;~\searrow_x$ & 
+$\;~\searrow_y$ & 
+$\;~\searrow_z$ & 
+$\;~\searrow_x$ & 
+$\;~\searrow_y$ & 
+$\;~\searrow_z$  \\
+\noalign{\smallskip}
+$ \left[ \begin{matrix}
+1&0&0\\ 0&1&0\\ 0&0&1\\
+\end{matrix} \right] $ &
+$ \left[ \begin{matrix}
+0&1&0\\ 1&0&0\\ 0&0&1\\
+\end{matrix} \right] $ &
+$ \left[ \begin{matrix}
+0&0&1\\ 0&1&0\\ 1&0&0\\
+\end{matrix} \right] $ &
+$ \left[ \begin{matrix}
+1&0&0\\ 0&0&1\\ 0&1&0\\
+\end{matrix} \right] $ &
+$ \left[ \begin{matrix}
+0&1&0\\ 0&0&1\\ 1&0&0\\
+\end{matrix} \right] $ &
+$\left[ \begin{matrix}
+0&0&1\\ 1&0&0\\ 0&1&0\\
+\end{matrix} \right] $ \\
+\noalign{\smallskip}
+\noalign{\smallskip}
+${(3)21}_4 = 09_{16} $ &
+${(3)12}_4 = 06_{16} $ &
+${(1)23}_4 = 0B_{16} $ &
+${(2)31}_4 = 0D_{16} $ &
+${(1)32}_4 = 0E_{16} $ &
+${(2)13}_4 = 07_{16} $ \\
+\hline
+\end{tabular}
+\label{table:axisperm}
+\end{table}
+\\
+The encoding is little endian, uses indexes from 1 and base 4, and is decoded by:
+\begin{verbatim}
+i1 = 3 AND   x
+i2 = 3 AND  (x>>2)
+i3 = 3 AND ((x>>2) XOR x)
+\end{verbatim}
+This compact encoding is useful in that all of these permutations can be calculated and multiplied using a C enum, ensureing that the combine transform is computed at compile time.\\
+Read header file ( $eMatAxisPerm.h$ ) for usage details.
+\end{document}
