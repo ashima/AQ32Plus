@@ -1050,6 +1050,12 @@ void sensorCLI()
                 break;
 
 			///////////////////////////
+            case 'd': // MPU6000 Calibration
+                mpu6000CalibrationLSQ();
+
+                sensorQuery = 'a';
+                validQuery = true;
+                break;
 
         	case 'x':
 			    cliPrint("\nExiting Sensor CLI....\n\n");
