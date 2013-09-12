@@ -243,8 +243,10 @@ void initMPU6000()//I2C_TypeDef *I2Cx)
     //       not in hmc5883.c/h
     magScaleFactor[0] = magScaleFactor[1] = magScaleFactor[2] = 1;
 
-    float min[3] = { -335, -170,  15 };
-    float max[3] = { -140,   10, 195 };
+    // float min[3] = { -335, -170,  15 };
+    // float max[3] = { -140,   10, 195 };
+    float min[3] = { -1, -1, -1 };
+    float max[3] = {  1,  1,  1 };
     int i;
 
     for (i = 0; i < 3; i++) {
@@ -294,8 +296,6 @@ void readMPU6000()//I2C_TypeDef *I2Cx)
     rawMag[XAXIS].bytes[0]         = buf[++i];
     rawMag[ZAXIS].bytes[1]         = buf[++i];
     rawMag[ZAXIS].bytes[0]         = buf[++i];
-
-    newMagData = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

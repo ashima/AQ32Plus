@@ -217,8 +217,11 @@ void SysTick_Handler(void)
 
         ///////////////////////////////
 
-        // if (((frameCounter + 1) % COUNT_10HZ) == 0)
+        if (((frameCounter + 1) % COUNT_10HZ) == 0)
+        {
         //     newMagData = readMag(HMC5883L_I2C);
+	        newMagData = true;
+	    }
 
         if ((frameCounter % COUNT_10HZ) == 0)
             frame_10Hz = true;
