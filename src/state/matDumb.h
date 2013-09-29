@@ -21,6 +21,8 @@ class matrix
   T data[N][M];
 
 public:
+  enum { dim_1 = N, dim_2 = M, size = N*M };
+
   T &operator()(uint i, uint j)
     {
    // assert( i < N && j < M );
@@ -78,6 +80,7 @@ S &operator<<(S &os, matrix<T,A,B> m)
   return os;
   }
 
+// d = s'
 template<typename T, uint A, uint B>
 void m_transpose( matrix<T, B, A> &d, matrix<T, A, B> &s ) {
   for (uint i = 0 ; i < A ; ++i )
@@ -85,6 +88,7 @@ void m_transpose( matrix<T, B, A> &d, matrix<T, A, B> &s ) {
       d(j,i) = s(i,j);
   }
 
+// d += a * b
 template<typename T, uint A, uint B,uint C>
 void m_mac(matrix<T,A,C> &d, matrix<T,A,B> &a, matrix<T,B,C> &b )
   {
@@ -94,6 +98,16 @@ void m_mac(matrix<T,A,C> &d, matrix<T,A,B> &a, matrix<T,B,C> &b )
         d(i,j) = d(i,j) + a(i,k) * b(k,j);
   }
 
+// d += a * diag(d)
+template<typename T, uint A, uint B>
+void m_maD(matrix<T,A,B> &d, matrix<T,A,B> &a, matrix<T,B,1> &b )
+  {
+  for (uint i = 0; i < A; ++i)
+    for (uint j = 0; j < B; ++j )
+      d(i,j) = a(i,j) * b(j,0);
+  }
+
+// d += a' * b
 template<typename T, uint A, uint B,uint C>
 void m_maTc(matrix<T,A,C> &d, matrix<T,B,A> &a, matrix<T,B,C> &b )
   {
@@ -103,6 +117,7 @@ void m_maTc(matrix<T,A,C> &d, matrix<T,B,A> &a, matrix<T,B,C> &b )
         d(i,j) = d(i,j) + a(k,i) * b(k,j);
   }
 
+// d += a * b'
 template<typename T, uint A, uint B,uint C>
 void m_macT(matrix<T,A,C> &d, matrix<T,A,B> &a, matrix<T,C,B> &b )
   {
@@ -112,6 +127,7 @@ void m_macT(matrix<T,A,C> &d, matrix<T,A,B> &a, matrix<T,C,B> &b )
         d(i,j) = d(i,j) + a(i,k) * b(j,k);
   }
 
+// d = a + b
 template<typename T, uint A, uint B>
 void m_add(matrix<T,A,B> &d, matrix<T,A,B> &a, matrix<T,A,B> &b )
   {
@@ -120,6 +136,7 @@ void m_add(matrix<T,A,B> &d, matrix<T,A,B> &a, matrix<T,A,B> &b )
         d(i,j) = a(i,j) + b(i,j);
   }
 
+// d = a - b
 template<typename T, uint A, uint B>
 void m_sub(matrix<T,A,B> &d, matrix<T,A,B> &a, matrix<T,A,B> &b )
   {
@@ -128,6 +145,7 @@ void m_sub(matrix<T,A,B> &d, matrix<T,A,B> &a, matrix<T,A,B> &b )
         d(i,j) = a(i,j) - b(i,j);
   }
 
+// d += a 
 template<typename T, uint A, uint B>
 void m_acc(matrix<T,A,B> &d, matrix<T,A,B> &a)
   {
@@ -136,6 +154,7 @@ void m_acc(matrix<T,A,B> &d, matrix<T,A,B> &a)
         d(i,j) = d(i,j) + a(i,j);
   }
 
+// d -= a
 template<typename T, uint A, uint B>
 void m_ncc(matrix<T,A,B> &d, matrix<T,A,B> &a)
   {
@@ -143,22 +162,55 @@ void m_ncc(matrix<T,A,B> &d, matrix<T,A,B> &a)
     for (uint  j = 0 ; j < B ; ++j )
         d(i,j) = d(i,j) - a(i,j);
   }
-/* Find L D L' = A
- */
 
+// a = 0.5 * (a + a')
 template<typename T, uint A>
 void m_symify(matrix<T,A,A> &x)
+  {
+  uint32_t i,j;
+  T a;
+  for (i = 0; i < A-1 ; ++i)
+  for (j = i+1; j < A ; ++j)
     {
-    uint32_t i,j;
-    T a;
-    for (i = 0; i < A-1 ; ++i)
-    for (j = i+1; j < A ; ++j)
-      {
-      a = 0.5 * ( x(i,j) + x(j,i) );
-      x(i,j) = x(j,i) = a;
-      } 
-    }
+    a = 0.5 * ( x(i,j) + x(j,i) );
+    x(i,j) = x(j,i) = a;
+    } 
+  }
 
+template<typename T, uint A>
+T m_trace( matrix<T,A,A> &a )
+  {
+  T t = 0;
+
+  for (uint i=0; i < A ; ++i)
+    t += a(i,i);
+
+  return t;
+  }
+
+// Determinates. Just 1x1, 2x2, 3x3 for now.
+template<typename T>
+T m_det( matrix<T,1,1> &a )
+  {
+  return a(0,0);
+  }
+
+template<typename T>
+T m_det( matrix<T,2,2> &a )
+  {
+  return a(0,0)*a(1,1) - a(0,1)*a(1,0);
+  }
+
+template<typename T>
+T m_det( matrix<T,3,3> &a )
+  {
+  return   a(0,0)*a(1,1)*a(2,2) - a(0,2)*a(1,1)*a(2,0)
+         + a(0,1)*a(1,2)*a(2,0) - a(0,1)*a(1,0)*a(2,2)
+         + a(0,2)*a(1,0)*a(2,1) - a(0,0)*a(1,2)*a(2,1);
+  }
+
+/* Find L D L' = A
+ */
 template<typename T, uint A>
 void m_ldlT(matrix<T,A,A> &l, matrix<T,A,A> &m)
   {
