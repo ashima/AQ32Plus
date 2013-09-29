@@ -149,7 +149,8 @@ void processFlightCommands(void)
 		     (rxCommand[ROLL ] > (eepromConfig.maxCheck - MIDCOMMAND)) &&
 		     (rxCommand[PITCH] < (eepromConfig.minCheck - MIDCOMMAND)) )
 		{
-			computeMPU6000RTData();
+			//computeMPU6000RTData();
+			computeAccelOneG();
 			pulseMotors(3);
 		}
 
@@ -189,8 +190,8 @@ void processFlightCommands(void)
 
     // Check AUX1 for rate, attitude, or GPS mode (3 Position Switch) NOT COMPLETE YET....
 
-	//if ((rxCommand[AUX1] > MIDCOMMAND) && (flightMode == RATE))
-	if ( flightMode==RATE )
+	if ((rxCommand[AUX1] > MIDCOMMAND) && (flightMode == RATE))
+	//if ( flightMode==RATE )
 	{
 		flightMode = ATTITUDE;
 		setPIDintegralError(ROLL_ATT_PID,  0.0f);
@@ -200,7 +201,7 @@ void processFlightCommands(void)
 		setPIDstates(PITCH_ATT_PID, 0.0f);
 		setPIDstates(HEADING_PID,   0.0f);
 	}
-#if 0
+#if 1
 	else if ((rxCommand[AUX1] <= MIDCOMMAND) && (flightMode == ATTITUDE))
 	{
 		flightMode = RATE;

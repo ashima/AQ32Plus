@@ -192,11 +192,7 @@ int16andUint8_t rawMPU6000Temperature;
 
 ///////////////////////////////////////
 
-typedef struct {
-  int32_t x,y,z;
-  } xyz_t;
-
-xyz_t iRawAcc, iRawGyro, iRawMag ;
+int32XYZ_t iRawAcc, iRawGyro, iRawMag ;
 int32_t iRawAGTemp;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -250,7 +246,15 @@ void initMPU6000()//I2C_TypeDef *I2Cx)
     // enable the slave I2C devices  
     i2cWrite(I2Cx, MPU9150_ADDR, MPU9150_RA_USER_CTRL, 1 << MPU9150_USERCTRL_I2C_MST_EN_BIT);    
 
-    computeMPU6000RTData();
+    //computeMPU6000RTData();
+    computeAccelOneG();
+    eepromConfig.magBias[XAXIS] = -177.336;
+    eepromConfig.magBias[YAXIS] =   15.869;
+    eepromConfig.magBias[ZAXIS] =  -71.228;
+    magScaleFactor[XAXIS]   =  1./ 137.54;
+    magScaleFactor[YAXIS]   =  1./ 120.63;
+    magScaleFactor[ZAXIS]   =  1./ 121.24;
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -275,6 +279,7 @@ typedef struct __attribute__((__packed__)) {
   uint8_t mz_h; uint8_t mz_l;
 } mpuraw_t;
 
+// For AC3:
 // Board orientation is X+ points forward, Y+ points left, Z+ is up.
 // Chip orientation is X+ through the pin 24 side, Z+ is up.
 // Acc and gyro orientation match chip orientation.
@@ -335,13 +340,13 @@ __NOP();
 __NOP();
 
   EMAT_MUL_EMAT_VEC(iRawAcc,  BoardAcc,
-      ((xyz_t){ HL(r.ax_h, r.ax_l), HL(r.ay_h, r.ay_l), HL(r.az_h, r.az_l)}) ) ;
+      ((int32XYZ_t){ HL(r.ax_h, r.ax_l), HL(r.ay_h, r.ay_l), HL(r.az_h, r.az_l)}) ) ;
 
   EMAT_MUL_EMAT_VEC(iRawGyro, BoardGyro,
-      ((xyz_t){ HL(r.gx_h, r.gx_l), HL(r.gy_h, r.gy_l), HL(r.gz_h, r.gz_l)}) ) ;
+      ((int32XYZ_t){ HL(r.gx_h, r.gx_l), HL(r.gy_h, r.gy_l), HL(r.gz_h, r.gz_l)}) ) ;
 
   EMAT_MUL_EMAT_VEC(iRawMag,  BoardMag,
-      ((xyz_t){ HL(r.mx_h, r.mx_l), HL(r.my_h, r.my_l), HL(r.mz_h, r.mz_l)}) ) ;
+      ((int32XYZ_t){ HL(r.mx_h, r.mx_l), HL(r.my_h, r.my_l), HL(r.mz_h, r.mz_l)}) ) ;
 
   iRawAGTemp = HL(r.t_h, r.t_l);
 }
@@ -349,6 +354,8 @@ __NOP();
 ///////////////////////////////////////////////////////////////////////////////
 // Compute MPU6000 Runtime Data
 ///////////////////////////////////////////////////////////////////////////////
+#if 0
+// this now just seems to compute accelOneG which is better done in the shim.
 
 void computeMPU6000RTData(void)
 {
@@ -389,6 +396,7 @@ void computeMPU6000RTData(void)
 
     mpu6000Calibrating = false;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Compute MPU6000 Temperature Compensation Bias

@@ -11,22 +11,18 @@
 #include "board.h"
 
 enum { 
-  N = 256*32,         // 32 seconds worth.
-  DELAY = (int)(1e6 / 256),  // 256 Hz
+  N = 512*64,         // 64 seconds worth.
+  DELAY = (int)(1e6 / 512),  // 256 Hz
   };
 
-typedef struct {
-  int32_t x,y,z;
-  } xyz_t;
-
-extern xyz_t iRawAcc, iRawGyro, iRawMag ;
+extern int32XYZ_t iRawAcc, iRawGyro, iRawMag ;
 extern int32_t iRawAGTemp;
 
 static inline float sqr(float x) { return x*x; }
 
 void mpu6000CalibrationLSQ(void)
   {
-  xyz_t refAcc;
+  int32XYZ_t refAcc;
   int32_t refTemp;
   int i;
 
@@ -142,7 +138,6 @@ void mpu6000CalibrationLSQ(void)
     Tgx, Tgy, Tgz, Ogx, Ogy, Ogz, Cgx, Cgy, Cgz );
 
   cliPrint("\nFinnished MPU9150 Calibration\n");
-  mpu6000Calibrating = false;
 
   eepromConfig.accelTCBiasSlope[XAXIS]     = Tax ;
   eepromConfig.accelTCBiasSlope[YAXIS]     = Tay ;
@@ -161,7 +156,7 @@ void mpu6000CalibrationLSQ(void)
   eepromConfig.gyroTCBiasIntercept[YAW  ]  = Ogz ;
 
   cliPrint("\nMPU9150 Calibration Complete.\n\n");
-
+  computeAccelOneG();
   mpu6000Calibrating = false;
   }
 
