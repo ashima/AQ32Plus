@@ -8,6 +8,7 @@
 *.mapfile
 *.lst
 *.sw?
+*.pyc
 \#*
 *~
 

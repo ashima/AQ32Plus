@@ -1,22 +1,36 @@
 \documentclass{article}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\setlength{\parindent}{0pt}
+\usepackage{boilerplate}
 \begin{document}
-\title{Ashima Flight Co-ordinate Frames}
-\section{Ashima Flight Co-ordinate Frames}
+\title{Flight Co-ordinate Frames}
+\section{Flight Co-ordinate Frames}
+\boilerplate{APIBACK}
+{ijm@ashimaresearch.com}
+{Public interested in compile time coordinate transforms.}
+{Linked to the lifetime of the module it describes.}
+{Open, Incomplete}
+\subsection{Summary}
+Matching up orthogonal Cartesian co-ordinates systems is important for
+any devices that senses anything in the real world, but unfortunately
+the choice of which system to use is arbitrary.  This leads to an
+immediate problem when trying to interface or combine data from
+more than one sensor.\\
+This document describes a C macro compile time solution to matching
+ and transforming co-ordinate systems for
+orientations that remain fixed with respect to each other, and are
+aligned up to an axis permutation, without sacrificing the optimization given by 
+embed those transforms by hand.
+
 \subsection{Overview}
-Each sensor is in its own coordinate frame, relative to their
-packages, which in turn can be places on a board in a number of
-configurations. The board can be oriented differently in different
-flyer designs etc.
+In our system each sensor has its own coordinate frame relative to their
+packages; the packages can be places on a board in a number of
+configurations; the board is fixed to a chassis etc.
 \\
 We assume that chip dies and board layouts are all aligned up to
 an axis and handedness permutation, and will not change for any
 given board. These fixed transforms can be precomputed and compiled
 into the build for that board.
 \\
-Note that this assumption is valid because placing chips in a
+Note that this assumption is reasonable because placing chips in a
 non-rectangular way is often problematic for layout programs and can
 cause increases in manufacturing expenses. The possible exception
 to this is the 45-degree arrangement often seen on very small boards,
@@ -37,34 +51,37 @@ We will seek transform representations that are compact, and easy to specify in 
 or configurations.
 \\
 Figure 1. Shows the relationships between the various coordinate
-systems ($\Sigma$) used in the flyer and the transforms between them ($\Omega$).
+systems ($\Sigma$) used in the flyer and the transforms between them ($\Omega$) and includes
+GPS's local tangent plane (LTP) and earth centered earth fixed (ECEF) frames.
 \\
+\begin{figure}[h]
+\caption{Co-ordinate systems and transforms}
+\centering
 $\begin{matrix}
-\Sigma_{Vehicle} & \xrightarrow{\Omega_{V,B}} & \Sigma_{Board} & \xrightarrow{\Omega_{B,C}} &
+&\xrightarrow{\Omega_{V,B}} & \Sigma_{Board} & \xrightarrow{\Omega_{B,C}} &
   \Sigma_{Chip} & \xrightarrow{\Omega_{C,A}} & \Sigma_{Accel} \\
-&&&&&\xrightarrow{\Omega_{C,G}} & \Sigma_{Gyro}\\
+\Sigma_{Vehicle} &&&&&\xrightarrow{\Omega_{C,G}} & \Sigma_{Gyro}\\
 &&&&&\xrightarrow{\Omega_{C,M}} & \Sigma_{Mag}\\
 &\xrightarrow{\Omega_{V,L}} & \Sigma_{LTP} & \xrightarrow{\Omega_{L,E}} & \Sigma_{ECEF}\\
-\end{matrix}$\\
+\end{matrix}$
+\end{figure}
 \subsection{Specifying Axis Transforms}
 We're only concerned with solid body transforms in Euclidean
 $\mathbb{R}^3$, although the space of the encoding may be very
 different, and for this discussion we can ignore the position
 transform (to first order, even in full flight), leaving the rotations
 and reflections.
-\\
-A 3x3 matrix is the most generalizable transform, and fairly easy
-to understand, but contains a lot of redundancy.[expand]
-\\
-A unit quaternion is harder to understand, and requires two-sided
+\begin{enumerate}
+\item A $3\times3$ matrix is the most generalizable transform, and fairly easy
+to understand, but contains a lot of redundancy.[TODO - expand]
+\item A unit quaternion is harder to understand, and requires two-sided
 products to use. It is more compact that a matrix but still contains
 redundancy. It is, arguably, the most appropriate space to work
-in.[expand]
-\\
-A bi-vector is a compact representation of an area element, but also
+in.[TODO - expand]
+\item A bi-vector is a compact representation of an area element, but also
 can specify an instantaneous rotation, via the exponential map (which
-yields a quaternion). bi-vectors are commutative.[expand]
-\\
+yields a quaternion). bi-vectors are commutative.[TODO - expand]
+\end{enumerate}
 \subsection{Specifying fixed axis and handedness permutations} 
 Alignments up to an axis and handedness permutation can be specified
 by which of the six axis permutations to use, and which axis to
@@ -73,7 +90,7 @@ can be specified with a permutation matrix and a sign matrix.
 \\
 Table 1. Shows the possible axis permutations and a nice mostly compact 4-bit encoding for
 the permutation matrix.
-\begin{table}[ht]
+\begin{table}[h]
 \caption{Axis Permutations}
 \centering
 \begin{tabular}{c c c c c c}
@@ -96,44 +113,46 @@ $\;~\searrow_x$ &
 $\;~\searrow_y$ & 
 $\;~\searrow_z$  \\
 \noalign{\smallskip}
-$ \left[ \begin{matrix}
+$ \left[ \begin{smallmatrix}
 1&0&0\\ 0&1&0\\ 0&0&1\\
-\end{matrix} \right] $ &
-$ \left[ \begin{matrix}
+\end{smallmatrix} \right] $ &
+$ \left[ \begin{smallmatrix}
 0&1&0\\ 1&0&0\\ 0&0&1\\
-\end{matrix} \right] $ &
-$ \left[ \begin{matrix}
+\end{smallmatrix} \right] $ &
+$ \left[ \begin{smallmatrix}
 0&0&1\\ 0&1&0\\ 1&0&0\\
-\end{matrix} \right] $ &
-$ \left[ \begin{matrix}
+\end{smallmatrix} \right] $ &
+$ \left[ \begin{smallmatrix}
 1&0&0\\ 0&0&1\\ 0&1&0\\
-\end{matrix} \right] $ &
-$ \left[ \begin{matrix}
+\end{smallmatrix} \right] $ &
+$ \left[ \begin{smallmatrix}
 0&1&0\\ 0&0&1\\ 1&0&0\\
-\end{matrix} \right] $ &
-$\left[ \begin{matrix}
+\end{smallmatrix} \right] $ &
+$\left[ \begin{smallmatrix}
 0&0&1\\ 1&0&0\\ 0&1&0\\
-\end{matrix} \right] $ \\
+\end{smallmatrix} \right] $ \\
 \noalign{\smallskip}
 \noalign{\smallskip}
-${(3)21}_4 = 09_{16} $ &
-${(3)12}_4 = 06_{16} $ &
-${(1)23}_4 = 0B_{16} $ &
-${(2)31}_4 = 0D_{16} $ &
-${(1)32}_4 = 0E_{16} $ &
-${(2)13}_4 = 07_{16} $ \\
+${21}_4 = 09_{16} $ &
+${12}_4 = 06_{16} $ &
+${23}_4 = 0B_{16} $ &
+${31}_4 = 0D_{16} $ &
+${32}_4 = 0E_{16} $ &
+${13}_4 = 07_{16} $ \\
 \hline
 \end{tabular}
 \label{table:axisperm}
 \end{table}
 \\
-The encoding is little endian, uses indexes from 1 and base 4, and is decoded by:
+The encoding is little endian and uses the location (in base 4, indexed
+from 1) of where the 1 cell is in the first two rows.
+All three indices can then be retrieved by :
 \begin{verbatim}
 i1 = 3 AND   x
 i2 = 3 AND  (x>>2)
 i3 = 3 AND ((x>>2) XOR x)
 \end{verbatim}
-This compact encoding is useful in that all of these permutations
+This integer encoding is useful in that all of these permutations
 can be calculated and multiplied using a C enum, ensuring that the
 combine transform is computed at compile time.
 \\ 
