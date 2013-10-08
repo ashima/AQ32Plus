@@ -12,6 +12,7 @@
 
 #include "board.h"
 #include "eMatAxisPerm.h"
+#include "magCal.h"
 
 // AQ's coordinate frame is defined as X+ forward, Y+ to the right, and Z+ Down.
 // For out talon, the AC3 board is mounted upside down, so this lines up as an
@@ -68,12 +69,20 @@ void sreadGyro(floatXYZ_t *g)
 void sreadMag(floatXYZ_t *m)
   { // raw values and calibration offsets are in the board frame.
   // Convert to vehicle frame. 
+#if 0
   EMAT_MUL_EMAT_VEC((*m),VehicleBoard, ((floatXYZ_t){
         (float)iRawMag.x * magScaleFactor[XAXIS] - eepromConfig.magBias[XAXIS],
         (float)iRawMag.y * magScaleFactor[YAXIS] - eepromConfig.magBias[YAXIS],
         (float)iRawMag.z * magScaleFactor[ZAXIS] - eepromConfig.magBias[ZAXIS] } ) );
+#endif
+  floatXYZ_t v;
+  v.x = (float)iRawMag.x;
+  v.y = (float)iRawMag.y;
+  v.z = (float)iRawMag.z;
 
-  }
+  mcCDeCal( &v, eepromConfig.magCalMat );
+  EMAT_MUL_EMAT_VEC((*m),VehicleBoard, v);
+  } 
 
 void computeAccelOneG()
   { // one-g measurement might not cancle with calibration for a given sensor.

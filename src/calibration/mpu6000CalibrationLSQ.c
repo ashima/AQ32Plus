@@ -9,6 +9,7 @@
 
 #include <inttypes.h>
 #include "board.h"
+#include "shim.h"
 
 enum { 
   N = 512*64,         // 64 seconds worth.
@@ -23,7 +24,7 @@ static inline float sqr(float x) { return x*x; }
 void mpu6000CalibrationLSQ(void)
   {
   int32XYZ_t refAcc;
-  int32_t refTemp;
+  //int32_t refTemp;
   int i;
 
   float _n = 1.0 / (float)N;
@@ -53,7 +54,7 @@ void mpu6000CalibrationLSQ(void)
   // accuracy.
   readMPU6000();
   refAcc  = iRawAcc;
-  refTemp = iRawAGTemp;
+  //refTemp = iRawAGTemp;
   temp    = (float)iRawAGTemp / 340.0 + 35 ;
 
   cliPrintF("RAW:  [%d %d %d], [%d %d %d] %d(%f)\n", 

@@ -1,4 +1,12 @@
 #!/bin/sh
 export TEXINPUTS=.:..:
-pdflatex main.tex && pdflatex main.tex && pdflatex main.tex
+
+N=`basename $PWD`
+echo N = $N
+
+C="pdflatex -halt-on-error -jobname $N main.tex"
+echo C = $C
+
+$C && $C && $C
+#pdflatex main.tex && pdflatex main.tex && pdflatex main.tex
 

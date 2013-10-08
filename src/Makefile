@@ -51,7 +51,8 @@ SRCS=$(wildcard *.c) \
      $(wildcard $(STDPERIPH)/src/*.c) \
      $(GPSSRC)
 
-CCSRCS=$(wildcard state/*.cc)
+CCSRCS=$(wildcard state/*.cc)\
+       $(wildcard calibration/*.cc)
 
 OBJS=$(CCSRCS:.cc=.o) $(SRCS:.c=.o) startup/startup_stm32f40xx.o
 LINKFILE=../stm32_flash.ld

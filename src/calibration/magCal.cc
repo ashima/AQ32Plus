@@ -1,31 +1,59 @@
+/**
+  \file       magCal.cc
+  \brief      Magnetometer Calibration routines, to gather data and do an
+              ellipsoidal fit.
+  \copyright  Copyright (C) 2013 Ashima Research. All rights reserved. This
+              file distributed under the MIT Expat License. See LICENSE file.
+              https://github.com/ashima/AQ32Plus
+  \remark     Ported for AQ32Plus.
+*/
+
 #include <inttypes.h>
 #include <math.h>
-#include <iostream>
-using namespace std;
 
 #include "matDumb.h"
+#include "magCal.h"
 
-enum { X1_N = 3, X2_N = 9, X4_N = 34 };
+typedef matrix<double, X1_N, 1>    VX1_t;
+typedef matrix<double, X2_N, 1>    VX2_t;
+typedef matrix<double, X4_N, 1>    VX4_t;
 
-matrix<double, X4_N, 1>    accOmega ; // initilized to zero.
-matrix<double, X1_N, X1_N> mcCal;
-matrix<double, X1_N, 1>    mcCentre;
-matrix<double, X1_N, 1>    mcRadii;
+typedef matrix<double, X1_N, X1_N> MX1_t;
+typedef matrix<double, X2_N, X2_N> MX2_t;
 
-void mcAccumulate( matrix<double, X4_N, 1> &, float,float,float);
-void mcCollectO( matrix<double, X2_N, X2_N> &, 
-                  matrix<double, X2_N, 1> &,
-                  matrix<double, X4_N, 1> & );
-void mcCollectA(  matrix<double, X1_N, X1_N> &,
-                   matrix<double, X1_N, 1> &,
-                   matrix<double, X2_N, 1> & );
+typedef struct {
+  MX1_t K;
+  VX1_t c;
+  VX1_t iLambda;
+  } calmat_t;
 
-void mcColAndSolve( matrix<double, X2_N,1> &u,
-                    matrix<double, X4_N,1> &accOmega );
-void mcDeEllipsoid( matrix<double, X1_N, X1_N> &cal,
-                    matrix<double, X1_N, 1>   &c,
-                    matrix<double, X1_N, 1>   &iL,
-                    matrix<double, X2_N, 1>   &u );
+//matrix<double, X4_N, 1>    accOmega(0.0) ; // initilized to zero.
+//MX1_t mcCal;
+//VX1_t    mcCentre;
+//VX1_t    mcRadii;
+
+//void mcAccumulate( matrix<double, X4_N, 1> &, float,float,float);
+void mcAccumulate( VX4_t &, float,float,float);
+
+void mcCollectO( MX2_t &, VX2_t &, VX4_t &) ;
+//void mcCollectO( MX2_t &, 
+//                  VX2_t &,
+//                  matrix<double, X4_N, 1> & );
+
+void mcCollectA(  MX1_t &, VX1_t &, VX2_t & );
+//void mcCollectA(  MX1_t &,
+//                   VX1_t &,
+//                   VX2_t & );
+
+void mcColAndSolve( VX2_t &, VX4_t & );
+//void mcColAndSolve( VX2_t &u,
+//                    VX4_t &accOmega );
+
+void mcDeEllipsoid( calmat_t &, VX2_t & );
+//void mcDeEllipsoid( MX1_t &cal,
+//                    VX1_t   &c,
+//                    VX1_t   &iL,
+//                    VX2_t   &u );
 
 
 template<typename T>
@@ -37,7 +65,7 @@ void eigen(matrix<T,3,3> &Q, matrix<T,3,1> &L, matrix<T,3,3> &A)
   T p,q,r, a00, a11 ;
   int i,j;
   matrix<T,3,3> B, C;
-  const T pi23 = (M_PI * 2.0) / 3.0 ;
+  const T pi23 = (3.14159265358979323846 * 2.0) / 3.0 ;
 
   q = m_trace(A)/3.0;
  
@@ -80,49 +108,90 @@ void eigen(matrix<T,3,3> &Q, matrix<T,3,1> &L, matrix<T,3,3> &A)
     }
   }
 
-void mcAddPoint(double x, double y, double z)
-  {
-  mcAccumulate(accOmega, x,y,z);
+void mcInit(double accOmega[X4_N])
+  { // C entry
+  ((VX4_t*)accOmega)->fill(0.);
   }
 
-void mcDeCal(matrix<double, X1_N,1> &zp, matrix<double, X1_N,1> &z)
-  {
-  matrix<double, X1_N, 1> tmpz;
+void mcAddPoint(double accOmega[X4_N], double x, double y, double z)
+  { // C entry.
+  mcAccumulate( *((VX4_t*)accOmega), x,y,z);
+  }
 
-  m_sub(tmpz, z, mcCentre);
+void mcDeCal(VX1_t &zp, VX1_t &z, calmat_t &calmat)
+  {
+  VX1_t tmpz;
+
+  m_sub(tmpz, z, calmat.c);
   zp.fill(0.);
-  m_mac(zp, mcCal, tmpz);
+  m_mac(zp, calmat.K, tmpz);
   }
 
-void mcCompute()
-  {
-  matrix<double, X2_N, 1 >   u;
+void mcCDeCal(floatXYZ_t* v, double calmat[calmat_N] )
+  { // C entry.
+  matrix<double, 3, 1> z( (float*)v);
 
-  mcColAndSolve(u, accOmega);
+  mcDeCal(z,z, *((calmat_t*)calmat) );
 
-  mcDeEllipsoid(mcCal,mcCentre, mcRadii, u);
-
+  v->x = z(0,0);
+  v->y = z(1,0);
+  v->z = z(2,0);
   }
 
-void mcColAndSolve( matrix<double, X2_N,1> &u,
-                    matrix<double, X4_N,1> &accOmega )
+void mcCompute( double calmat[calmat_N], double accOmega[X4_N])
+  { // C entry.
+  VX2_t u;
+
+  mcColAndSolve(u, *((VX4_t*)accOmega) );
+  mcDeEllipsoid( *((calmat_t*)calmat), u);
+ // mcDeEllipsoid(mcCal,mcCentre, mcRadii, u);
+  }
+
+void mcColAndSolve( VX2_t &u, VX4_t &accOmega )
   {
-  matrix<double, X2_N, X2_N> OmegaTOmega;
-  matrix<double, X2_N, X2_N> LDL;
-  matrix<double, X2_N, 1      > Omega1;
+  MX2_t OmegaTOmega(0.);
+  MX2_t LDL;
+  VX2_t Omega1;
   mcCollectO( OmegaTOmega, Omega1, accOmega );
 
   m_ldlT( LDL, OmegaTOmega );
   m_solve_ldlT( u, LDL, Omega1 ); // return in u.
   }
 
-void mcDeEllipsoid( matrix<double, X1_N, X1_N> &cal,
-                    matrix<double, X1_N, 1>   &c,
-                    matrix<double, X1_N, 1>   &iL,
-                    matrix<double, X2_N, 1>   &u )
+template<typename T, unsigned int N>
+T sym_norm(matrix<T,N,N> &x)
   {
-  matrix<double, X1_N, 1 >    L, tmpc, cp;
-  matrix<double, X1_N, X1_N > Q, A, tmpS;
+  T a, m;
+  m = 0.;
+  for (int j = 0 ; j < (int)N ; ++j)
+    {
+    a = 0.;
+    for (int i = 0 ; i < (int)N ; ++i)
+      a += fabs( i<j ? x(i,j) : x(j,i) );
+    if (a > m)
+      m = a;
+    }
+  return m;
+  }
+
+double mcOTOConditionNumber(double accOmega[X4_N] ) 
+  { // C entry.
+    // I'm sure there should be a faster way to get
+    // at a condition number without having to fully invert.
+  MX2_t OmegaTOmega(0.), LDL(0.), invOTO(0.);
+  VX2_t Omega1;
+
+  mcCollectO( OmegaTOmega, Omega1, *((VX4_t*)accOmega) );
+  m_ldlT( LDL, OmegaTOmega );
+  m_inv_ldlT( invOTO, LDL ) ;
+
+  return log(sym_norm(OmegaTOmega) * sym_norm(invOTO));
+  }
+
+void mcDeEllipsoid( calmat_t &calmat, VX2_t &u )
+  {
+  VX1_t  iL, L, tmpc, cp;
+  MX1_t  Q, A, tmpS;
   matrix<double, 1, 1> r11 ;
   double r;
   int i;
@@ -133,29 +202,29 @@ void mcDeEllipsoid( matrix<double, X1_N, X1_N> &cal,
   for (i = 0; i < L.dim_1 ; ++i)
     iL(i,0) = 1.0 / L(i,0);
 
-
   m_maD ( tmpS, Q, iL );
   tmpc.fill(0.);
   m_maTc( tmpc,  Q,  cp );
-  c.fill(0.);
-  m_mac ( c, tmpS, tmpc );
-  c.scale(-1.0);   // return c
+  calmat.c.fill(0.);
+  m_mac( calmat.c, tmpS, tmpc );
+  calmat.c.scale(-1.0);   // return c
 
   tmpc.fill(0.);
-  m_mac ( tmpc, A, c );
-  m_maTc( r11, c, tmpc ) ;
+  m_mac ( tmpc, A, calmat.c );
+  r11.fill(0.);
+  m_maTc( r11, calmat.c, tmpc ) ;
 
   r = 1.0 / ( r11(0,0) + 1.0) ;
 
   for (i = 0; i < L.dim_1 ; ++i)
     {
     L(i,0)  =  sqrt( r * L(i,0) );
-    iL(i,0) =  1.0 / L(i,0);  // return iL
+    calmat.iLambda(i,0) =  1.0 / L(i,0);  // return iLambda
     }
   
-  m_maD (tmpS, Q,    L );
-  cal.fill(0.);
-  m_macT(cal,  tmpS, Q ); // return Cal
+  m_maD (tmpS, Q, L );
+  calmat.K.fill(0.);
+  m_macT(calmat.K,  tmpS, Q ); // return K
   }
 
 

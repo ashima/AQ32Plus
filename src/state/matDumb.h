@@ -11,7 +11,7 @@
               tiled). Much left to do.
 */
 
-#include <assert.h>
+//#include <assert.h>
 
 typedef unsigned int uint ;
 
@@ -25,13 +25,13 @@ public:
 
   T &operator()(uint i, uint j)
     {
-   // assert( i < N && j < M );
+    // assert( i < N && j < M );
     return this->data[i][j];
     }
 
   const T &operator()(uint i, uint j) const
     {
-  //  assert( i < N && j < M );
+    // assert( i < N && j < M );
     return this->data[i][j];
     }
 
@@ -56,10 +56,11 @@ public:
   matrix()                 {};
   matrix(matrix<T,N,M> &s) { blit(s); }
   matrix(T v)              { fill(v); }
-  matrix(T* p)
+  template<typename S>
+  matrix(S* p)
     {
     for (uint i = 0 ; i < N*M ; ++i)
-      ((T*)data)[i] = p[i];
+      ((T*)data)[i] = (T)(p[i]);
     }
 
   matrix<T,N,M> &operator=(matrix<T,N,M>& s) { blit(s); return *this; }
@@ -242,13 +243,13 @@ template<typename T, uint N,uint M>
 void m_solve_ldlT(matrix<T,N,M> &x, matrix<T,N,N> &l, matrix<T,N,M> &y)
   {
   T a;
-  for (uint j=0; j < M; ++j )
+  for (int j=0; j < (int)M; ++j )
     {
     x(0,j) = y(0,j);
-    for (uint i=1; i < N; ++i)
+    for (int i=1; i < (int)N; ++i)
       {
       a = y(i,j);
-      for (uint k=0; k < i ; ++k)
+      for (int k=0; k < i ; ++k)
         a -= l(i,k) * x(k,j) ;
       x(i,j) = a;
       }
@@ -256,7 +257,7 @@ void m_solve_ldlT(matrix<T,N,M> &x, matrix<T,N,N> &l, matrix<T,N,M> &y)
     for (int i=N-2; i >= 0; --i)
       {
       a = x(i,j) / l(i,i);
-      for (uint k=i+1; k < N ; ++k)
+      for (int k=i+1; k < (int)N ; ++k)
         a -= l(k,i) * x(k,j) ;
       x(i,j) = a;
       }
@@ -264,6 +265,34 @@ void m_solve_ldlT(matrix<T,N,M> &x, matrix<T,N,N> &l, matrix<T,N,M> &y)
     }
   }
 
+template<typename T, uint N>
+void m_inv_ldlT(matrix<T,N,N> &x, matrix<T,N,N> &l)
+  {
+  T a;
+  for (int j=0; j < (int)N; ++j )
+    {
+    x(j,j) = 1.0;
+    for (int i=j+1; i < (int)N; ++i)
+      {
+      a = 0.;
+      for (int k=0; k < i ; ++k)
+        a -= l(i,k) * x(k,j) ;
+      x(i,j) = a;
+      }
+    x(N-1,j) = x(N-1,j) / l(N-1,N-1);
+    for (int i=N-2; i >= j; --i)
+      {
+      a = x(i,j) / l(i,i);
+      for (int k=i+1; k < (int)N ; ++k)
+        a -= l(k,i) * x(k,j) ;
+      x(i,j) = a;
+      }
+    for (int i = j-1; i>=0 ; --i)
+      x(i,j) = x(j,i);
+    }
+
+  }
+ 
 template<typename T, uint N>
 void m_unpack_ld(matrix<T,N,N> &l, matrix<T,N,N> &d, matrix<T,N,N> &m)
   {

@@ -37,6 +37,7 @@
 #include "board.h"
 #include <core_cmInstr.h>
 #include "eMatAxisPerm.h"
+#include "shim.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // MPU6000 Defines and Variables

@@ -1,5 +1,5 @@
 function x = testMagCal()
-  d = load('mag_ac3');
+  d = load('mag_ac3.dat');
  
   [DD,D1] = acc1(d); 
   [A,cp] = dToA1(DD,D1);
@@ -50,11 +50,15 @@ function [DD,D1] = acc2(d)
   accOmega = zeros(35,1);
 
   for i=1:(size(d)(1)),
-    accAccumulate( d(i,1), d(i,2), d(i,3) );
+    mcAccumulate( d(i,1), d(i,2), d(i,3) );
+
+    [DD, D1] = mcCollectO(accOmega);
+    DD = (DD + tril(DD',-1));
+
+    DDcond(i) = (norm(DD));
   end
- 
-  [DD, D1] = accCollectO(accOmega);
-  DD = (DD + tril(DD',-1));
+save("tt1.dat", 'DDcond');
+
 end
 
 function [A,cp] = dToA1(DD,D1)
@@ -65,7 +69,7 @@ end
 
 function [A,cp] = dToA2(DD,D1)
   v = DD \ D1' ;
-  [A,cp] = accCollectA(v);
+  [A,cp] = mcCollectA(v);
   # A = [ v(1) v(2) v(4) ; v(2) v(3) v(5) ; v(4) v(5) v(6) ];
   # cp = [ v(7); v(8); v(9) ];
 end

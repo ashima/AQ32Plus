@@ -3,34 +3,40 @@
 using namespace std;
 
 #include "matDumb.h"
+#include "calibration/magCal.h"
 
 enum { ln_N = 1024 };
 
 char ln[ln_N];
-enum { X1_N = 3 };
+//enum { X1_N = 3 };
 
-extern matrix<double, X1_N, X1_N> mcCal;
-extern matrix<double, X1_N, 1>    mcCentre;
-extern matrix<double, X1_N, 1>    mcRadii;
 
 void mcAddPoint(double x, double y, double z);
 void mcCompute();
+double mcOTOConditionNumber();
+
+enum { conditionEveryN = 100 };
 
 int main()
   {
-  FILE *fp = fopen("mag_ac3.dat","r") ;
+  FILE *fp = stdin ; //fopen("mag_ac3.dat","r") ;
   float x,y,z;
+  int i;
+  double accOmega[ X4_N ];
+  matrix<double, 5,3> calMat;
 
-  while (!feof(fp))
+  mcInit(accOmega);
+
+  for (i=0; !feof(fp); ++i )
     {
     fgets(ln, ln_N, fp);
     sscanf(ln, "%f,%f,%f", &x,&y,&z);
-    mcAddPoint(x,y,z);
+    mcAddPoint(accOmega,x,y,z);
+    if (0 == i % conditionEveryN)
+      cout << mcOTOConditionNumber(accOmega) << endl;
     }
 
-  mcCompute();
-  cout << "cal = "     << mcCal <<endl;  
-  cout << "mCentre = " << mcCentre <<endl;  
-  cout << "radii = "   << mcRadii <<endl;  
+  mcCompute((double*)&calMat(0,0),accOmega);
+  cout << "cal = "     << calMat <<endl;
   fclose(fp);
   }

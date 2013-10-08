@@ -118,7 +118,7 @@ void cliPrint(char* str)
 
 void cliPrintF(const char * fmt, ...)
 {
-	char buf[256];
+	char buf[1024];
 
 	va_list  vlist;
 	va_start (vlist, fmt);
