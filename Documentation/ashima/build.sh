@@ -4,7 +4,7 @@ export TEXINPUTS=.:..:
 N=`basename $PWD`
 echo N = $N
 
-C="pdflatex -halt-on-error -jobname $N main.tex"
+C="pdflatex -jobname $N -output-directory $1 -halt-on-error main.tex "
 echo C = $C
 
 $C && $C && $C
