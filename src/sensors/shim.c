@@ -19,8 +19,8 @@
 // identity transorm. For the normal mount, the 180 degree rotation about X is
 // just negating Y and Z.
 
-//EMAT_DECLARE_PERM_EMAT( VehicleBoard, P_XYZ | P_PNN );
-EMAT_DECLARE_PERM_EMAT( VehicleBoard, P_XYZ | P_PPP );
+EMAT_DECLARE_PERM_EMAT( VehicleBoard, P_XYZ | P_PNN );
+//EMAT_DECLARE_PERM_EMAT( VehicleBoard, P_XYZ | P_PPP );
 
 // This function assumes that the raw sensor values have just been read
 // into global raw state variables by their appropriate functions.
