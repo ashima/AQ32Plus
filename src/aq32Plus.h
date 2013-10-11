@@ -372,6 +372,9 @@ typedef struct eepromConfig_t
     int8_t signMX;
     int8_t signMY;
     int8_t signMZ;
+
+    double magCalMat[15];
+
     uint8_t  CRCFlags;
     uint32_t CRCAtEnd[1];
 } eepromConfig_t;

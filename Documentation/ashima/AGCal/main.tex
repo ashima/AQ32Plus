@@ -1,0 +1,57 @@
+\documentclass{article}
+\usepackage{boilerplate}
+\def\mat#1{\mathbf{#1}}
+\begin{document}
+\title{Accelerometer and Gyro Calibration}
+\section{Accelerometer and Gyro Calibration}
+\boilerplate{APIBACK}
+{ijm@ashimaresearch.com}
+{Public interested spherical fitting and calibrating Accelerometers.}
+{Linked to the lifetime of the module it describes.}
+{Open, Incomplete}
+\subsection{Overview}
+The MPU6050 and MPU9150, accelerometer and gyro have temperature dependent biases that drift very slowly over time.
+\\
+The problem is how to separate the biases from without knowing the
+precise orientation of the vehicle. We assume :\\
+\begin{itemize}
+\item the biases are linear in temperature only
+\item measurement noise is Gaussian with zero mean
+\item that the temperature can be varied in some way for each observation
+\item the vehicle is stationary while taking a calibration observation
+\item the earth gravity doesn't change between observation
+\item that multiple observation can be done, each in a different orientation.
+\end{itemize}
+From this we can generate more relations than unknown coefficients
+and so solve or fit for the coefficients.  Specifically :
+The linear dependence on temperature means it must be constant
+across all observations and so can be computed independently of
+offsets and each observation produces a mean vector that is the sum
+of the bias offset and earth gravity. Thus each observation 
+generates 3 new unknowns, but 4 new relations to
+add to the 3 unknown biases. So for $N$ measurements we have $3N+6$
+unknowns versus $4N$ relations, and the problem becomes over
+constrained for $N>6$.  (The eight mid-octant vectors would be a good choice).
+To make this a linear problem though we have to do the same trick as is layed out
+in detail in the Magnotometer section, accept we can assume the ellipsoid is axis
+oriented, which makes this a 6 unknown problem instead of the full 9 unknowns.
+\\
+\subsection{Details}
+For each observation the only thing changing is the temperature of
+the chip (by say, using a cold spray right before the observation
+starts). Data is taken continuously and accumulated to give a least
+squares fit for the observation.
+\\
+The slope of a straight line that minimizes the square deviation
+in the dependant parameter $z$ with respect to independent parameter, in this case the temperature $T$, is given by
+\begin{equation}
+T_z = \frac{ cov(T,z) } { cov(T,T) } = 
+\frac{ (\sum_i T_i z_i) - n \bar{T}\bar{z} } { (\sum_i T_i^2) - n \bar{T}^2 } = 
+\frac{ \sum_i (T_i - \bar{T})(z - \bar{z}) } { \sum_i ( T_i - \bar{T} )^2 }
+\end{equation}
+And the Offset can be recovered by using the slope and the means :
+\begin{equation}
+A_z = \bar{z} - T_z \bar{T}
+\end{equation}
+... tbf ...\\
+\end{document}

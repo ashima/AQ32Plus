@@ -983,12 +983,20 @@ void sensorCLI()
                 cliPrintF("Gyro TC Bias Intercept:    %9.4f, %9.4f, %9.4f\n",   eepromConfig.gyroTCBiasIntercept[ROLL ],
                    		                                                        eepromConfig.gyroTCBiasIntercept[PITCH],
                    		                                                        eepromConfig.gyroTCBiasIntercept[YAW  ]);
-                cliPrintF("Mag Bias:                  %9.4f, %9.4f, %9.4f\n",   eepromConfig.magBias[XAXIS],
-                                                   		                        eepromConfig.magBias[YAXIS],
-                                                   		                        eepromConfig.magBias[ZAXIS]);
-                cliPrintF("Mag Scale Factor:          %9.4f, %9.4f, %9.4f\n",   magScaleFactor[XAXIS],
-                                                   		                        magScaleFactor[YAXIS],
-                                                   		                        magScaleFactor[ZAXIS]);
+                //cliPrintF("Mag Bias:                  %9.4f, %9.4f, %9.4f\n",   eepromConfig.magBias[XAXIS],
+                //                                   		                        eepromConfig.magBias[YAXIS],
+                //                                   		                        eepromConfig.magBias[ZAXIS]);
+                //cliPrintF("Mag Scale Factor:          %9.4f, %9.4f, %9.4f\n",   magScaleFactor[XAXIS],
+                //                                   		                        magScaleFactor[YAXIS],
+                //                                   		                        magScaleFactor[ZAXIS]);
+		double* mc = eepromConfig.magCalMat;
+
+                cliPrintF("Mag : [ %9.4f %9.4f %9.4f ]\n", mc[ 0], mc[ 1], mc[ 2]);
+                cliPrintF("      [ %9.4f %9.4f %9.4f ]\n", mc[ 3], mc[ 4], mc[ 5]);
+                cliPrintF("      [ %9.4f %9.4f %9.4f ]\n", mc[ 6], mc[ 7], mc[ 8]);
+                cliPrintF("  c : [ %9.4f %9.4f %9.4f ]\n", mc[ 9], mc[10], mc[11]);
+                cliPrintF("  r : [ %9.4f %9.4f %9.4f ]\n", mc[12], mc[13], mc[14]);
+
                 cliPrintF("Accel One G:               %9.4f\n",   accelOneG);
                 cliPrintF("Accel Cutoff:              %9.4f\n",   eepromConfig.accelCutoff);
                 cliPrintF("KpAcc (MARG):              %9.4f\n",   eepromConfig.KpAcc);
@@ -1050,6 +1058,12 @@ void sensorCLI()
                 break;
 
 			///////////////////////////
+            case 'd': // MPU6000 Calibration
+                mpu6000CalibrationLSQ();
+
+                sensorQuery = 'a';
+                validQuery = true;
+                break;
 
         	case 'x':
 			    cliPrint("\nExiting Sensor CLI....\n\n");

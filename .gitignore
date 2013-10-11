@@ -8,6 +8,8 @@
 *.mapfile
 *.lst
 *.sw?
+*.pyc
 \#*
 *~
+.DS_Store
 

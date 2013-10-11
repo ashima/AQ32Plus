@@ -160,6 +160,7 @@ void SysTick_Handler(void)
             	gyroSummedSamples500Hz[index] = gyroSum500Hz[index];
                 gyroSum500Hz[index] = 0.0f;
             }
+   
         }
 
         ///////////////////////////////
@@ -218,10 +219,8 @@ void SysTick_Handler(void)
         ///////////////////////////////
 
         if (((frameCounter + 1) % COUNT_10HZ) == 0)
-        {
+             newMagData = true;
         //     newMagData = readMag(HMC5883L_I2C);
-	        newMagData = true;
-	    }
 
         if ((frameCounter % COUNT_10HZ) == 0)
             frame_10Hz = true;

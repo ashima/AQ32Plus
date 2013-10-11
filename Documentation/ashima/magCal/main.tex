@@ -1,0 +1,588 @@
+\documentclass{article}
+\usepackage{boilerplate}
+\def\mat#1{\mathbf{#1}}
+\begin{document}
+\title{Magnetometer Calibration}
+\section{Magnetometer Calibration}
+\boilerplate{APIBACK}
+{ijm@ashimaresearch.com}
+{General: Anyonec interested in ellipsoidal fitting and calibration of magnetometers.}
+{Linked to the lifetime of the module it describes.}
+{Open, Incomplete}
+\subsection{Introduction}
+The calibration described in this document is designed with the goal of using
+a magnetometer as a compass. While some applications using a magnetometer
+may find want to measure the absolute field strength, our priority is to get a good
+heading measurement and as such we would ideally seek to remove everything 
+but the Earth's field.
+\\
+\\
+In a perfect world the magnetometer would sit by itself with no
+metal around it, sampling an unchanging magnetic field from the
+earth with 3 perfectly balanced and orthogonal sensors.
+\\
+\\
+In reality the magnetometer will have to deal with field modification by materials
+and currents flowing near to the magnetometer. There are two major forms of error: 
+1. Hard magnetic errors owing to the presence of materials like steel and/or to 
+large circulating currents, both of which cause a constant offset (unless the current
+is changing) and both rotate with the magnetometer; 2. Soft magnetic errors due to
+the presence of materials like iron and nickel (including nickel plated parts), which
+cause a stretching of the measured field.
+\\
+\\
+The stretching and offset can be computed and removed without
+recourse to a calibration magnet as long as the magnetometer can
+be rotated over a full sphere in a constant, unchanging field (such as the
+terrestrial field). If
+there were no distortions (no stretching or offsets), the measured field vectors would all sit on a sphere
+centered at the origin, since the Earth's magnetic field doesn't change while the
+orientation of the magnetometer is varied. However, hard magnetic (`hard iron') errors equate 
+to a non-origin center, and soft magnetic (`soft iron') errors to an ellipsoidal shape.
+\\
+\\
+The following sections detail how to fit an ellipsoid to a set of
+data points derived from rotating the magnetometer within a constant field in 
+order to retrieve the parameters for a
+de-calibration function $k(\vec{x})$.\\
+\subsection{Some Definitions: From a Sphere to an Off-Center Ellipsoid}
+Start with a unit sphere about the origin. 
+\begin{equation}
+\left| \vec{x} \right |^2 = \vec{x}^T \vec{x} = 1
+\end{equation}
+Where $\vec{x}$ is a column 3-vector. If instead the vector defines an ellipse centered on the origin and with axes aligned with the coordinate axes, then it must be scaled back to a sphere first (and keeping the equation symmetric):
+\begin{equation}
+(\mat{\Sigma}\vec{x})^T (\mat{\Sigma}\vec{x}) = 1
+\end{equation}
+\begin{equation}
+\vec{x}^T \mat{\Sigma}^2 \vec{x} = 1
+\end{equation}
+Where $\mat{\Sigma}^2$ and $\mat{\Sigma}$ are diagonal matricies.  If we further relax the vector to one defining an ellipse that isn't oriented with the coordinate axes, then it must be rotated before being scaled:
+\begin{equation}
+\vec{x}^T \mat{R}^T \mat{\Sigma}^2 \mat{R} \vec{x} = 1
+\end{equation}
+Where $\mat{R}$ is an orthogonal rotation matrix.  Lastly, if the ellipsoid is not centered on the origin, then it has to be translated before being rotated and scaled:
+\begin{equation}
+(\vec{x}-\vec{c})^T \mat{R}^T \mat{\Sigma}^2 \mat{R} (\vec{x}-\vec{c}) = 1
+\end{equation}
+Where $\vec{c}$ is the center of the ellipsoid.\\
+\\
+Ignoring the center for the moment, the combined matrix $\mat{A} = \mat{B}^T\mat{B}$ with $\mat{B} = \mat{\Sigma} \mat{R}$. This equation then has the form:
+\begin{equation}
+\vec{x}^T \mat{A} \vec{x} = \vec{x}^T \mat{B}^T \mat{B} \vec{x} = 1
+\end{equation}
+$\mat{A}$ is therefore symmetric and at least positive semi-definite. $\mat{R}$ is a rotation matrix so $\mat{R}^{-1} = \mat{R}^T$ and therefor
+$\mat{A} = \mat{R}^{-1}\mat{\Sigma}^2\mat{R}$. This has a similar form
+to the eigen-decomposition of a squared matrix. So $\mat{A} = \mat{Q}\mat{\Lambda}\mat{Q}^{-1}$,
+where $\mat{Q} = \mat{R}^{-1}$ contain eigenvectors, and $\mat{\Lambda} = \mat{\Sigma}^2$ is a
+diagonal matrix of corresponding eigenvalues.
+\subsection{Non-Centering of the Ellipsoid}
+I will deal with the offset of the ellipsoid center from the origin by a vector
+$\vec{c}$. Several parallel and equivalent approaches are shown for clarity and
+for ease of comparison with other derivations.
+%
+\subsubsection{Method 1 - Cartesian}
+In Cartesian vector form, subtracting $\vec{c}$ and multiplying through :
+\begin{equation}
+(\vec{x}-\vec{c})^T \mat{A} (\vec{x}-\vec{c}) = 1
+\end{equation}
+\begin{equation}
+(\vec{x}^T-\vec{c}^T) (\mat{A}\vec{x}- \mat{A}\vec{c}) = 1
+\end{equation}
+\begin{equation}
+\vec{x}^T \mat{A}\vec{x} - \vec{x}^T\mat{A}\vec{c}
+- \vec{c}^T\mat{A}\vec{x} + \vec{c}^T\mat{A}\vec{c} = 1
+\end{equation}
+\begin{equation}
+\vec{x}^T \mat{A}\vec{x} - 2\vec{c}^T\mat{A}\vec{x} + \vec{c}^T\mat{A}\vec{c} = 1
+\end{equation}
+%
+\subsubsection{Method 2 - Homogeneous}
+Reformulating in homogeneous co-ordinates, which requires care because the $\left\|
+\vec{x} \right\|$ operator because is no longer simple: 
+\begin{equation}
+\left| \vec{x'}^T\vec{x'} \right| = \vec{x}^T \vec{x} + 1
+\end{equation}
+Where $\vec{x}'$ is the vector $\vec{x}$ augmented with an extra dimension
+containing a weight, and using the notation $\left|\vec{x}\right|$ to mean 
+that the homogeneous coordinates are
+first scaled so the weight component is $1$. i.e. 
+\begin{equation*}
+\left| \left[ x ~ y ~ z ~ w \right]^T \right| = 
+\left[ \frac{x}{w} ~ \frac{y}{w} ~ \frac{z}{w}
+~ {1} \right]^T
+\end{equation*}
+\\
+So:
+\begin{equation} \left| \vec{x'}^T\mat{C}^T \mathcal{A}\mat{C} \vec{x'} \right| -1 = 1
+\end{equation}
+where $\mat{C}=\left[\begin{smallmatrix}
+1 & 0 & 0 & -r\\ 0 & 1 & 0 & -s\\ 0 & 0 & 1 & -t\\ 0 & 0 & 0 & 1
+\end{smallmatrix} \right]$ is the translation operator for $\vec{c}$ and $\mathcal{A}$ is
+$\mat{A}$ augmented with the origin\\
+$\mathcal{A}= \left[\begin{array}{c|c}
+\mat{A} & 0 \\ \hline 0 & 1 \end{array}\right] = \left[\begin{smallmatrix}
+A & B & C & 0\\ B & D & E & 0\\ C & E & F & 0\\ 0 & 0 & 0 & 1
+\end{smallmatrix} \right]$.
+%
+\begin{equation}
+\begin{split}
+\left| \vec{x'}^T\mat{C}^T \mathcal{A} \mat{C} \vec{x'}\right| &= 2\\
+\left|\vec{x'}^T\left[\begin{array}{c|c}
+\mat{A} & -\mat{A}\vec{c} \\ 
+\hline
+-\vec{c}^T\mat{A} & \vec{c}^T \mat{A} \vec{c}+1 
+\end{array} \right]\vec{x'} \right| &= 2 \\
+\end{split}
+\end{equation}
+Multiplying out (including the weight) gives:
+\begin{equation}
+\begin{split}
+\vec{x}^T \mat{A}\vec{x} - 2\vec{c}^T\mat{A}\vec{x} + \vec{c}^T\mat{A}\vec{c} + 1 &= 2\\
+\end{split}
+\end{equation}
+%
+\subsubsection{Method 3 - Element-wise}
+Multiplying out $x^T\mat{A}x = 1$, with 
+$\mat{A} = \left[ \begin{smallmatrix}
+A & B & C \\
+B & D & E \\
+C & E & F
+\end{smallmatrix} \right]$ and $\vec{x}=\left[ x,y,z \right]$ first.
+\begin{equation}
+Ax^2 + Dy^2 + Fz^2 + 2Bxy + 2Cxz +2Eyz = 1
+\end{equation} 
+Substituting $\vec{x} = \vec{x}-\vec{c}$ with $\vec{c} = \left[r,s,t\right]$
+\begin{equation}
+\begin{matrix}
+A(x^2 - 2xr + r^2) &+& 2B(xy -xs -yr + rs) &+&\\
+D(y^2 - 2ys + s^2) &+& 2C(xz -xt -zr + rt) &+&\\
+F(z^2 - 2zt + t^2) &+& 2E(yz -yt -zs + st) &=&1\\
+\end{matrix}
+\end{equation}
+Rearranging :
+\begin{equation}
+\begin{matrix}
+Ax^2 + 2Bxy &+& Dy^2 + 2Cxz &+& Fz^2 + 2Eyz &+& \\
+-2x(Ar+Bs+Ct) &+& -2y(Br+Ds+Et) &+& -2z(Cr+Es+Ft) &+&\\
+Ar^2+2Brs  &+& Ds^2 + 2Crt &+& Ft^2 + 2Est &=&1  \\
+\end{matrix}
+\end{equation}
+Which is the same form as:
+\begin{equation}
+\vec{x}^T \mat{A}\vec{x} - 2\vec{c}^T\mat{A}\vec{x} + \vec{c}^T\mat{A}\vec{c} = 1
+\end{equation}
+\subsection{The Ellipse Equation}
+Let $\mat{A} = \left[ \begin{smallmatrix}
+A & B & C \\
+B & D & E \\
+C & E & F
+\end{smallmatrix} \right]$ as above, 
+$R = 1 - \vec{c}^T\mat{A}\vec{c}$, and $\left[\begin{smallmatrix}
+G\\H\\I \end{smallmatrix}\right] = -\mat{A}\vec{c}$
+\\
+Substituting and multiplying through gives :
+\\
+\begin{equation}
+Ax^2 + Dy^2 + Fz^2 + 2Bxy + 2Cxz +2Eyz + 2Gz + 2Hy + 2Iz = R
+\end{equation}
+As $R$ contains unknowns but is constant for every point, we can divide it out and rewrite the problem as:
+\begin{equation}
+A'x^2 + D'y^2 + F'z^2 + 2B'xy + 2C'xz +2E'yz + 2G'z + 2H'y + 2I'z = 1
+\end{equation}
+The factor $R$ is only needed if retrieving the ellipse radii separately
+is required. Otherwise this is a constant factor applied equally
+to all axes, which disappears under the final normalization step.
+\\
+A collection of points can be least-squares fit to this equation
+by constructing the linear problem
+$\mat{\Omega}\vec{u} = \vec{v}$ where the i-th row of $\mat{\Omega}$ contains the factor permutations in
+the above equation, $\vec{u} =
+\left[A',B',...,I'\right]^T$ are the members of matrix $\mat{A}'$ as above for $\mat{A}$, and $\vec{v}=\vec{1}$.
+\begin{equation}
+\left[ \begin{matrix}
+& & & \vdots \\
+x_i^2 & 2x_iy_i & 2x_iz_i & y_i^2 & 2y_iz_i & z_i^2 & 2x_i & 2y_i & 2z_i \\
+& & & \vdots  
+\end{matrix}\right]
+\left[ \begin{matrix} A'\\ B'\\ \vdots\\ H'\\ I' \end{matrix}\right] = \vec{1}
+\end{equation}
+Once found, the parameters of the ellipse can be found by using an 
+eigen-decomposition of $\mat{A}'$ to reverse the above construction.
+\\
+\\
+Note: The matrix $\mat{A'}$ being found here is symmetric only. It does
+not have to be positive semi-definate and probably won't be if the
+ellipse is not very close to the origin.
+%
+\subsection{Usage}
+The target goal here is to remove the distortions caused by hard and soft magnetic errors in order to improve the use of a 3-axis magnetometer as a compass.
+\\
+\\
+From the previous section we now have the parameters of the ellipse on which data measurements 
+will sit with minimum error. From this we can remove the center offset easily.
+However we want to scale the ellipse back to a sphere without changing the measured direction.
+This is done by scaling along the axes of the ellipse, given by the eigen-vectors of $\mat{A}$. The result will still be noisy and so still has to be forced onto the sphere with a normalization.
+\\
+\\
+To do this we need to rotate a measurement ($\vec{z}$), scale along the axes, and rotate back. This rotation is the same as the rotation $\mat{R}$ above in the definition of the ellipse because it also rotates back to the axes before scaling. The difference is the scale factor (it isn't squared):
+\begin{equation}
+\vec{z}' = \mat{R}^T \mat{\Sigma} \mat{R} \vec{z}
+\end{equation}
+The decalibration function is then :
+\begin{equation}
+k(\vec{z}) = \mat{K}\left( \vec{z} - \vec{c} \right)~\text{ where }~\mat{K} = \mat{R}^T \mat{\Sigma} \mat{R}
+\end{equation}
+Figure X is histogram of the angle between the corrected and uncorrected measurements when forced onto a sphere (i.e. $\hat{\vec{z}}'$ and $\hat{\vec{z}}$ respectively) from an example calibration. It shows that that angles can be off by as much as 4 degrees.
+\subsection{Procedure}
+\begin{enumerate}
+\item Compute the matrices $\mat{\Omega}^T \mat{\Omega}$ (covariances) and $\mat{\Omega}^T \vec{1}$ (means).
+\item Solve $\mat{\Omega}^T \mat{\Omega} \vec{u} = \mat{\Omega}^T \vec{1}$ for $\vec{u}$ to reconstruct $\mat{A}'$.
+\item Decompose $\mat{A'}$ into $\mat{Q}\mat{\Lambda}\mat{Q}^T$.
+\item Retrieve center by solving $\left[\begin{smallmatrix} G'\\H'\\I' \end{smallmatrix}\right] = -\mat{A'}\vec{c}$ for $\vec{c}$.
+\item Retrieve radii by Un-scale $\mat{A'}$ back to $\mat{A}$.
+\item Compute the calibration matrix.
+\end{enumerate}
+\subsection{Implementation}
+\subsubsection{ Compute the matrices $\mat{\Omega}^T \mat{\Omega}$ and $\mat{\Omega}^T \vec{1}$ }
+$\mat{\Omega}^T \vec{1}$ simply sums the elements of columns of $\mat{\Omega}$ so:
+\begin{equation}
+\mat{\Omega}^T \vec{1} =  \left[ \begin{matrix}
+\overline { x^2 } &
+2\overline { x y } &
+2\overline { x z } &
+\overline { y^2 } &
+2\overline { y z } &
+\overline { z^2 } &
+2\overline { x } &
+2\overline { y } &
+2\overline { z }
+\end{matrix}\right]^T
+\end{equation}
+Where $\overline{abc} = \sum_i a_i b_i c_i$ (Note: it is NOT divided by the count to get a mean).
+\\
+\\
+$\mat{\Omega}^T\mat{\Omega}$ is more interesting. First element-wise factor out the constants in 
+each row, with
+$\vec{f} = 
+\left[ \begin{matrix}
+1 & 2 & 2 & 1 & 2 & 1 & 2 & 2 & 2
+\end{matrix}\right]$, and
+\begin{equation}
+\mat{\Omega} = \left[ \begin{matrix}
+& & & \vdots \\
+x_i^2 & x_iy_i & x_iz_i & y_i^2 & y_iz_i & z_i^2 & x_i & y_i & z_i \\
+& & & \vdots  
+\end{matrix}\right] \otimes \left[\begin{matrix} \vdots\\ \vec{f} \\ \vdots \end{matrix}\right]
+\end{equation}
+\begin{equation}
+\mat{\Omega}^T \mat{\Omega} = \left[ \begin{array}{cccccccccc}
+\overline{x^4} & \overline{x^3y} & \overline{x^3z} & \overline{\cellcolor{green}x^2y^2} & \overline{\cellcolor{yellow}x^2yz} & \overline{\cellcolor{green}x^2z^2} & \overline{x^3} & \overline{\cellcolor{yellow}x^2y} & \overline{\cellcolor{yellow}x^2z} & \\
+\overline{x^3y} & \overline{\cellcolor{green}x^2y^2} & \overline{\cellcolor{yellow}x^2yz} & \overline{xy^3} & \overline{\cellcolor{yellow}xy^2z} & \overline{\cellcolor{yellow}xyz^2} & \overline{\cellcolor{yellow}x^2y} & \overline{\cellcolor{yellow}xy^2} & \overline{\cellcolor{red}xyz} & \\
+\overline{x^3z} & \overline{\cellcolor{yellow}x^2yz} & \overline{\cellcolor{green}x^2z^2} & \overline{\cellcolor{yellow}xy^2z} & \overline{\cellcolor{yellow}xyz^2} & \overline{xz^3} & \overline{\cellcolor{yellow}x^2z} & \overline{\cellcolor{red}xyz} & \overline{\cellcolor{yellow}xz^2} & \\
+\overline{\cellcolor{green}x^2y^2} & \overline{xy^3} & \overline{\cellcolor{yellow}xy^2z} & \overline{y^4} & \overline{y^3z} & \overline{\cellcolor{green}y^2z^2} & \overline{\cellcolor{yellow}xy^2} & \overline{y^3} & \overline{\cellcolor{yellow}y^2z} & \\
+\overline{\cellcolor{yellow}x^2yz} & \overline{\cellcolor{yellow}xy^2z} & \overline{\cellcolor{yellow}xyz^2} & \overline{y^3z} & \overline{\cellcolor{green}y^2z^2} & \overline{yz^3} & \overline{\cellcolor{red}xyz} & \overline{\cellcolor{yellow}y^2z} & \overline{\cellcolor{yellow}yz^2} & \\
+\overline{\cellcolor{green}x^2z^2} & \overline{\cellcolor{yellow}xyz^2} & \overline{xz^3} & \overline{\cellcolor{green}y^2z^2} & \overline{yz^3} & \overline{z^4} & \overline{\cellcolor{yellow}xz^2} & \overline{\cellcolor{yellow}yz^2} & \overline{z^3} & \\
+\overline{x^3} & \overline{\cellcolor{yellow}x^2y} & \overline{\cellcolor{yellow}x^2z} & \overline{\cellcolor{yellow}xy^2} & \overline{\cellcolor{red}xyz} & \overline{\cellcolor{yellow}xz^2} & \overline{x^2} & \overline{xy} & \overline{xz} & \\
+\overline{\cellcolor{yellow}x^2y} & \overline{\cellcolor{yellow}xy^2} & \overline{\cellcolor{red}xyz} & \overline{y^3} & \overline{\cellcolor{yellow}y^2z} & \overline{\cellcolor{yellow}yz^2} & \overline{xy} & \overline{y^2} & \overline{yz} & \\
+\overline{\cellcolor{yellow}x^2z} & \overline{\cellcolor{red}xyz} & \overline{\cellcolor{yellow}xz^2} & \overline{\cellcolor{yellow}y^2z} & \overline{\cellcolor{yellow}yz^2} & \overline{z^3} & \overline{xz} & \overline{yz} & \overline{z^2} & \\
+\end{array}\right]
+\otimes \vec{f}^T \vec{f}
+\end{equation}
+\\
+Where $\otimes$ denotes the element wise multiplication. The 
+colours highlight that the structure is more
+than simply symmetric. Green shows cells that are repeated 3 times,
+yellow 4 times, and red 6 times. There are 31 unique summations
+in the above matrix making 34 in total. These can be accumulated
+one measurement at a time.
+%
+\subsubsection*{Notes on floating point precision}
+The summations need to be done carefully. There are power 1 through
+4 factors, floats only have 24 bits of precision, and there may be
+$\approx$ 100,000 points measured (2 minutes is $\approx$ 128 seconds at 1024 Hz is
+131072 samples, so the count alone requires 17 bits). For more than a
+few seconds of data, a summation hierarchy is needed. Additionally, 
+subtracting out a good center to start with should help greatly.
+%
+\subsubsection*{Notes on code generation}
+The rows of $\mat{A'}$, $\mat{\Omega}$ and $\mat{\Omega}^T\mat{\Omega}$ follow a construction pattern. Consider:
+\begin{equation}
+\begin{split}
+\vec{a}= \operatorname{lo}\left(\begin{matrix}A_i=a_i\\ i \leq 3 \end{matrix}\right)
+&=\left[x~y~z~1\right]\\
+%-----
+\vec{b}= \operatorname{lo}\left(\begin{matrix}B_{ij}=a_ia_j\\ i \leq j \leq 3 \end{matrix}\right)
+&=\operatorname{lo}\left(\begin{matrix}
+x^2 &     &     &   \\
+xy  & y^2 &     &   \\
+xz  & yz  & z^2 &   \\
+x   & y   & z   & 1
+\end{matrix}\right) \\
+&= \left[\begin{matrix}
+x^2 &
+xy & y^2  &
+xz & yz & z^2 & x & y & z & 1
+\end{matrix}\right] \\
+%-----
+\vec{c}=\operatorname{lo}\left(\begin{matrix}C_{ijk}=a_ia_ja_k\\ i \leq j \leq k \leq 3 \end{matrix}\right)
+&=\operatorname{lo}\left(\begin{matrix}
+x^2 &     &     &   \\
+xy  & y^2 &     &   \\
+xz  & yz  & z^2 &   \\
+x   & y   & z   & 1
+\end{matrix}\right|
+\left.\begin{matrix}
+x^2z &      &       & \\
+xyz  & y^2z &       & \\
+xz^2 & yz^2 & z^3   & \\
+     &      &       & 
+\end{matrix}\right|
+\left.\begin{matrix}
+x^2y &      &  & \\
+xy^2 & y^3  &  & \\
+     &      &  & \\
+     &      &  & 
+\end{matrix}\right|
+\left.\begin{matrix}
+x^3 &   &   & \\
+    &   &   & \\
+    &   &   & \\
+    &   &   & 
+\end{matrix}\right)\\
+&= \left[\begin{smallmatrix}
+x^3  &
+x^2y & xy^2 & y^3 &
+x^2z & xyz  & y^2z & xz^2 & yz^2 z^3  &
+x^2  & xy  & y^2 & xz  & yz  & z^2 & x  & y   & z   & 1
+\end{smallmatrix}\right] \\
+%----------
+%\vec{x}_3 &= \operatorname{up}(\vec{x}_2^T\vec{x}_2)=\operatorname{up}
+%\left(\begin{matrix}
+%x^4  & x^3 y   & x^3 z   & x^3    & x^2y^2 & \dots \\
+     %& x^2 y^2 & x^2 y z & x^2 y  & z^2y   & \ddots \\
+     %&         & x^2 z^2 & x^2 z  & \ddots & \ddots \\
+     %&         &         & \ddots & \ddots &  \\
+%\end{matrix}\right)=
+%\left[\begin{matrix}
+%x^4 & x^3 y & x^3 z & x^3 & x^2 y^2 & \dots
+%\end{matrix}\right] 
+\vec{d}=\operatorname{lo}\left(\begin{matrix}D_{ijkl}=a_ia_ja_ka_l\\ i \leq j \leq k \leq l\leq 3 \end{matrix}\right)
+&= \dots
+\end{split}
+\end{equation}
+Notice that $\vec{d}$ ends in $\vec{c}$, and $\vec{c}$ ends in 
+$\vec{b}$, etc.  The lengths and indices of these sequences are intimately
+connected to the simplex numbers (triangular-, tetrahedral-, etc numbers):
+\begin{equation}
+\begin{matrix}
+\triangle_1(h) = h &
+\triangle_2(h) = \frac{h(h+1)}{2} &
+\triangle_3(h) = \frac{h(h+1)(h+2)}{3!} &
+\triangle_d(h) = \frac{(d+h-1)!}{d!(h-1)!}
+\end{matrix}
+\end{equation}
+Where $d$ is the number of dimensions, and $h$ is the height of the simplex. Our height here is always $4$, so:
+\begin{equation}
+\begin{matrix}
+\triangle_1(4) = 4 &
+\triangle_2(4) = 10 &
+\triangle_3(4) = 20 &
+\triangle_4(4) = 35
+\end{matrix}
+\end{equation}
+The indexes in the arrays $\vec{a}$, $\vec{b}$, \dots and their locations in a corresponding tensor $A_{i}$, $B_{ij}$, ... are related by :
+\begin{equation}
+\begin{array}{lll}
+a_n = A_i      & n=\triangle_1(i) = i &  \forall i\leq 3 \\
+b_n = B_{ij}   & n=\triangle_2(j)+\triangle_1(i) & \forall i\leq j \leq 3 \\
+c_n = C_{ijk}  & n=\triangle_3(k)+\triangle_2(j)+\triangle_1(i) & \forall i\leq j \leq k\leq 3 \\
+d_n = D_{ijkl} & n=\triangle_4(l)+\triangle_3(k)+\triangle_2(j)+\triangle_1(i) & \forall i\leq j \leq k\leq l \leq 3 \\
+\end{array}
+\end{equation}
+This reflects the construction of simplex numbers; that the next number in a sequence (e.g. the triangular number sequence)
+is the sum of all the previous numbers. The inverse of these functions requires inverting this idea; find the highest simplex number that
+accounts for as much of $n$ as possible, subtract it out, and recurse for the next index down.
+\begin{equation}
+\begin{split}
+n &= \triangle_2(j) = \frac{j^2 + j}{2} \\
+\text{solve } 0 &= j^2 + j - 2n \\
+\triangle_2^{-1}(n) = j &= \left\lfloor \frac{-1 \pm \sqrt{1 + 8n}}{2} \right\rfloor \\
+\end{split}
+\end{equation}
+So:
+\begin{equation}
+\begin{array}{ll}
+a_n = A_i      & i=\triangle_1^{-1}(n) = n \\
+b_n = B_{ij}   & j=\triangle_2^{-1}(n),~ i = \triangle_1^{-1}(n-\triangle_2(j)) = n-\triangle_2(j) \\
+\end{array}
+\end{equation}
+These relationships can be used to automatically generate $\mat{\Omega}$ and the 
+unique members of $\mat{\Omega}$ and $\mat{\Omega}^{T}\mat{\Omega}$ and to 
+reconstruct $\mat{A'}$, in a way that is always self-consistent.
+
+\subsubsection{Solve $\mat{\Omega}^T \mat{\Omega} \vec{u} = \mat{\Omega}^T \vec{1}$ for $\vec{u}$}
+$\mat{\Omega}^T\mat{\Omega}$ is, by construction, a positive definite symmetric
+matrix and so has a unique Cholesky decomposition. However an ordinary LDL
+decomposition and solve will suffice to solve for $\vec{u}$.\\
+Decompose $\mat{\Omega}^T \mat{\Omega} = \mat{L}\mat{D}\mat{L}^T $ :
+\begin{equation}
+\begin{split}
+\mat{L}\mat{D}\mat{L}^T \vec{u} &= \mat{\Omega}^T \vec{1}\\
+\vec{u} &= \mat{L}^{-T}\mat{D}^{-1}\mat{L}^{-1}\mat{\Omega}^T \vec{1}\\
+\end{split}
+\end{equation}
+By solving by back-substitution the consecutive problems:
+\begin{equation}
+\begin{split}
+\mat{L}\vec{w} &= \mat{\Omega}^T \vec{1}\\
+\mat{L}^T\vec{u} &= \mat{D}^{-1} \vec{w}\\
+\end{split}
+\end{equation}
+\subsubsection{Eigen decompose $\mat{A'} = \mat{Q}\mat{\Lambda}\mat{Q}^{-1}$}
+$\mat{A'}$ is a 3 by 3 symmetric matrix whose eigenvalues can be
+solved directly from its characteristic equation. Start with:
+\begin{equation}
+\begin{matrix}
+\det\left( \lambda \mat{I} - \mat{A'} \right) = 0 & &
+\det\left( \phi \mat{I} - \mat{B} \right) = 0\\
+\end{matrix}
+\end{equation}
+Where $\mat{A'} = p\mat{B} + q\mat{I}$, ~ $\lambda = p \phi + q$, ~ $q = \frac{1}{3}tr(\mat{A'})$ and 
+$p = \sqrt{ tr \left( \frac{1}{6} (q\mat{I}-\mat{A'})^2 \right) } $.\\
+\\
+Then the matrix $\mat{B}$ has a characteristic equation:
+\begin{equation}
+\phi^3 - 3 \phi - \det(\mat{B}) = 0
+\end{equation}
+Which has a trigonometric solution for symmetric real matrices, via the 
+substitution $\phi = 2 \cos{ \theta }$, giving the eigenvalues for $\mat{A'}$ as
+\begin{equation}
+\lambda_{i} = q + 2 p \cos{(\frac{1}{3}\arccos{ \left( \frac{ \det(\mat{B})}{2} \right) + \frac{2\pi}{3}i })}
+\end{equation}
+for $i=1,2,3$. (Note that the cyclic nature of the cosine means that $i=0$ and $i=3$ are the same, etc).
+\\
+\\
+To retrieve the eigen vectors note that: 
+\begin{equation}
+(\mat{A'}-\lambda_i\mat{I})\vec{v}_i = 0
+\end{equation}
+implies that $\vec{v_i}$ sits in the null space of
+$\mat{A'}-\lambda_i\mat{I}$, and (assuming that the eigenvalues are
+distinct) that the column and rows spaces of the matrix sit in a
+plane orthogonal to this eigenvector. So the cross product of any two
+columns will give a vector in the null space:
+\begin{equation}
+[\mat{Q}]_i = \widehat{ [\mat{A'}_i]_1 \times  [\mat{A'}_i]_2 }\text{, for } \mat{A'}_i = \mat{A'} - \lambda_i\mat{I}
+\end{equation}
+Where $[\mat{X}]_i$ means the i-th column of $\mat{X}$.\\
+\\
+Lastly, note again that in this case the $\mat{Q}$s are rotation matrices and so $\mat{Q}^T = \mat{Q}^{-1}$.
+\subsubsection{Retrieve center by solving for $\vec{c}$}
+Defined in the construction:
+\begin{equation}
+\left[\begin{smallmatrix} G'\\H'\\I' \end{smallmatrix}\right] = -\mat{A'}\vec{c}
+\end{equation}
+Note that $G'$,$H'$,$I'$, and the elements of $\mat{A'}$ are all scaled by the constant $R$, which therefore cancels out and using the eigen-decomposition of $\mat{A'}$ :
+\begin{equation}
+-\left[\begin{smallmatrix} G'\\H'\\I' \end{smallmatrix}\right] = \mat{Q}\mat{\Lambda}\mat{Q}^{T}\vec{c}
+\end{equation}
+\begin{equation}
+\vec{c} = -\mat{Q}\mat{\Lambda}^{-1}\mat{Q}^{T}\left[\begin{smallmatrix} G'\\H'\\I' \end{smallmatrix}\right] 
+\end{equation}
+\subsubsection{Retrieve radii by unscaling $\mat{A'}$ back to $\mat{A}$}
+If the radii are needed, then $R$ has to be found so that the
+eigenvalues can be rescaled. Here it is important to distinguish
+between the $\mat{A}$ matrix used in the ellipse construction of
+sections 2.1 and 2.2, and the $\mat{A'}=\frac{1}{R}\mat{A}$ that is retrieved in 2.3.
+\begin{equation}
+\begin{split}
+\vec{c}^T \mat{A'} \vec{c} &= \vec{c}^T \frac{\mat{A}}{R} \vec{c} ~=~\frac{\vec{c}^T\mat{A}\vec{c}}{1 - \vec{c}^T\mat{A}\vec{c} } \\
+&= \frac{1}{1 - \vec{c}^T\mat{A}\vec{c}} + \frac{-1 + \vec{c}^T\mat{A}\vec{c}}{1-\vec{c}^T\mat{A}\vec{c}}\\
+&= \frac{1}{1 - \vec{c}^T\mat{A}\vec{c}} -1 = \frac{1}{R} -1\\
+\end{split}
+\end{equation}
+So:
+\begin{equation}
+R = \frac{1}{\vec{c}^T\mat{A'}\vec{c} +1}\\
+\end{equation}
+The radii in the direction of the eigen-vectors are reciprocal of $\mat{\Sigma}$ :
+\begin{equation}
+\begin{split}
+\mat{\Sigma} &= \sqrt{R \mat{\Lambda}}\\
+&= \sqrt{ (\vec{c}^T\mat{A'}\vec{c} +1)^{-1} \mat{\Lambda}}
+\end{split}
+\end{equation}
+\subsubsection{Usage}
+The decalibration function is:
+\begin{equation}
+k(\vec{z}) = \mat{K}\left( \vec{z} - \vec{c} \right)
+\end{equation}
+Where
+\begin{equation}
+\mat{K} 
+= \mat{R}^T \mat{\Sigma} \mat{R}
+= \left\{\begin{matrix}
+\mat{Q} \mat{\Sigma} \mat{Q}^T &~\text{if}~&\text{Radii are needed} \\
+\mat{Q} \sqrt{\Lambda} \mat{Q}^T &~\text{if}~&\vec{z}\text{ is to be normalized anyway}\\
+\end{matrix}
+\right.
+\end{equation}
+\subsection{Matlab/Octave Proof Code}
+This proof-of-concept code has been written in Matlab so that various
+expressions could be checked against their Matlab equivalents. The
+code has a form as close as possible to the final C/C++ (or Python)
+code that cannot make use of lots of memory or complex math
+libraries.
+%Should be done with an include ?
+\begin{verbatim}
+function [radii, c, Cal] = deEllipsoid(d)
+  ACC = zeros(1,48);   DD = zeros(9);  f = [ 1,2,2,1,2,1,2,2,2 ];
+
+  for i=1:(size(d)(1)), ACC += mults( d(i,:) ); end
+
+  DD(tril(ones(9),0)==1) = ACC(1:45);
+  DD = (DD + triu(DD',1)) .* (f'*f);
+  D1 = ACC(40:48).*f;
+
+  v = DD \ D1';
+
+  A = [ v(1) v(2) v(3) ; v(2) v(4) v(5) ; v(3) v(5) v(6) ];
+  [Q, L] = eigen3x3(A);
+
+  c = - Q * inv(L) * Q' * [ v(7) v(8) v(9) ]' ;
+  r = 1 / (c' * A * c + 1) ;
+  D = sqrt( L * r );
+  radii = 1 ./ diag(D) ;
+  Cal = Q * D * Q';
+end
+
+function OmegaOmega = mults( x )
+  O          = [ ((x' * x)(tril(ones(3),0)==1))', x ];
+  OmegaOmega = [ ((O' * O)(tril(ones(9),0)==1))', x ];
+end
+
+function [Q, L] = eigen3x3(A)
+  q = trace(A)/3
+  p = sqrt( trace( (A - q*eye(3))**2 )/6)
+  B = (A - q*eye(3))/p
+
+  theta = acos(0.5*det(B))/3
+  pi23 = 2*pi/3
+
+  l0 = q + p * 2 * cos(theta + pi23 * 3 );
+  l1 = q + p * 2 * cos(theta + pi23 * 1 );
+  l2 = q + p * 2 * cos(theta + pi23 * 2 );
+  L = zeros(3,3)
+  L([1,5,9]) = [l0,l1,l2]
+
+  A0 = A - l0*eye(3);
+  A1 = A - l1*eye(3);
+  A2 = A - l2*eye(3);
+  v0 = cross( A0(1,:), A0(2,:) );
+  v1 = cross( A1(1,:), A1(2,:) );
+  v2 = cross( A2(1,:), A2(2,:) );
+  Q = [ v0'/norm(v0) , v1'/norm(v1), v2'/norm(v2) ]
+end 
+\end{verbatim}
+\end{document}

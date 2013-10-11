@@ -1,0 +1,10 @@
+*.s
+*.pdf
+*.aux
+*.log
+*.mapfile
+*.lst
+*.sw?
+\#*
+*~
+
