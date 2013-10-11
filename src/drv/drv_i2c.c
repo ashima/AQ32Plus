@@ -85,7 +85,10 @@ static volatile uint8_t *read_p;
 
 void I2C_ER_Handler(void)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
     volatile uint32_t SR1Register, SR2Register;
+#pragma GCC diagnostic pop
 
     SR1Register = I2Cx->SR1;                                              // Read the I2Cx status register
 

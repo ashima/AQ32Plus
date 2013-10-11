@@ -38,6 +38,9 @@
 #include "evr.h"
 #include "drv/drv_crc.h"
 
+// here for now.
+void mpu6000CalibrationLSQ();
+
 ///////////////////////////////////////////////////////////////////////////////
 // MAX7456 CLI
 ///////////////////////////////////////////////////////////////////////////////
@@ -944,7 +947,7 @@ char extractSign(int8_t v)
 
 void sensorCLI()
 {
-    uint8_t  sensorQuery;
+    uint8_t  sensorQuery = 0;
     uint8_t  tempInt;
     uint8_t  validQuery = false;
 
