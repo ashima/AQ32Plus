@@ -39,6 +39,7 @@
 #include "batMon.h"
 #include "harness.h"
 #include "state/char_telem.h"
+#include "shim.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -127,6 +128,7 @@ int main(void)
     #endif
 
 	uint32_t currentTime;
+    floatXYZ_t a;
 
     systemInit();
 
@@ -192,9 +194,13 @@ int main(void)
 
 			if (newMagData == true)
 			{
-				sensors.mag10Hz[XAXIS] = eepromConfig.signMX *   (float)rawMag[XAXIS].value * magScaleFactor[XAXIS] - eepromConfig.magBias[XAXIS];
-			    sensors.mag10Hz[YAXIS] = eepromConfig.signMY *   (float)rawMag[YAXIS].value * magScaleFactor[YAXIS] - eepromConfig.magBias[YAXIS];
-			    sensors.mag10Hz[ZAXIS] = eepromConfig.signMZ * -((float)rawMag[ZAXIS].value * magScaleFactor[ZAXIS] - eepromConfig.magBias[ZAXIS]);
+				//sensors.mag10Hz[XAXIS] = eepromConfig.signMX *   (float)rawMag[XAXIS].value * magScaleFactor[XAXIS] - eepromConfig.magBias[XAXIS];
+			    //sensors.mag10Hz[YAXIS] = eepromConfig.signMY *   (float)rawMag[YAXIS].value * magScaleFactor[YAXIS] - eepromConfig.magBias[YAXIS];
+			    //sensors.mag10Hz[ZAXIS] = eepromConfig.signMZ * -((float)rawMag[ZAXIS].value * magScaleFactor[ZAXIS] - eepromConfig.magBias[ZAXIS]);
+                        sreadMag(&a);
+                        sensors.mag10Hz[XAXIS] = a.x;
+                        sensors.mag10Hz[YAXIS] = a.y;
+                        sensors.mag10Hz[ZAXIS] = a.z;
 
 			    newMagData = false;
 			    magDataUpdate = true;
@@ -268,15 +274,25 @@ int main(void)
 
        	 	dt500Hz = (float)timerValue * 0.0000005f;  // For integrations in 500 Hz loop
 
-            computeMPU6000TCBias();
+            sreadAccel( &a );
+            sensors.accel500Hz[XAXIS] = a.x;
+            sensors.accel500Hz[YAXIS] = a.y;
+            sensors.accel500Hz[ZAXIS] = a.z;
+
+            sreadGyro( &a );
+            sensors.gyro500Hz[XAXIS] = a.x;
+            sensors.gyro500Hz[YAXIS] = a.y;
+            sensors.gyro500Hz[ZAXIS] = a.z;
+
+            // computeMPU6000TCBias();
             /*
             sensorTemp1 = computeMPU6000SensorTemp();
             sensorTemp2 = sensorTemp1 * sensorTemp1;
             sensorTemp3 = sensorTemp2 * sensorTemp1;
             */
-            sensors.accel500Hz[XAXIS] = eepromConfig.signAX *  ((float)accelSummedSamples500Hz[XAXIS] / 2.0f - accelTCBias[XAXIS]) * ACCEL_SCALE_FACTOR;
-			sensors.accel500Hz[YAXIS] = eepromConfig.signAY * -((float)accelSummedSamples500Hz[YAXIS] / 2.0f - accelTCBias[YAXIS]) * ACCEL_SCALE_FACTOR;
-			sensors.accel500Hz[ZAXIS] = eepromConfig.signAZ * -((float)accelSummedSamples500Hz[ZAXIS] / 2.0f - accelTCBias[ZAXIS]) * ACCEL_SCALE_FACTOR;
+            //sensors.accel500Hz[XAXIS] = eepromConfig.signAX *  ((float)accelSummedSamples500Hz[XAXIS] / 2.0f - accelTCBias[XAXIS]) * ACCEL_SCALE_FACTOR;
+			//sensors.accel500Hz[YAXIS] = eepromConfig.signAY * -((float)accelSummedSamples500Hz[YAXIS] / 2.0f - accelTCBias[YAXIS]) * ACCEL_SCALE_FACTOR;
+			//sensors.accel500Hz[ZAXIS] = eepromConfig.signAZ * -((float)accelSummedSamples500Hz[ZAXIS] / 2.0f - accelTCBias[ZAXIS]) * ACCEL_SCALE_FACTOR;
             /*
             sensors.accel500Hz[XAXIS] =  ((float)accelSummedSamples500Hz[XAXIS] / 2.0f  +
                                           eepromConfig.accelBiasP0[XAXIS]               +
@@ -296,9 +312,9 @@ int main(void)
 			                              eepromConfig.accelBiasP2[ZAXIS] * sensorTemp2 +
 			                              eepromConfig.accelBiasP3[ZAXIS] * sensorTemp3 ) * ACCEL_SCALE_FACTOR;
             */
-            sensors.gyro500Hz[ROLL ] = eepromConfig.signGX *  ((float)gyroSummedSamples500Hz[ROLL]  / 2.0f - gyroRTBias[ROLL ] - gyroTCBias[ROLL ]) * GYRO_SCALE_FACTOR;
-			sensors.gyro500Hz[PITCH] = eepromConfig.signGY * -((float)gyroSummedSamples500Hz[PITCH] / 2.0f - gyroRTBias[PITCH] - gyroTCBias[PITCH]) * GYRO_SCALE_FACTOR;
-            sensors.gyro500Hz[YAW  ] = eepromConfig.signGZ * -((float)gyroSummedSamples500Hz[YAW]   / 2.0f - gyroRTBias[YAW  ] - gyroTCBias[YAW  ]) * GYRO_SCALE_FACTOR;
+            //sensors.gyro500Hz[ROLL ] = eepromConfig.signGX *  ((float)gyroSummedSamples500Hz[ROLL]  / 2.0f - gyroRTBias[ROLL ] - gyroTCBias[ROLL ]) * GYRO_SCALE_FACTOR;
+	//		sensors.gyro500Hz[PITCH] = eepromConfig.signGY * -((float)gyroSummedSamples500Hz[PITCH] / 2.0f - gyroRTBias[PITCH] - gyroTCBias[PITCH]) * GYRO_SCALE_FACTOR;
+         //   sensors.gyro500Hz[YAW  ] = eepromConfig.signGZ * -((float)gyroSummedSamples500Hz[YAW]   / 2.0f - gyroRTBias[YAW  ] - gyroTCBias[YAW  ]) * GYRO_SCALE_FACTOR;
             /*
             sensors.gyro500Hz[ROLL ] =  ((float)gyroSummedSamples500Hz[ROLL ] / 2.0f  +
                                          gyroBiasP0[ROLL ]                            +
@@ -369,10 +385,15 @@ RED_LED_TOGGLE;
 			TIM_Cmd(TIM11, ENABLE);
 
 			dt100Hz = (float)timerValue * 0.0000005f;  // For integrations in 100 Hz loop
+                        sreadAccel( &a );
+                        sensors.accel100Hz[XAXIS] = a.x;
+                        sensors.accel100Hz[YAXIS] = a.y;
+                        sensors.accel100Hz[ZAXIS] = a.z;
 
-			sensors.accel100Hz[XAXIS] = eepromConfig.signAX *  ((float)accelSummedSamples100Hz[XAXIS] / 10.0f - accelTCBias[XAXIS]) * ACCEL_SCALE_FACTOR;
-			sensors.accel100Hz[YAXIS] = eepromConfig.signAY * -((float)accelSummedSamples100Hz[YAXIS] / 10.0f - accelTCBias[YAXIS]) * ACCEL_SCALE_FACTOR;
-			sensors.accel100Hz[ZAXIS] = eepromConfig.signAZ * -((float)accelSummedSamples100Hz[ZAXIS] / 10.0f - accelTCBias[ZAXIS]) * ACCEL_SCALE_FACTOR;
+
+			//sensors.accel100Hz[XAXIS] = eepromConfig.signAX *  ((float)accelSummedSamples100Hz[XAXIS] / 10.0f - accelTCBias[XAXIS]) * ACCEL_SCALE_FACTOR;
+			//sensors.accel100Hz[YAXIS] = eepromConfig.signAY * -((float)accelSummedSamples100Hz[YAXIS] / 10.0f - accelTCBias[YAXIS]) * ACCEL_SCALE_FACTOR;
+			//sensors.accel100Hz[ZAXIS] = eepromConfig.signAZ * -((float)accelSummedSamples100Hz[ZAXIS] / 10.0f - accelTCBias[ZAXIS]) * ACCEL_SCALE_FACTOR;
 
         	createRotationMatrix();
         	bodyAccelToEarthAccel();

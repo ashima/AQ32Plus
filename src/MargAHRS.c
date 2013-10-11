@@ -148,7 +148,7 @@ void MargAHRSupdate(float gx, float gy, float gz,
     //-------------------------------------------
 
     // Mag turned off, so fake it for now.
-    if ((MargAHRSinitialized == false))// && (magDataUpdate == true))
+    if ((MargAHRSinitialized == false) && (magDataUpdate == true))
     {
         mx = 1;
         my = 0;

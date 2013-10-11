@@ -48,7 +48,6 @@ static const uint8_t ubx5Hz[14] = {0xb5,0x62,0x06,0x08,0x06,0x00,0xc8,0x00,0x01,
 
 void initGPS(void)
 {
-    uint8_t i;
 #ifndef STVGPS
     switch(eepromConfig.gpsType)
     {
@@ -83,7 +82,8 @@ void initGPS(void)
 
         ///////////////////////////////
 
-        case UBLOX:             // UBLOX in binary mode
+        case UBLOX:  ;           // UBLOX in binary mode
+        	int i;
         	for (i = 0; i < sizeof(ubx5Hz); i++)                // Set 5 Hz Update Rate
         	   gpsWrite(ubx5Hz[i]);
 

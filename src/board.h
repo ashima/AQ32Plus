@@ -87,7 +87,7 @@
 #include "usbd_desc.h"
 
 /////////////////////////////////////////////////////////////////////////////
-
+#include "localtypes.h"
 #include "pid.h"
 
 #include "aq32Plus.h"

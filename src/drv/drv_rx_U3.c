@@ -250,7 +250,7 @@ void USART3_IRQHandler(void)
 {
     uint8_t  b;
     uint8_t  spektrumChannel;
-    uint32_t spektrumTime;
+    //uint32_t spektrumTime;
 
     if (USART_GetITStatus(USART3, USART_IT_RXNE) == SET)
     {

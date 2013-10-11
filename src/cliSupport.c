@@ -38,6 +38,9 @@
 #include "evr.h"
 #include "drv/drv_crc.h"
 
+// here for now.
+void mpu6000CalibrationLSQ();
+
 ///////////////////////////////////////////////////////////////////////////////
 // MAX7456 CLI
 ///////////////////////////////////////////////////////////////////////////////
@@ -944,7 +947,7 @@ char extractSign(int8_t v)
 
 void sensorCLI()
 {
-    uint8_t  sensorQuery;
+    uint8_t  sensorQuery = 0;
     uint8_t  tempInt;
     uint8_t  validQuery = false;
 
@@ -983,9 +986,20 @@ void sensorCLI()
                 cliPrintF("Gyro TC Bias Intercept:    %9.4f, %9.4f, %9.4f\n",   eepromConfig.gyroTCBiasIntercept[ROLL ],
                    		                                                        eepromConfig.gyroTCBiasIntercept[PITCH],
                    		                                                        eepromConfig.gyroTCBiasIntercept[YAW  ]);
-                cliPrintF("Mag Bias:                  %9.4f, %9.4f, %9.4f\n",   eepromConfig.magBias[XAXIS],
-                                                   		                        eepromConfig.magBias[YAXIS],
-                                                   		                        eepromConfig.magBias[ZAXIS]);
+                //cliPrintF("Mag Bias:                  %9.4f, %9.4f, %9.4f\n",   eepromConfig.magBias[XAXIS],
+                //                                   		                        eepromConfig.magBias[YAXIS],
+                //                                   		                        eepromConfig.magBias[ZAXIS]);
+                //cliPrintF("Mag Scale Factor:          %9.4f, %9.4f, %9.4f\n",   magScaleFactor[XAXIS],
+                //                                   		                        magScaleFactor[YAXIS],
+                //                                   		                        magScaleFactor[ZAXIS]);
+		double* mc = eepromConfig.magCalMat;
+
+                cliPrintF("Mag : [ %9.4f %9.4f %9.4f ]\n", mc[ 0], mc[ 1], mc[ 2]);
+                cliPrintF("      [ %9.4f %9.4f %9.4f ]\n", mc[ 3], mc[ 4], mc[ 5]);
+                cliPrintF("      [ %9.4f %9.4f %9.4f ]\n", mc[ 6], mc[ 7], mc[ 8]);
+                cliPrintF("  c : [ %9.4f %9.4f %9.4f ]\n", mc[ 9], mc[10], mc[11]);
+                cliPrintF("  r : [ %9.4f %9.4f %9.4f ]\n", mc[12], mc[13], mc[14]);
+
                 cliPrintF("Accel One G:               %9.4f\n",   accelOneG);
                 cliPrintF("Accel Cutoff:              %9.4f\n",   eepromConfig.accelCutoff);
                 cliPrintF("KpAcc (MARG):              %9.4f\n",   eepromConfig.KpAcc);
@@ -1047,6 +1061,12 @@ void sensorCLI()
                 break;
 
 			///////////////////////////
+            case 'd': // MPU6000 Calibration
+                mpu6000CalibrationLSQ();
+
+                sensorQuery = 'a';
+                validQuery = true;
+                break;
 
         	case 'x':
 			    cliPrint("\nExiting Sensor CLI....\n\n");
@@ -1126,6 +1146,26 @@ void sensorCLI()
             case 'E': // h dot est/h est Comp Filter A/B
                 eepromConfig.compFilterA = readFloatCLI();
                 eepromConfig.compFilterB = readFloatCLI();
+
+                sensorQuery = 'a';
+                validQuery = true;
+                break;
+
+            ///////////////////////////
+
+            case 'G': // mag manual cal
+                ;float min[3], max[3];
+                int i;
+
+                for (i = 0; i < 3; i++) {
+                    min[i] = readFloatCLI();
+                    max[i] = readFloatCLI();
+                }
+
+                for (i = 0; i < 3; i++) {
+                    magScaleFactor[i] = 2.0 / (max[i] - min[i]);
+                    eepromConfig.magBias[i] = (max[i] + min[i]) / 2.0 * magScaleFactor[i];
+                }
 
                 sensorQuery = 'a';
                 validQuery = true;

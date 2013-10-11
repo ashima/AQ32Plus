@@ -33,7 +33,7 @@ DRVSRC=drv_adc.c drv_cli.c drv_i2c.c drv_led.c \
 	drv_crc.c
 GPSSRC=drv/drv_gps.c gps/skyTraq.c gps/gps.c
 #GPSSRC=
-SENSRC=hmc5883.c bmp085.c mpu6000_I2C.c
+SENSRC=shim.c hmc5883.c bmp085.c mpu6000_I2C.c
 OSDSRC=$(wildcard max7456/*.c)
 STATE=char_telem.c
 
@@ -51,7 +51,8 @@ SRCS=$(wildcard *.c) \
      $(wildcard $(STDPERIPH)/src/*.c) \
      $(GPSSRC)
 
-CCSRCS=$(wildcard state/*.cc)
+CCSRCS=$(wildcard state/*.cc)\
+       $(wildcard calibration/*.cc)
 
 OBJS=$(CCSRCS:.cc=.o) $(SRCS:.c=.o) startup/startup_stm32f40xx.o
 LINKFILE=../stm32_flash.ld
