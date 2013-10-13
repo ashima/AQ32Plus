@@ -495,22 +495,25 @@ If the radii are needed, then $R$ has to be found so that the
 eigenvalues can be rescaled. Here it is important to distinguish
 between the $\mat{A}$ matrix used in the ellipse construction of
 sections 2.1 and 2.2, and the $\mat{A'}=\frac{1}{R}\mat{A}$ that is retrieved in 2.3.
+\\
+From the definition in the construction :
 \begin{equation}
 \begin{split}
-\vec{c}^T \mat{A'} \vec{c} &= \vec{c}^T \frac{\mat{A}}{R} \vec{c} ~=~\frac{\vec{c}^T\mat{A}\vec{c}}{1 - \vec{c}^T\mat{A}\vec{c} } \\
-&= \frac{1}{1 - \vec{c}^T\mat{A}\vec{c}} + \frac{-1 + \vec{c}^T\mat{A}\vec{c}}{1-\vec{c}^T\mat{A}\vec{c}}\\
-&= \frac{1}{1 - \vec{c}^T\mat{A}\vec{c}} -1 = \frac{1}{R} -1\\
+R &= 1 - \vec{c}^T\mat{A}\vec{c}\\
+1 &= \frac{1}{R}-\frac{ \vec{c}^T\mat{A}\vec{c} }{R} \\
+\frac{1}{R} &= 1 +  \vec{c}^T\frac{\mat{A}}{R}\vec{c} \\
 \end{split}
 \end{equation}
 So:
 \begin{equation}
-R = \frac{1}{\vec{c}^T\mat{A'}\vec{c} +1}\\
+R = \frac{1}{1 + \vec{c}^T\mat{A'}\vec{c}}\\
 \end{equation}
+\\
 The radii in the direction of the eigen-vectors are reciprocal of $\mat{\Sigma}$ :
 \begin{equation}
 \begin{split}
 \mat{\Sigma} &= \sqrt{R \mat{\Lambda}}\\
-&= \sqrt{ (\vec{c}^T\mat{A'}\vec{c} +1)^{-1} \mat{\Lambda}}
+&= \sqrt{ \frac{1}{\vec{c}^T\mat{A'}\vec{c} +1} \mat{\Lambda}}
 \end{split}
 \end{equation}
 \subsubsection{Usage}
