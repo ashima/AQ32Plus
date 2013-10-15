@@ -87,7 +87,7 @@ void pushInitTelem()
   ctIDBMP180Params_t bmp = {{ ac1, ac2, ac3, ac4, ac5, ac6, b1, b2, mb, mc, md, overSamplingSetting }} ;
 
   evrPush(EVR_StartingMain,0);
-  ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
+  ctPushSMTB(ctIDHSFState, 4*(6), (uint8_t*) hsf_getState() );
   ctPushSMTB(ctIDBMP180Params, sizeof(bmp), bmp.c_ptr );
   }
 
@@ -145,12 +145,12 @@ int main(void)
     hsf_step();
     hsf_update_t();
     ctPushSMTB(ctIDTemperature, sizeof(ctIDTemperature_t), ((ctIDTemperature_t){{rawTemperature, filter_dt}}).c_ptr);
-    ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
+    ctPushSMTB(ctIDHSFState, 4*(6), (uint8_t*) hsf_getState() );
 
     hsf_step();
     hsf_update_p();
     ctPushSMTB(ctIDPressure, sizeof(ctIDPressure_t), ((ctIDPressure_t){{ rawPressure, filter_dt }}.c_ptr) );
-    ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
+    ctPushSMTB(ctIDHSFState, 4*(6), (uint8_t*) hsf_getState() );
 
     delay(10);
 
@@ -379,7 +379,7 @@ RED_LED_TOGGLE;
               ctPushSMTB(ctIDPressure, sizeof(ctIDPressure_t), ((ctIDPressure_t){{ rawPressure, filter_dt }}.c_ptr) );
               }
 
-            ctPushSMTB(ctIDHSFState, sizeof(float)*(4), (uint8_t*) hsf_getState() );
+            ctPushSMTB(ctIDHSFState, sizeof(float)*(6), (uint8_t*) hsf_getState() );
         	currentTime       = micros();
 			deltaTime100Hz    = currentTime - previous100HzTime;
 			previous100HzTime = currentTime;
@@ -462,8 +462,8 @@ RED_LED_TOGGLE;
             			                                        sensors.pressureAlt10Hz,
             			                                        hDotEstimate,
             			                                        hEstimate); */
-            	telemetryPrintF("%f %f %f %f\n", 
-                    st[0],st[1],st[2],st[3] );
+            	telemetryPrintF("%f %f %f %f %f %f\n", 
+                    st[0],st[1],st[2],st[3],st[4], st[5] );
             }
 
             executionTime100Hz = micros() - currentTime;
