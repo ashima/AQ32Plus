@@ -30,20 +30,21 @@ noise = 0
 buff=""
  
 def pktError(s):
-  #print ("%10s %d %s")%( "PktError",0,s)
+  print ("%10s %d %s")%( "PktError",0,s)
   pass
 
 msgFmts = {
-  0x02 : ("<HLHHxx", "EVR"),
-  0x08 : ("<HLHHxx", "State"),
-  0x10 : ("<HLLh", "RawPres"),
-  0x11 : ("<HLHhxx", "RawTemp"),
-  0x12 : ("<HLBBLLLLLLLLxx", "RawGPS"),
-  0x18 : ("<HLfff", "ACC100Hz"),
-  0x20 : ("<HLffffxx", "HSF"),
-  0x21 : ("<HLhhhHHHhhhhhh", "BMP180"),
-  0x22 : ("<HLfxx", "Height"),
-  0x30 : ("<HLffffxx", "MotCmd"),
+  0x00 + 0x02 : ("<HLHHxx", "EVR"),
+  0x00 + 0x08 : ("<HLHHxx", "State"),
+  0x20 + 0x00 : ("<HLLh", "RawPres"),
+  0x20 + 0x01 : ("<HLHhxx", "RawTemp"),
+  0x20 + 0x02 : ("<HLBBLLLLLLLLxx", "RawGPS"),
+  0x20 + 0x03 : ("<HLhhhhx", "RawACC"),
+  0x40 + 0x01 : ("<HLfff", "ACC100Hz"),
+  0x40 + 0x02 : ("<HLffffxx", "MotCmd"),
+  0x60 + 0x00 : ("<HLffffxx", "HSF"),
+  0x60 + 0x01 : ("<HLhhhHHHhhhhhh", "BMP180"),
+  0x60 + 0x02 : ("<HLfxx", "Height"),
 }
 
 msgLenths = dict([ (i, 4*int((struct.calcsize(msgFmts[i][0])+2)/3)) for i in msgFmts ])
@@ -66,7 +67,7 @@ def pkt_decode(m, bs,(outfa,outfb)) :
 
   if outfa :
     f = msgFmts[m][0]
-#    print "m=",m," f=",f, "s=",bs, "#f=", struct.calcsize(f), "#s=", len(s)
+    #print "m=",m," f=",f, "s=",bs, "#f=", struct.calcsize(f), "#s=", len(s)
     x = struct.unpack(f,s)
     p = " ".join([ "%"+p2f[i] for i in f if p2f.get(i) ])
     if mid == 0x02 :

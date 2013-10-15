@@ -63,6 +63,7 @@ void pushInitTelem()
   extern unsigned int ac4 , ac5 , ac6 ;
   extern int b1 , b2 , mb , mc , md ;
 
+/*
   union 
     {
     struct  __attribute__((__packed__))
@@ -81,7 +82,9 @@ void pushInitTelem()
       int16_t oss;
       };
     uint8_t c_ptr[1];
-    } bmp = {{ ac1, ac2, ac3, ac4, ac5, ac6, b1, b2, mb, mc, md, overSamplingSetting }} ;
+    }
+*/
+  ctIDBMP180Params_t bmp = {{ ac1, ac2, ac3, ac4, ac5, ac6, b1, b2, mb, mc, md, overSamplingSetting }} ;
 
   evrPush(EVR_StartingMain,0);
   ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
@@ -94,14 +97,14 @@ extern uint32_t rawPressure, rawTemperature ;
 
 extern uint16_t i2c2ErrorCount;
 extern uint32_t u2TxOverflow ;
-
+/*
 typedef union {
   struct __attribute__((__packed__)) {
     uint16_t t;
     int16_t dt; 
     } ;
   uint8_t c_ptr[1];
-  } rawT_t;
+  } ctIDTemperature_t;
 
 typedef union {
   struct __attribute__((__packed__)) {
@@ -109,8 +112,8 @@ typedef union {
     int16_t dt; 
     } ;
   uint8_t c_ptr[1];
-  } rawP_t;
-
+  } ctIDPressure_t;
+*/
 
 
 int main(void)
@@ -139,12 +142,12 @@ int main(void)
 
     hsf_step();
     hsf_update_t();
-    ctPushSMTB(ctIDTemperature, sizeof(rawT_t), ((rawT_t){{rawTemperature, filter_dt}}).c_ptr);
+    ctPushSMTB(ctIDTemperature, sizeof(ctIDTemperature_t), ((ctIDTemperature_t){{rawTemperature, filter_dt}}).c_ptr);
     ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
 
     hsf_step();
     hsf_update_p();
-    ctPushSMTB(ctIDPressure, sizeof(rawP_t), ((rawP_t){{ rawPressure, filter_dt }}.c_ptr) );
+    ctPushSMTB(ctIDPressure, sizeof(ctIDPressure_t), ((ctIDPressure_t){{ rawPressure, filter_dt }}.c_ptr) );
     ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
 
     delay(10);
@@ -365,13 +368,13 @@ int main(void)
             else if ( 10 == frameCounter % COUNT_10HZ ) {
               hsf_step();
               hsf_update_t(); 
-              ctPushSMTB(ctIDTemperature, sizeof(rawT_t), ((rawT_t){{rawTemperature, filter_dt}}).c_ptr);
+              ctPushSMTB(ctIDTemperature, sizeof(ctIDTemperature_t), ((ctIDTemperature_t){{rawTemperature, filter_dt}}).c_ptr);
 RED_LED_TOGGLE;
               }
             else {
               hsf_step();
               hsf_update_p();
-              ctPushSMTB(ctIDPressure, sizeof(rawP_t), ((rawP_t){{ rawPressure, filter_dt }}.c_ptr) );
+              ctPushSMTB(ctIDPressure, sizeof(ctIDPressure_t), ((ctIDPressure_t){{ rawPressure, filter_dt }}.c_ptr) );
               }
 
             ctPushSMTB(ctIDHSFState, sizeof(float)*(4), (uint8_t*) hsf_getState() );
@@ -401,6 +404,14 @@ RED_LED_TOGGLE;
 
             ctPushSMTB(ctIDWAcc100, sizeof(float)*3, (uint8_t*) &earthAxisAccels );
             //ctPushSMTB(ctIDComHeight, sizeof(float), (uint8_t*) &hEstimate );
+
+            ctIDAcc_t atelem;
+            atelem.T = iRawAGTemp;
+            atelem.x = iRawAcc.x;
+            atelem.y = iRawAcc.y;
+            atelem.z = iRawAcc.z;
+
+            ctPushSMTB( ctIDAcc, sizeof(atelem), atelem.c_ptr );
 
         	if ( highSpeedTelem1Enabled == true )
             {
