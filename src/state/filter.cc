@@ -289,11 +289,15 @@ void filterInit(filter_t<float_tt,ns,no> &f , float_tt dt) throw()
   f.P(1,1) = f.P(3,3) = f.P(5,5) = 1.0f;
 
   make_F(f.F, 0.01);  
-  make_Q(f.Q, 0.001f, 0.01);
+  //make_Q(f.Q, 0.001f, 0.01);
+  make_Q(f.Q, 0.10f, 0.01);
 
+  //f.Rts(0,0) = 40.0f;
+  //f.Rps(0,0) = 20.0f;
+  //f.Ras(0,0) = 0.060f;
   f.Rts(0,0) = 40.0f;
   f.Rps(0,0) = 20.0f;
-  f.Ras(0,0) = 0.060f;
+  f.Ras(0,0) = 0.040f;
   }
 
 #if 0

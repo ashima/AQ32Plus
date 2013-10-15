@@ -30,7 +30,17 @@ noise = 0
 buff=""
  
 def pktError(s):
-  print ("%10s %d %s")%( "PktError",0,s)
+  l = len(s)
+  if l < 8 :
+    print ("PktError len < 8 : '%s'" % s)
+  else :
+    (mid,_) = struct.unpack_from( "<hl", base64.decodestring(buff) )
+    mlen = msgLenths.get(mid)
+    if mlen :
+      print ("PktError mid=%d (0x%4x) data-recived=%d  msg len=%d : '%s'"% (mid, mid, l, mlen, s )) 
+    else :
+      print ("PktError mid=%d (0x%4x) data-recived=%d  unknown mid : '%s'"% (mid, mid, l, s )) 
+
   pass
 
 msgFmts = {
@@ -40,8 +50,8 @@ msgFmts = {
   0x20 + 0x01 : ("<HLHhxx", "RawTemp"),
   0x20 + 0x02 : ("<HLBBLLLLLLLLxx", "RawGPS"),
   0x20 + 0x03 : ("<HLhhhhx", "RawACC"),
-  0x40 + 0x01 : ("<HLfff", "ACC100Hz"),
-  0x40 + 0x02 : ("<HLffffxx", "MotCmd"),
+  0x40 + 0x00 : ("<HLfff", "WACC100Hz"),
+  0x40 + 0x01 : ("<HLffffxx", "MotCmd"),
   0x60 + 0x00 : ("<HLffffxx", "HSF"),
   0x60 + 0x01 : ("<HLhhhHHHhhhhhh", "BMP180"),
   0x60 + 0x02 : ("<HLfxx", "Height"),

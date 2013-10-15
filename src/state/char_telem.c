@@ -45,7 +45,7 @@ static const uint32_t ctChanEnable[ ctIDTableSIZE ] = {
 
 bool ctChanEnabled(uint16_t m)
   {
-  return (m < ctID_EM) && 
+  return (true == highSpeedTelem1Enabled) && (m < ctID_EM) && 
          ((ctChanEnable[m >> wordArrayInxBITS] >> (m & wordArrayInxMASK))&1) ;
   }
 

@@ -136,6 +136,8 @@ int main(void)
     systemInit();
 
     systemReady = true;
+    highSpeedTelem1Enabled = true ;
+
     delay(200);
     hsf_init();
     pushInitTelem();
@@ -401,7 +403,7 @@ RED_LED_TOGGLE;
         	createRotationMatrix();
         	bodyAccelToEarthAccel();
         	vertCompFilter(dt100Hz);
-
+            hsf_update_a();
             ctPushSMTB(ctIDWAcc100, sizeof(float)*3, (uint8_t*) &earthAxisAccels );
             //ctPushSMTB(ctIDComHeight, sizeof(float), (uint8_t*) &hEstimate );
 
@@ -413,6 +415,7 @@ RED_LED_TOGGLE;
 
             ctPushSMTB( ctIDAcc, sizeof(atelem), atelem.c_ptr );
 
+#if 0
         	if ( highSpeedTelem1Enabled == true )
             {
             	// 500 Hz Accels
@@ -420,6 +423,7 @@ RED_LED_TOGGLE;
             	        			                     sensors.accel500Hz[YAXIS],
             	        			                     sensors.accel500Hz[ZAXIS]);
             }
+#endif
 
             if ( highSpeedTelem2Enabled == true )
             {
