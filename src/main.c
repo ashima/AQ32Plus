@@ -363,7 +363,7 @@ int main(void)
         	frame_100Hz = false;
 
             if ( 0 ==  frameCounter % COUNT_10HZ ) {
-              ctPushSMTB(ctIDPressure, 3, (uint8_t*)&rawPressure);
+              ctPushSMTB(ctIDPressure, sizeof(ctIDPressure_t), ((ctIDPressure_t){{ rawPressure, filter_dt }}.c_ptr) );
               hsf_step();
               hsf_update_p();
               }
