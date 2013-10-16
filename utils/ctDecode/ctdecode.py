@@ -20,6 +20,11 @@ def procargs() :
 
   return p.parse_args()
 
+validB64={}
+q = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" ;
+for i in q :
+  validB64[i] = 1
+
 
 state = 0
 i = 0
@@ -31,15 +36,20 @@ buff=""
  
 def pktError(s):
   l = len(s)
+  s = "".join( [ (x if validB64.get(x) else "A") for x in s ] )
+
   if l < 8 :
     print ("PktError len < 8 : '%s'" % s)
   else :
-    (mid,_) = struct.unpack_from( "<hl", base64.decodestring(buff) )
+    lp = 4 - (l&3)
+    if lp != 4 :
+      s += ( "A" * lp )
+    (mid,_) = struct.unpack_from( "<hl", base64.decodestring(s) )
     mlen = msgLenths.get(mid)
     if mlen :
-      print ("PktError mid=%d (0x%4x) data-recived=%d  msg len=%d : '%s'"% (mid, mid, l, mlen, s )) 
+      print ("PktError mid=%d (0x%04x) data-recived=%d (needed %d pad)  msg len=%d : '%s'"% (mid, mid, l,lp, mlen, s )) 
     else :
-      print ("PktError mid=%d (0x%4x) data-recived=%d  unknown mid : '%s'"% (mid, mid, l, s )) 
+      print ("PktError mid=%d (0x%04x) data-recived=%d (needed %d pad) unknown mid : '%s'"% (mid, mid, l,lp, s )) 
 
   pass
 
@@ -70,6 +80,11 @@ zeros = ("\0" *64)
 
 def pkt_decode(m, bs,(outfa,outfb)) :
   #print "{",len(s)
+  l = len(bs)
+  if (l&3) != 0 :
+    s += ( "A" * ( 4- (l&3)))
+    print "Padding needed in pkt_decode. l=%d" % l
+
   s = base64.decodestring(bs) 
 
   if outfb :
@@ -98,11 +113,7 @@ def step_pkt_rd(x,fds) :
       noise = noise +1
 
   elif state == 1 :
-    if x == '$' :
-      pktError(buff);
-      state = 0
-      step_pkt_rd(x,fds)
-    else:
+    if validB64.get(x) :
       buff += x
       i = i + 1
       if i == 8 :
@@ -111,19 +122,23 @@ def step_pkt_rd(x,fds) :
         #print mid,mlen,state
         if mlen != None :
           state = 2
-
-  elif state == 2 :
-    if x == '$' :
+    else:
       pktError(buff);
       state = 0
       step_pkt_rd(x,fds)
-    else:
+
+  elif state == 2 :
+    if validB64.get(x) :
       buff += x
       i = i + 1
       if i >= mlen :
         pkt_decode(mid, buff, fds)
         state = 0
         mlen = 0
+    else:
+      pktError(buff);
+      state = 0
+      step_pkt_rd(x,fds)
 
 def rd():
   args = procargs()
