@@ -416,5 +416,10 @@ void computeMPU6000TCBias(void)
     gyroTCBias[YAW  ]  = eepromConfig.gyroTCBiasSlope[YAW  ]  * mpu6000Temperature + eepromConfig.gyroTCBiasIntercept[YAW  ];
 }
 
+float getMPU6000Temp(void)
+{
+    return (float)rawMPU6000Temperature.value/340.0 + 35;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 

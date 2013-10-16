@@ -115,3 +115,5 @@ void computeMPU6000RTData(void);
 void computeMPU6000TCBias(void);
 
 ///////////////////////////////////////////////////////////////////////////////
+
+float getMPU6000Temp(void);
