@@ -297,7 +297,7 @@ void filterInit(filter_t<float_tt,ns,no> &f , float_tt dt) throw()
   //f.Ras(0,0) = 0.060f;
   f.Rts(0,0) = 40.0f;
   f.Rps(0,0) = 20.0f;
-  f.Ras(0,0) = 0.040f;
+  f.Ras(0,0) = 0.40f;
   }
 
 #if 0

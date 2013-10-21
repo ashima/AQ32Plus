@@ -45,9 +45,9 @@
 
 #ifdef ASHIMACORE
 static volatile uint32_t *OutputChannels[] = {
-  &(TIM8->CCR1), &(TIM8->CCR2),
-  &(TIM2->CCR1), &(TIM2->CCR2),
-  &(TIM3->CCR1), &(TIM3->CCR2) };
+  &(TIM1->CCR1), &(TIM1->CCR2),
+  &(TIM1->CCR3), &(TIM1->CCR4),
+  &(TIM5->CCR1), &(TIM5->CCR2), };
 #else
 static volatile uint32_t *OutputChannels[] = { &(TIM8->CCR4),
 	                                           &(TIM8->CCR3),
@@ -89,43 +89,50 @@ void pwmEscInit(uint16_t escPwmRate)
     // ESC PWM3 TIM2_CH2 PB3
     // ESC PWM4 TIM3_CH1 PB4
     // ESC PWM5 TIM3_CH2 PB5
+    // 
+    // using the other header:
+    // ESC PWM1 TIM1_CH1 PE9
+    // ESC PWM2 TIM1_CH2 PE11
+    // ESC PWM3 TIM1_CH3 PE13
+    // ESC PWM4 TIM1_CH4 PE14
+    // ESC PWM5 TIM5_CH1 PA0
+    // ESC PWM6 TIM5_CH2 PA1
 
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE); //<--
 
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1,  ENABLE); //<--
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,  ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5,  ENABLE); //<--
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3,  ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8,  ENABLE);
 
     GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_15;
+    GPIO_InitStructure.GPIO_Pin  |= GPIO_Pin_0 | GPIO_Pin_1; //<--
     GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   //GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-
  	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
     GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
-  //GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-  //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  //GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-
  	GPIO_Init(GPIOB, &GPIO_InitStructure);
+
 #ifdef ASHIMACORE
     GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_6 | GPIO_Pin_7;
 #else
     GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9;
 #endif
-  //GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AF;
-  //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  //GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  //GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-
  	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_14; //<--
+    GPIO_Init(GPIOE, &GPIO_InitStructure); //<--
+
  	GPIO_PinAFConfig(GPIOA, GPIO_PinSource15, GPIO_AF_TIM2);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource0,  GPIO_AF_TIM5); //<--
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource1,  GPIO_AF_TIM5); //<--
 
 	GPIO_PinAFConfig(GPIOB, GPIO_PinSource3,  GPIO_AF_TIM2);
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource4,  GPIO_AF_TIM3);
@@ -136,6 +143,10 @@ void pwmEscInit(uint16_t escPwmRate)
 	GPIO_PinAFConfig(GPIOC, GPIO_PinSource8,  GPIO_AF_TIM8);
 	GPIO_PinAFConfig(GPIOC, GPIO_PinSource9,  GPIO_AF_TIM8);
 
+    GPIO_PinAFConfig(GPIOE, GPIO_PinSource9, GPIO_AF_TIM1); //<--
+    GPIO_PinAFConfig(GPIOE, GPIO_PinSource11, GPIO_AF_TIM1); //<--
+    GPIO_PinAFConfig(GPIOE, GPIO_PinSource13, GPIO_AF_TIM1); //<--
+    GPIO_PinAFConfig(GPIOE, GPIO_PinSource14, GPIO_AF_TIM1); //<--
     // Output timers
 
     TIM_TimeBaseStructure.TIM_Period            = (uint16_t)(2000000 / escPwmRate) - 1;
@@ -144,8 +155,10 @@ void pwmEscInit(uint16_t escPwmRate)
   //TIM_TimeBaseStructure.TIM_CounterMode       = TIM_CounterMode_Up;
   //TIM_TimeBaseStructure.TIM_RepititionCounter = 0x0000;
 
+    TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure); //<--
     TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
     TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
+    TIM_TimeBaseInit(TIM5, &TIM_TimeBaseStructure); //<--
     TIM_TimeBaseInit(TIM8, &TIM_TimeBaseStructure);
 
     TIM_OCInitStructure.TIM_OCMode       = TIM_OCMode_PWM2;
@@ -157,23 +170,35 @@ void pwmEscInit(uint16_t escPwmRate)
     TIM_OCInitStructure.TIM_OCIdleState  = TIM_OCIdleState_Set;
   //TIM_OCInitStructure.TIM_OCNIdleState = TIM_OCNIdleState_Reset;
 
+    TIM_OC1Init(TIM1, &TIM_OCInitStructure); //<--
+    TIM_OC2Init(TIM1, &TIM_OCInitStructure); //<--
+    TIM_OC3Init(TIM1, &TIM_OCInitStructure); //<--
+    TIM_OC4Init(TIM1, &TIM_OCInitStructure); //<--
+
     TIM_OC1Init(TIM2, &TIM_OCInitStructure);
     TIM_OC2Init(TIM2, &TIM_OCInitStructure);
 
     TIM_OC1Init(TIM3, &TIM_OCInitStructure);
     TIM_OC2Init(TIM3, &TIM_OCInitStructure);
 
+    TIM_OC1Init(TIM5, &TIM_OCInitStructure); //<--
+    TIM_OC2Init(TIM5, &TIM_OCInitStructure); //<--
+
     TIM_OC1Init(TIM8, &TIM_OCInitStructure);
     TIM_OC2Init(TIM8, &TIM_OCInitStructure);
     TIM_OC3Init(TIM8, &TIM_OCInitStructure);
     TIM_OC4Init(TIM8, &TIM_OCInitStructure);
 
+    TIM_Cmd(TIM1, ENABLE); //<--
     TIM_Cmd(TIM2, ENABLE);
     TIM_Cmd(TIM3, ENABLE);
+    TIM_Cmd(TIM5, ENABLE); //<--
     TIM_Cmd(TIM8, ENABLE);
 
+    TIM_CtrlPWMOutputs(TIM1, ENABLE); //<--
     TIM_CtrlPWMOutputs(TIM2, ENABLE);
     TIM_CtrlPWMOutputs(TIM3, ENABLE);
+    TIM_CtrlPWMOutputs(TIM5, ENABLE); //<--
     TIM_CtrlPWMOutputs(TIM8, ENABLE);
 
 }
@@ -188,3 +213,8 @@ void pwmEscWrite(uint8_t channel, uint16_t value)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+uint16_t pwmEscRead(uint8_t channel)
+{
+    return *OutputChannels[channel];
+}

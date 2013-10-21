@@ -62,7 +62,7 @@ msgFmts = {
   0x20 + 0x03 : ("<HLhhhhx", "RawACC"),
   0x40 + 0x00 : ("<HLfff", "WACC100Hz"),
   0x40 + 0x01 : ("<HLffffxx", "MotCmd"),
-  0x60 + 0x00 : ("<HLffffxx", "HSF"),
+  0x60 + 0x00 : ("<HLffffff", "HSF"),
   0x60 + 0x01 : ("<HLhhhHHHhhhhhh", "BMP180"),
   0x60 + 0x02 : ("<HLfxx", "Height"),
 }

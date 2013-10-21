@@ -412,7 +412,11 @@ void cliCom(void)
 
         ///////////////////////////////
 
-        case 'q': // Not Used
+        case 'q': // first 6 PID iTerms
+            for (index = 0; index < NUMBER_OF_PIDS; index++)
+                cliPrintF("%.3f ", eepromConfig.PID[index].iTerm);
+            cliPrint("\n");
+
             cliQuery = 'x';
            	validCliCommand = false;
            	break;
@@ -487,14 +491,9 @@ void cliCom(void)
         ///////////////////////////////
 
         case 'v': // ESC PWM Outputs
-        	cliPrintF("%4ld, ", TIM8->CCR4);
-        	cliPrintF("%4ld, ", TIM8->CCR3);
-        	cliPrintF("%4ld, ", TIM8->CCR2);
-        	cliPrintF("%4ld, ", TIM8->CCR1);
-        	cliPrintF("%4ld, ", TIM2->CCR2);
-        	cliPrintF("%4ld, ", TIM3->CCR1);
-        	cliPrintF("%4ld, ", TIM3->CCR2);
-        	cliPrintF("%4ld\n", TIM2->CCR1);
+            for (index = 0; index < numberMotor; index++)
+                cliPrintF("%4ld ", pwmEscRead(index));
+            cliPrint("\n");
 
             validCliCommand = false;
             break;

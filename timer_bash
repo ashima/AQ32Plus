@@ -1,0 +1,2 @@
+find . -name "*.c*" -or -name "*.h" | xargs grep -hPo "[A-Za-z0-9_]*TIM([0-9_][A-Za-z0-9_]*|(?=[^A-Za-z]))" | sort -u > timer_symbol
+gsed -Ei 's/(.*)/\\b\1\\b/' timer_symbol

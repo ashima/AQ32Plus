@@ -350,7 +350,7 @@ int main(void)
 
             computeAxisCommands(dt500Hz);
             mixTable();
-            writeServos();
+            //writeServos();
             writeMotors();
 
        	    executionTime500Hz = micros() - currentTime;
@@ -403,7 +403,7 @@ RED_LED_TOGGLE;
         	createRotationMatrix();
         	bodyAccelToEarthAccel();
         	vertCompFilter(dt100Hz);
-            hsf_update_a();
+            //hsf_update_a();
             ctPushSMTB(ctIDWAcc100, sizeof(float)*3, (uint8_t*) &earthAxisAccels );
             //ctPushSMTB(ctIDComHeight, sizeof(float), (uint8_t*) &hEstimate );
 
@@ -450,8 +450,13 @@ RED_LED_TOGGLE;
             if ( highSpeedTelem5Enabled == true )
             {
             	// Yaw Rate, Yaw Rate Command
-            	telemetryPrintF("%9.4f, %9.4f\n", sensors.gyro500Hz[YAW],
-            	            	                  rxCommand[YAW]);
+            	// telemetryPrintF("%9.4f, %9.4f\n", sensors.gyro500Hz[YAW],
+            	//             	                  rxCommand[YAW]);
+            	int index;
+	            for (index = 0; index < numberMotor; index++)
+	                telemetryPrintF("%4ld ", pwmEscRead(index));
+	            telemetryPrintF("\n");
+
             }
 
             if ( highSpeedTelem7Enabled == true )
@@ -527,8 +532,8 @@ RED_LED_TOGGLE;
 #ifndef NOGPS
 void skytraqStepState(uint8_t c);
 
-        while ( gpsAvailable() )
-          skytraqStepState( gpsRead() );
+        // while ( gpsAvailable() )
+        //   skytraqStepState( gpsRead() );
 #endif
     }
 
