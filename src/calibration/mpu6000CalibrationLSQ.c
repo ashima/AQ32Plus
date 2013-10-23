@@ -14,6 +14,7 @@
 enum { 
   N = 512*64,         // 64 seconds worth.
   DELAY = (int)(1e6 / 512),  // 256 Hz
+  tempEveryN = 32,
   };
 
 extern int32XYZ_t iRawAcc, iRawGyro, iRawMag ;
@@ -45,7 +46,16 @@ void mpu6000CalibrationLSQ(void)
 
   mpu6000Calibrating = true;
 
-  cliPrint("\nStarting MPU9150 Calibration\n");
+  cliPrint("\nPress key to start MPU9150 Calibration, 'x' to cancel\n");
+
+  while ( false == cliAvailable() ) {
+    readMPU6000();
+    cliPrintF(" %.2f\n", getMPU6000Temp());
+    delay(100);
+    }
+  if (cliRead() == 'x')
+    return;
+
 
   delayMicroseconds(DELAY);
 
@@ -69,6 +79,9 @@ void mpu6000CalibrationLSQ(void)
   for (i=0; i < N ; i++)
     {
     delayMicroseconds(DELAY);
+
+    if ((i % tempEveryN) == 0)
+      cliPrintF("*%.2f\n", getMPU6000Temp());
 
     // returns values in iRawAcc, iRawGyro, iRawMag, and iRawAGTemp;
     readMPU6000() ;

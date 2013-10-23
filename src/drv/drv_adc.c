@@ -61,9 +61,9 @@
 #define ADC4_CHANNEL  ADC_Channel_15
 
 #ifdef ASHIMACORE
-#define VBATT_PIN     GPIO_Pin_0
-#define VBATT_GPIO    GPIOA
-#define VBATT_CHANNEL ADC_Channel_0
+#define VBATT_PIN     GPIO_Pin_5
+#define VBATT_GPIO    GPIOC
+#define VBATT_CHANNEL ADC_Channel_15
 #else
 #define VBATT_PIN     GPIO_Pin_0
 #define VBATT_GPIO    GPIOC

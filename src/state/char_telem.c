@@ -9,6 +9,7 @@
 
 #include <inttypes.h>
 #include <board.h>
+#include "char_telem.h"
 
 char base64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" ;
 char b64b[5]= "....";
@@ -35,6 +36,19 @@ void ctPushB(int32_t s, uint8_t *c)
 
   }
 #endif
+static const uint32_t ctChanEnable[ ctIDTableSIZE ] = {
+  0x00000014,
+  0x0000000f,
+  0x00000001,
+  0x00000007
+  };
+
+bool ctChanEnabled(uint16_t m)
+  {
+  return (true == highSpeedTelem1Enabled) && (m < ctID_EM) && 
+         ((ctChanEnable[m >> wordArrayInxBITS] >> (m & wordArrayInxMASK))&1) ;
+  }
+
 void ctPushB(int32_t s, uint8_t *c)
   {
   uint32_t l;
@@ -66,9 +80,12 @@ void ctPushSB(int32_t s, uint8_t *c)
 void ctPushSMB(uint16_t mid,int32_t s, uint8_t *c)
   {
   uint32_t m;
-  m = mid | (c[0] << 16);
-  ctPushSB(3, (uint8_t*)&m);
-  ctPushB(s-1, c+1);
+  if ( ctChanEnabled(mid) )
+    {
+    m = mid | (c[0] << 16);
+    ctPushSB(3, (uint8_t*)&m);
+    ctPushB(s-1, c+1);
+    }
   }
 
 void ctPushSMTB(uint16_t mid,int32_t s, uint8_t *c)
@@ -81,8 +98,11 @@ void ctPushSMTB(uint16_t mid,int32_t s, uint8_t *c)
     uint8_t c[1];
     } msgx;
 
-  msgx.t = micros();
-  msgx.m = mid;
-  ctPushSB(6, msgx.c);
-  ctPushB(s, c);
+  if ( ctChanEnabled(mid) )
+    {
+    msgx.t = micros();
+    msgx.m = mid;
+    ctPushSB(6, msgx.c);
+    ctPushB(s, c);
+    }
   }

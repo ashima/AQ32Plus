@@ -61,7 +61,7 @@ int main()
 
       switch(b.mid)
         {
-        case 33:
+        case ctIDBMP180Params:
           ac1 = ((int16_t *)b.s_ptr)[ 3];
           ac2 = ((int16_t *)b.s_ptr)[ 4];
           ac3 = ((int16_t *)b.s_ptr)[ 5];
@@ -79,7 +79,7 @@ int main()
           hsf_init();
           //printf("%10d %5d %6d HSF(p): %f %f %f %f %f %f\n",lastTimeSeen, 1, 0, st[0], st[1], st[2], st[3], st[4], st[5] );
           break;
-        case 16: //pruessure
+        case ctIDPressure:
           rawPressure = b.c_ptr[6] | (b.c_ptr[7] << 8) | (b.c_ptr[8] << 16) ;
           dt = b.s_ptr[5];
           lastTimeCode = lt + dt;
@@ -87,7 +87,7 @@ int main()
           hsf_update_p();
           printf("%10d %5d %6d HSF(p): %f %f %f %f %f %f\n",lastTimeSeen, dt, rawPressure, st[0], st[1], st[2], st[3], st[4], st[5] );
           break;
-        case 17: //Temperature
+        case ctIDTemperature:
           rawTemperature = b.s_ptr[3];
           dt = b.s_ptr[4];
           lastTimeCode = lt + dt;
@@ -95,7 +95,7 @@ int main()
           hsf_update_t();
           printf("%10d %5d %6d HSF(t): %f %f %f %f %f %f\n",lastTimeSeen, dt, rawTemperature, st[0], st[1], st[2], st[3], st[4], st[5] );
           break;
-        case 24: //Temperature
+        case ctIDWAcc100:
           earthAxisAccels[2] = *((float*) (&b.s_ptr[7]) );
           hsf_update_a();
           break;

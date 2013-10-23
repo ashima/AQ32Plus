@@ -63,6 +63,7 @@ void pushInitTelem()
   extern unsigned int ac4 , ac5 , ac6 ;
   extern int b1 , b2 , mb , mc , md ;
 
+/*
   union 
     {
     struct  __attribute__((__packed__))
@@ -81,10 +82,12 @@ void pushInitTelem()
       int16_t oss;
       };
     uint8_t c_ptr[1];
-    } bmp = {{ ac1, ac2, ac3, ac4, ac5, ac6, b1, b2, mb, mc, md, overSamplingSetting }} ;
+    }
+*/
+  ctIDBMP180Params_t bmp = {{ ac1, ac2, ac3, ac4, ac5, ac6, b1, b2, mb, mc, md, overSamplingSetting }} ;
 
   evrPush(EVR_StartingMain,0);
-  ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
+  ctPushSMTB(ctIDHSFState, 4*(6), (uint8_t*) hsf_getState() );
   ctPushSMTB(ctIDBMP180Params, sizeof(bmp), bmp.c_ptr );
   }
 
@@ -94,14 +97,14 @@ extern uint32_t rawPressure, rawTemperature ;
 
 extern uint16_t i2c2ErrorCount;
 extern uint32_t u2TxOverflow ;
-
+/*
 typedef union {
   struct __attribute__((__packed__)) {
     uint16_t t;
     int16_t dt; 
     } ;
   uint8_t c_ptr[1];
-  } rawT_t;
+  } ctIDTemperature_t;
 
 typedef union {
   struct __attribute__((__packed__)) {
@@ -109,8 +112,8 @@ typedef union {
     int16_t dt; 
     } ;
   uint8_t c_ptr[1];
-  } rawP_t;
-
+  } ctIDPressure_t;
+*/
 
 
 int main(void)
@@ -133,19 +136,21 @@ int main(void)
     systemInit();
 
     systemReady = true;
+    highSpeedTelem1Enabled = true ;
+
     delay(200);
     hsf_init();
     pushInitTelem();
 
     hsf_step();
     hsf_update_t();
-    ctPushSMTB(ctIDTemperature, sizeof(rawT_t), ((rawT_t){{rawTemperature, filter_dt}}).c_ptr);
-    ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
+    ctPushSMTB(ctIDTemperature, sizeof(ctIDTemperature_t), ((ctIDTemperature_t){{rawTemperature, filter_dt}}).c_ptr);
+    ctPushSMTB(ctIDHSFState, 4*(6), (uint8_t*) hsf_getState() );
 
     hsf_step();
     hsf_update_p();
-    ctPushSMTB(ctIDPressure, sizeof(rawP_t), ((rawP_t){{ rawPressure, filter_dt }}.c_ptr) );
-    ctPushSMTB(ctIDHSFState, 4*(4), (uint8_t*) hsf_getState() );
+    ctPushSMTB(ctIDPressure, sizeof(ctIDPressure_t), ((ctIDPressure_t){{ rawPressure, filter_dt }}.c_ptr) );
+    ctPushSMTB(ctIDHSFState, 4*(6), (uint8_t*) hsf_getState() );
 
     delay(10);
 
@@ -345,7 +350,7 @@ int main(void)
 
             computeAxisCommands(dt500Hz);
             mixTable();
-            writeServos();
+            //writeServos();
             writeMotors();
 
        	    executionTime500Hz = micros() - currentTime;
@@ -358,23 +363,23 @@ int main(void)
         	frame_100Hz = false;
 
             if ( 0 ==  frameCounter % COUNT_10HZ ) {
-              ctPushSMTB(ctIDPressure, 3, (uint8_t*)&rawPressure);
+              ctPushSMTB(ctIDPressure, sizeof(ctIDPressure_t), ((ctIDPressure_t){{ rawPressure, filter_dt }}.c_ptr) );
               hsf_step();
               hsf_update_p();
               }
             else if ( 10 == frameCounter % COUNT_10HZ ) {
               hsf_step();
               hsf_update_t(); 
-              ctPushSMTB(ctIDTemperature, sizeof(rawT_t), ((rawT_t){{rawTemperature, filter_dt}}).c_ptr);
+              ctPushSMTB(ctIDTemperature, sizeof(ctIDTemperature_t), ((ctIDTemperature_t){{rawTemperature, filter_dt}}).c_ptr);
 RED_LED_TOGGLE;
               }
             else {
               hsf_step();
               hsf_update_p();
-              ctPushSMTB(ctIDPressure, sizeof(rawP_t), ((rawP_t){{ rawPressure, filter_dt }}.c_ptr) );
+              ctPushSMTB(ctIDPressure, sizeof(ctIDPressure_t), ((ctIDPressure_t){{ rawPressure, filter_dt }}.c_ptr) );
               }
 
-            ctPushSMTB(ctIDHSFState, sizeof(float)*(4), (uint8_t*) hsf_getState() );
+            ctPushSMTB(ctIDHSFState, sizeof(float)*(6), (uint8_t*) hsf_getState() );
         	currentTime       = micros();
 			deltaTime100Hz    = currentTime - previous100HzTime;
 			previous100HzTime = currentTime;
@@ -398,10 +403,19 @@ RED_LED_TOGGLE;
         	createRotationMatrix();
         	bodyAccelToEarthAccel();
         	vertCompFilter(dt100Hz);
-
+            //hsf_update_a();
             ctPushSMTB(ctIDWAcc100, sizeof(float)*3, (uint8_t*) &earthAxisAccels );
             //ctPushSMTB(ctIDComHeight, sizeof(float), (uint8_t*) &hEstimate );
 
+            ctIDAcc_t atelem;
+            atelem.T = iRawAGTemp;
+            atelem.x = iRawAcc.x;
+            atelem.y = iRawAcc.y;
+            atelem.z = iRawAcc.z;
+
+            ctPushSMTB( ctIDAcc, sizeof(atelem), atelem.c_ptr );
+
+#if 0
         	if ( highSpeedTelem1Enabled == true )
             {
             	// 500 Hz Accels
@@ -409,6 +423,7 @@ RED_LED_TOGGLE;
             	        			                     sensors.accel500Hz[YAXIS],
             	        			                     sensors.accel500Hz[ZAXIS]);
             }
+#endif
 
             if ( highSpeedTelem2Enabled == true )
             {
@@ -435,8 +450,13 @@ RED_LED_TOGGLE;
             if ( highSpeedTelem5Enabled == true )
             {
             	// Yaw Rate, Yaw Rate Command
-            	telemetryPrintF("%9.4f, %9.4f\n", sensors.gyro500Hz[YAW],
-            	            	                  rxCommand[YAW]);
+            	// telemetryPrintF("%9.4f, %9.4f\n", sensors.gyro500Hz[YAW],
+            	//             	                  rxCommand[YAW]);
+            	int index;
+	            for (index = 0; index < numberMotor; index++)
+	                telemetryPrintF("%4ld ", pwmEscRead(index));
+	            telemetryPrintF("\n");
+
             }
 
             if ( highSpeedTelem7Enabled == true )
@@ -447,8 +467,8 @@ RED_LED_TOGGLE;
             			                                        sensors.pressureAlt10Hz,
             			                                        hDotEstimate,
             			                                        hEstimate); */
-            	telemetryPrintF("%f %f %f %f\n", 
-                    st[0],st[1],st[2],st[3] );
+            	telemetryPrintF("%f %f %f %f %f %f\n", 
+                    st[0],st[1],st[2],st[3],st[4], st[5] );
             }
 
             executionTime100Hz = micros() - currentTime;
@@ -512,8 +532,8 @@ RED_LED_TOGGLE;
 #ifndef NOGPS
 void skytraqStepState(uint8_t c);
 
-        while ( gpsAvailable() )
-          skytraqStepState( gpsRead() );
+        // while ( gpsAvailable() )
+        //   skytraqStepState( gpsRead() );
 #endif
     }
 

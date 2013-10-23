@@ -20,6 +20,11 @@ def procargs() :
 
   return p.parse_args()
 
+validB64={}
+q = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" ;
+for i in q :
+  validB64[i] = 1
+
 
 state = 0
 i = 0
@@ -30,20 +35,36 @@ noise = 0
 buff=""
  
 def pktError(s):
-  #print ("%10s %d %s")%( "PktError",0,s)
+  l = len(s)
+  s = "".join( [ (x if validB64.get(x) else "A") for x in s ] )
+
+  if l < 8 :
+    print ("PktError len < 8 : '%s'" % s)
+  else :
+    lp = 4 - (l&3)
+    if lp != 4 :
+      s += ( "A" * lp )
+    (mid,_) = struct.unpack_from( "<hl", base64.decodestring(s) )
+    mlen = msgLenths.get(mid)
+    if mlen :
+      print ("PktError mid=%d (0x%04x) data-recived=%d (needed %d pad)  msg len=%d : '%s'"% (mid, mid, l,lp, mlen, s )) 
+    else :
+      print ("PktError mid=%d (0x%04x) data-recived=%d (needed %d pad) unknown mid : '%s'"% (mid, mid, l,lp, s )) 
+
   pass
 
 msgFmts = {
-  0x02 : ("<HLHHxx", "EVR"),
-  0x08 : ("<HLHHxx", "State"),
-  0x10 : ("<HLLh", "RawPres"),
-  0x11 : ("<HLHhxx", "RawTemp"),
-  0x12 : ("<HLBBLLLLLLLLxx", "RawGPS"),
-  0x18 : ("<HLfff", "ACC100Hz"),
-  0x20 : ("<HLffffxx", "HSF"),
-  0x21 : ("<HLhhhHHHhhhhhh", "BMP180"),
-  0x22 : ("<HLfxx", "Height"),
-  0x30 : ("<HLffffxx", "MotCmd"),
+  0x00 + 0x02 : ("<HLHHxx", "EVR"),
+  0x00 + 0x08 : ("<HLHHxx", "State"),
+  0x20 + 0x00 : ("<HLLh", "RawPres"),
+  0x20 + 0x01 : ("<HLHhxx", "RawTemp"),
+  0x20 + 0x02 : ("<HLBBLLLLLLLLxx", "RawGPS"),
+  0x20 + 0x03 : ("<HLhhhhx", "RawACC"),
+  0x40 + 0x00 : ("<HLfff", "WACC100Hz"),
+  0x40 + 0x01 : ("<HLffffxx", "MotCmd"),
+  0x60 + 0x00 : ("<HLffffff", "HSF"),
+  0x60 + 0x01 : ("<HLhhhHHHhhhhhh", "BMP180"),
+  0x60 + 0x02 : ("<HLfxx", "Height"),
 }
 
 msgLenths = dict([ (i, 4*int((struct.calcsize(msgFmts[i][0])+2)/3)) for i in msgFmts ])
@@ -59,6 +80,11 @@ zeros = ("\0" *64)
 
 def pkt_decode(m, bs,(outfa,outfb)) :
   #print "{",len(s)
+  l = len(bs)
+  if (l&3) != 0 :
+    s += ( "A" * ( 4- (l&3)))
+    print "Padding needed in pkt_decode. l=%d" % l
+
   s = base64.decodestring(bs) 
 
   if outfb :
@@ -66,7 +92,7 @@ def pkt_decode(m, bs,(outfa,outfb)) :
 
   if outfa :
     f = msgFmts[m][0]
-#    print "m=",m," f=",f, "s=",bs, "#f=", struct.calcsize(f), "#s=", len(s)
+    #print "m=",m," f=",f, "s=",bs, "#f=", struct.calcsize(f), "#s=", len(s)
     x = struct.unpack(f,s)
     p = " ".join([ "%"+p2f[i] for i in f if p2f.get(i) ])
     if mid == 0x02 :
@@ -87,11 +113,7 @@ def step_pkt_rd(x,fds) :
       noise = noise +1
 
   elif state == 1 :
-    if x == '$' :
-      pktError(buff);
-      state = 0
-      step_pkt_rd(x,fds)
-    else:
+    if validB64.get(x) :
       buff += x
       i = i + 1
       if i == 8 :
@@ -100,19 +122,23 @@ def step_pkt_rd(x,fds) :
         #print mid,mlen,state
         if mlen != None :
           state = 2
-
-  elif state == 2 :
-    if x == '$' :
+    else:
       pktError(buff);
       state = 0
       step_pkt_rd(x,fds)
-    else:
+
+  elif state == 2 :
+    if validB64.get(x) :
       buff += x
       i = i + 1
       if i >= mlen :
         pkt_decode(mid, buff, fds)
         state = 0
         mlen = 0
+    else:
+      pktError(buff);
+      state = 0
+      step_pkt_rd(x,fds)
 
 def rd():
   args = procargs()

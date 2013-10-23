@@ -49,3 +49,5 @@ void pwmEscInit(uint16_t escPwmRate);
 void pwmEscWrite(uint8_t channel, uint16_t value);
 
 ///////////////////////////////////////////////////////////////////////////////
+
+uint16_t pwmEscRead(uint8_t channel);
