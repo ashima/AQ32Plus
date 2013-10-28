@@ -401,11 +401,13 @@ void systemReset(bool toBootloader)
         *((uint32_t *)0x2001FFFC) = 0xDEADBEEF; // 128KB SRAM STM32F407
     }
 
+#ifndef ASHIMACORE
     GPIO_ResetBits(USB_DISCONNECT_GPIO, USB_DISCONNECT_PIN);
 
     delay(200);
 
     GPIO_SetBits(USB_DISCONNECT_GPIO, USB_DISCONNECT_PIN);
+#endif
 
     // Generate system reset
     SCB->AIRCR = AIRCR_VECTKEY_MASK | (uint32_t) 0x04;

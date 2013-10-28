@@ -77,7 +77,9 @@ void cliInit(void)
 
 	GPIO_SetBits(USB_DISCONNECT_GPIO, USB_DISCONNECT_PIN);
 #endif
+
 	USBD_Init(&USB_OTG_dev,	USB_OTG_FS_CORE_ID, &USR_desc, &USBD_CDC_cb, &USR_cb);
+        USB_Support_DisReConnect(&USB_OTG_dev);
 	evrRegisterListener(cliListenerCB);
 }
 
