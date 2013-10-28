@@ -31,6 +31,7 @@ struct filter_t
 
 typedef float float_tt ;
 enum { ns = 6UL, no = 3UL};
+//enum { ns = 4UL, no = 2UL};
 
 //void filterStep( filter_t<float_tt,ns,no> &f, uint32_t theta, uint32_t phi);
 //void filter_step_tp( filter_t<float_tt,ns,no> &f, uint32_t theta, uint32_t phi) throw();

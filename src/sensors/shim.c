@@ -31,12 +31,25 @@ void sreadAccel(floatXYZ_t *a)
   float Tax = eepromConfig.accelTCBiasSlope[XAXIS] * t + eepromConfig.accelTCBiasIntercept[XAXIS];
   float Tay = eepromConfig.accelTCBiasSlope[YAXIS] * t + eepromConfig.accelTCBiasIntercept[YAXIS];
   float Taz = eepromConfig.accelTCBiasSlope[ZAXIS] * t + eepromConfig.accelTCBiasIntercept[ZAXIS];
+#if 0
+  float Tax = 6.4630e-4 *t +0.024283;
+  float Tay = 1.0508e-4 *t -0.0012070;
+  float Taz = 1.1196e-3 *t +0.01471153;
+ 
   //Tax = Tay = Taz = 0. ;
+  // Convert to vehicle frame. 
+  EMAT_MUL_EMAT_VEC((*a), VehicleBoard, 
+    ((floatXYZ_t){ ((float)iRawAcc.x/8192.0 + Tax) * 9.8065 ,
+                   ((float)iRawAcc.y/8192.0 + Tay) * 9.0865 ,
+                   ((float)iRawAcc.z/8192.0 + Taz) * 9.0865 } ) );
+#endif
+
   // Convert to vehicle frame. 
   EMAT_MUL_EMAT_VEC((*a), VehicleBoard, 
     ((floatXYZ_t){ ((float)iRawAcc.x - Tax) * ACCEL_SCALE_FACTOR ,
                    ((float)iRawAcc.y - Tay) * ACCEL_SCALE_FACTOR ,
                    ((float)iRawAcc.z - Taz) * ACCEL_SCALE_FACTOR } ) );
+
 
 /*
   cliPrintF("T = %f\n", t);

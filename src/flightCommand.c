@@ -67,6 +67,7 @@ uint8_t disarmingTimer = 0;
 
 uint8_t  altitudeHoldState = DISENGAGED;
 uint16_t previousAUX2State = MINCOMMAND;
+uint8_t  altitudeVelState = false ;
 
 float    altitudeHoldThrottleValue = 0.0f;
 
@@ -224,9 +225,37 @@ void processFlightCommands(void)
 	    headingHoldEngaged = false;
 
 	///////////////////////////////////
-
+        if (rxCommand[AUX2] < ONETHIRDCOMMAND)
+          {
+          if ( previousAUX2State != 0)
+            {
+            altitudeHoldState = DISENGAGED;
+            previousAUX2State = 0;
+            }
+          }
+        else if (rxCommand[AUX2] < TWOTHIRDCOMMAND && previousAUX2State != 0)
+          {
+          if ( previousAUX2State != 1)
+            {
+            altitudeHoldState = ENGAGED;
+            altitudeHoldThrottleValue = rxCommand[THROTTLE];
+            altitudeVelState = false;
+            previousAUX2State = 1;
+            }
+          }
+        else
+          {
+          if ( previousAUX2State != 2)
+            {
+            altitudeHoldState = ENGAGED;
+            altitudeHoldThrottleValue = rxCommand[THROTTLE];
+            altitudeVelState = true;
+            previousAUX2State = 2;
+            }
+          }
+ 
 	// Check AUX2 for altitude hold mode (2 Position Switch)
-
+#if 0
 	if ((rxCommand[AUX2] > MIDCOMMAND) && (previousAUX2State <= MIDCOMMAND))      // Rising edge detection
 	{
 		altitudeHoldState = ENGAGED;
@@ -238,7 +267,7 @@ void processFlightCommands(void)
 	}
 
 	previousAUX2State = rxCommand[AUX2];
-
+#endif
 
 	///////////////////////////////////
 }

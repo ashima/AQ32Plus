@@ -1,8 +1,13 @@
 #include <inttypes.h>
 #include <cstdio>
+#include <math.h>
 
 #include "char_telem.h"
 #include "harness.h"
+
+float aOfp(float p);
+float pOfDN(int up,float t);
+float tOfDN(int ut);
 
 uint8_t overSamplingSetting = 0;
 int ac1 = 0, ac2 = 0, ac3 = 0;
@@ -14,8 +19,8 @@ uint32_t rawPressure;
 float earthAxisAccels[3];
 float accelOneG = 9.8;
 
-uint32_t lastTimeCode;
-uint32_t lastTimeSeen;
+uint32_t lastTimeCode = 0 ;
+uint32_t lastTimeSeen = 0 ;
 extern "C" {
 void dump_filter();
 uint32_t micros()
@@ -36,6 +41,21 @@ st[12], st[13], st[14], st[15],
 st[16], st[17], st[18], st[19] );
   }
 
+void dump_hsf()
+  {
+//  float *stpt = hsf_getStatePT();
+//  printf("%f %f ",stpt[0],stpt[1]);
+//  float *stp = hsf_getStatePos();
+//  printf("%f %f %f ", stp[0], stp[1], stp[2] );
+//  printf("%f %f %f ", stp[3], stp[4], stp[5] );
+//  printf("%f %f %f ", stp[6], stp[7], stp[8] );
+//  printf("%f %f %f ", stp[9], stp[10], stp[11] );
+  float *st = hsf_getState();
+  printf("%f %f %f %f ", st[0], st[1], st[2], st[3] );
+  printf("%f %f", st[4], st[5] );
+  printf("\n");
+  }
+
 int main()
   {
   union {
@@ -48,8 +68,16 @@ int main()
     uint8_t  c_ptr[64];
   } b;
 
-  int n; int dt;
+  int n; int dt = 0;
   float *st = hsf_getState();
+  float lastt = 28. , lastp = 1.0e5 , lasta = 0.;
+
+earthAxisAccels[0] = 0. ;
+earthAxisAccels[1] = 0. ;
+earthAxisAccels[2] = 0. ;
+
+printf("%10d %5d %f %f %f ",lastTimeSeen, dt, earthAxisAccels[0], earthAxisAccels[1], earthAxisAccels[2] );
+dump_hsf();
 
   while (!feof(stdin) )
     {
@@ -78,6 +106,8 @@ int main()
 
           hsf_init();
           //printf("%10d %5d %6d HSF(p): %f %f %f %f %f %f\n",lastTimeSeen, 1, 0, st[0], st[1], st[2], st[3], st[4], st[5] );
+printf("%10d %5d %f %f %f ",lastTimeSeen, dt, earthAxisAccels[0], earthAxisAccels[1], earthAxisAccels[2] );
+dump_hsf();
           break;
         case ctIDPressure:
           rawPressure = b.c_ptr[6] | (b.c_ptr[7] << 8) | (b.c_ptr[8] << 16) ;
@@ -85,7 +115,9 @@ int main()
           lastTimeCode = lt + dt;
           hsf_step();
           hsf_update_p();
-          printf("%10d %5d %6d HSF(p): %f %f %f %f %f %f\n",lastTimeSeen, dt, rawPressure, st[0], st[1], st[2], st[3], st[4], st[5] );
+          //printf("%10d %5d %6d HSF(p): %f %f %f %f %f %f\n",lastTimeSeen, dt, rawPressure, st[0], st[1], st[2], st[3], st[4], st[5] );
+          lastp = pOfDN(rawPressure, lastt);
+          lasta = aOfp(lastp);
           break;
         case ctIDTemperature:
           rawTemperature = b.s_ptr[3];
@@ -93,11 +125,20 @@ int main()
           lastTimeCode = lt + dt;
           hsf_step();
           hsf_update_t();
-          printf("%10d %5d %6d HSF(t): %f %f %f %f %f %f\n",lastTimeSeen, dt, rawTemperature, st[0], st[1], st[2], st[3], st[4], st[5] );
+           //printf("%10d %5d %6d HSF(t): %f %f %f %f %f %f\n",lastTimeSeen, dt, rawTemperature, st[0], st[1], st[2], st[3], st[4], st[5] );
+          lastt = tOfDN(rawTemperature);
           break;
         case ctIDWAcc100:
+          //earthAxisAccels[0] = *((float*) (&b.s_ptr[3]) );
+          //earthAxisAccels[1] = *((float*) (&b.s_ptr[5]) );
           earthAxisAccels[2] = *((float*) (&b.s_ptr[7]) );
-          hsf_update_a();
+          if ( fabs(earthAxisAccels[2]) < 100.0 )
+            hsf_update_a();
+          else
+            earthAxisAccels[2] = 0.;
+          printf("%10d %5d %f %f %f ",lastTimeSeen, dt, earthAxisAccels[0], earthAxisAccels[1], earthAxisAccels[2] );
+          printf("%f %f %f ", lastt, lastp, lasta );
+          dump_hsf();
           break;
         }
       }

@@ -64,6 +64,30 @@ void filterSetParams() throw()
 */
  }
 
+float tOfDN(int ut)
+  {
+  float a_ = c5 * ( (float)ut - c6 );
+  float t = a_ + mc_ / (a_ + md_);
+  return t;
+  }
+
+float pOfDN(int up,float t)
+  {
+  float s = t - T_0;
+
+  float x = ((x2  * s) + x1 ) * s + x0;
+  float y = ((y2  * s) + y1_) * s + y0_;
+
+  float q = ((float)up * ps - x ) / y  ;
+  float p  = 100. * (((z2 * q) + z1) * q + z0) ;
+  return p;
+  }
+
+float aOfp(float p)
+  {
+  float a = z_max * (1. -  pow( p / P_0, (1./rho) ) ) ;
+  return a;
+  }
 
 
 template<typename T, uint NS>
@@ -114,6 +138,7 @@ void filterFwd(filter_t<T,NS,NO> &f, matrix<T,NS,NS> &Q) throw()
   f.x(0,0) += dt * f.x(1,0);
 
   matrix<T,4,1> y0, y1, y2,y3, k1,k2,k3,k4;
+  //matrix<T,2,1> y0, y1, y2,y3, k1,k2,k3,k4;
   y0(0,0) = f.x(2,0);
   y0(1,0) = f.x(3,0);
   y0(2,0) = f.x(4,0);
@@ -151,6 +176,7 @@ void filterFwd(filter_t<T,NS,NO> &f, matrix<T,NS,NS> &Q) throw()
   f.x(3,0) += k1(1,0);
   f.x(4,0) += k1(2,0);
   f.x(5,0) += k1(3,0);
+
 #if 0
   float_tt x2,x3,x4,x5; 
   x2 = f.x(2,0) + 0.5 * dt * f.x(3,0) ;//+ dt*dt*0.5f* f.x(4,0) + dt*dt*dt/6.0f * f.x(5,0);
@@ -204,6 +230,7 @@ void filterGainUpdate(matrix<T,NO,NS> H, matrix<T,NS,NS> &P,
 void make_Q(matrix<float_tt,ns,ns> &Q, float_tt sigma_a, float_tt dt) throw()
   {
 #if 0
+//origonal 
   float_tt dt2 = dt * dt;
   float_tt dt3_2 = dt2 * dt * 0.5f;
   float_tt dt4_4 = dt2 * dt2 * 0.25f;
@@ -221,9 +248,14 @@ void make_Q(matrix<float_tt,ns,ns> &Q, float_tt sigma_a, float_tt dt) throw()
   dt8 = dt * ( dt7 = dt * ( dt6 = dt * ( dt5 = dt * 
   (dt4 = dt * ( dt3 = dt * ( dt2 = dt * dt * sigma_a ) )))));
 
+#if 1
+// Pressure with acc
   Q(0,0) =          dt4 / 4.0;
   Q(1,0) = Q(0,1) = dt3 / 2.0;
   Q(1,1) =          dt2;
+  //Q(0,0) =          dt8 / 576.0;
+  //Q(1,0) = Q(0,1) = dt7 / 144.0;
+  //Q(1,1) =          dt6 / 48;
 
   Q(2,2) =          dt8 / 576.0;
   Q(3,2) = Q(2,3) = dt7 / 144.0;
@@ -238,6 +270,18 @@ void make_Q(matrix<float_tt,ns,ns> &Q, float_tt sigma_a, float_tt dt) throw()
   Q(5,4) = Q(4,5) = dt3 / 2.0;
 
   Q(5,5) =          dt2;
+#endif
+
+#if 0
+//Simple pressure
+  Q(0,0) =          dt4 / 4.0 ;
+  Q(1,0) = Q(0,1) = dt3 / 2.0 ;
+  Q(1,1) =          dt2 ;
+
+  Q(2,2) =          dt4 / 4.0 ;
+  Q(2,3) = Q(3,2) = dt3 / 2.0 ;
+  Q(3,3) =          dt2 ;
+#endif
   }
 
 #if 0
@@ -268,6 +312,8 @@ void make_F(matrix<float_tt,ns,ns> &F, float_tt dt) throw()
 
 */ 
 
+#if 1
+//Pressure with acc
   for (uint32_t i = 0 ; i < ns ; ++i )
     F(i,i) = 1.0;
 
@@ -275,6 +321,13 @@ void make_F(matrix<float_tt,ns,ns> &F, float_tt dt) throw()
   F(2,3) = F(3,4) = F(4,5) = dt;
   F(2,4) = F(3,5) = dt2;
   F(2,5) = dt3;
+#endif
+
+#if 0
+//Simple Pressure
+  F(0,0) = F(1,1) = F(2,2) = F(3,3) =  1.0 ;
+  F(0,1) = F(2,3) = dt ;
+#endif
   }
 
 
@@ -284,20 +337,37 @@ void filterInit(filter_t<float_tt,ns,no> &f , float_tt dt) throw()
   {
   f.x(2,0) = 230.234269f; 
   f.x(0,0) = 28.941330f;
+#if 0
+// Simple Pressure
+  f.P(0,0) = f.P(2,2) /* = f.P(4,4) */ = 100.0f;
+  f.P(1,1) = f.P(3,3) /* = f.P(5,5) */ = 0.1f;
+#endif
 
-  f.P(0,0) = f.P(2,2) = f.P(4,4) = 100.0f;
-  f.P(1,1) = f.P(3,3) = f.P(5,5) = 1.0f;
+#if 1
+// Pressure with acc
+float x = 1.0e-7;
+  f.P(0,0) = f.P(2,2) = x ;
+  f.P(4,4) = x * 0.01;
+  f.P(1,1) = f.P(3,3) = f.P(5,5) = x * 0.01;
+#endif
 
   make_F(f.F, 0.01);  
   //make_Q(f.Q, 0.001f, 0.01);
-  make_Q(f.Q, 0.10f, 0.01);
 
   //f.Rts(0,0) = 40.0f;
   //f.Rps(0,0) = 20.0f;
   //f.Ras(0,0) = 0.060f;
-  f.Rts(0,0) = 40.0f;
-  f.Rps(0,0) = 20.0f;
-  f.Ras(0,0) = 0.40f;
+#if 0
+  make_Q(f.Q, 1.0f, 0.01);
+  f.Rts(0,0) = 10.00f;
+  f.Rps(0,0) = 10.00f;
+#endif
+#if 1
+  make_Q(f.Q, 1.0e-7f, 0.01);
+  f.Rts(0,0) = 1.0e-7f;
+  f.Rps(0,0) = 1.0e-6f;
+  f.Ras(0,0) = 1.0e-3f;
+#endif
   }
 
 #if 0
@@ -333,6 +403,7 @@ void filter_update_t( filter_t<float_tt,ns,no> &f, uint32_t theta) throw()
 
 void filter_update_a( filter_t<float_tt,ns,no> &f, float_tt z_dot_dot) throw()
   {
+#if 1
   matrix<float_tt,1UL,1UL>  y;
   matrix<float_tt,1UL,ns> h(0.0f);
 
@@ -340,6 +411,7 @@ void filter_update_a( filter_t<float_tt,ns,no> &f, float_tt z_dot_dot) throw()
   h(0,4) = 1.0;
  
   filterGainUpdate(h, f.P, f.x, y, f.Ras);
+#endif
   }
 
 void filter_update_p( filter_t<float_tt,ns,no> &f, uint32_t phi) throw()
@@ -356,6 +428,8 @@ void filter_update_p( filter_t<float_tt,ns,no> &f, uint32_t phi) throw()
 
 void filter_step(filter_t<float_tt,ns,no> &f) throw()
   {
+  //f.x(4,0) = 0.;
+  //f.x(5,0) = 0.;
   filterFwd(f, f.Q); 
   }
 

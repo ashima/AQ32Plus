@@ -403,7 +403,7 @@ RED_LED_TOGGLE;
         	createRotationMatrix();
         	bodyAccelToEarthAccel();
         	vertCompFilter(dt100Hz);
-            //hsf_update_a();
+            hsf_update_a();
             ctPushSMTB(ctIDWAcc100, sizeof(float)*3, (uint8_t*) &earthAxisAccels );
             //ctPushSMTB(ctIDComHeight, sizeof(float), (uint8_t*) &hEstimate );
 
