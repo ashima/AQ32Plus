@@ -11,7 +11,11 @@
               tiled). Much left to do.
 */
 
-//#include <assert.h>
+#ifdef DOMATASSERT
+#include <assert.h>
+#else
+#define assert(X)
+#endif
 
 typedef unsigned int uint ;
 
@@ -25,13 +29,13 @@ public:
 
   T &operator()(uint i, uint j)
     {
-    // assert( i < N && j < M );
+    assert( i < N && j < M );
     return this->data[i][j];
     }
 
   const T &operator()(uint i, uint j) const
     {
-    // assert( i < N && j < M );
+    assert( i < N && j < M );
     return this->data[i][j];
     }
 

@@ -6,7 +6,7 @@ CFLAGS= -O3
 # --fast-math -fno-math-errno -fno-trapping-math -fno-signaling-nans \
 #	-fsingle-precision-constant
 
-CCFLAGS= -fno-rtti -fno-exceptions -Weffc++
+CCFLAGS= -fno-rtti -fno-exceptions -Weffc++ -DDOMATASSERT
 
 
 SD=../../src/state
