@@ -31,9 +31,21 @@ extern float accelOneG;
 
 void   hsf_update_t()   { filter_update_t(*(F*)filter, rawTemperature); }
 void   hsf_update_p()   { filter_update_p(*(F*)filter, rawPressure); }
-void   hsf_update_a()   { filter_update_a(*(F*)filter, 
-                                          earthAxisAccels[2] * accelOneG);}
 void   hsf_step()       { filter_step    (*(F*)filter ) ; }
 
 float *hsf_getState()   { return &((*(F*)(filter)).x(0,0)); }
 
+void   hsf_update_a()
+  {
+  float x_now = earthAxisAccels[2];
+  static float s_last = 0.0f;
+
+/* exponential filter to remove a short term trend in the bias
+ */
+
+  float alpha = 0.02f; 
+
+  s_last = alpha * x_now + (1.0 - alpha) * s_last;
+
+  filter_update_a(*(F*)filter, x_now - s_last );
+  }

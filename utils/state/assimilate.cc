@@ -77,6 +77,7 @@ earthAxisAccels[1] = 0. ;
 earthAxisAccels[2] = 0. ;
 
 printf("%10d %5d %f %f %f ",lastTimeSeen, dt, earthAxisAccels[0], earthAxisAccels[1], earthAxisAccels[2] );
+printf("%f %f %f ", lastt, lastp, lasta );
 dump_hsf();
 
   while (!feof(stdin) )
@@ -107,6 +108,7 @@ dump_hsf();
           hsf_init();
           //printf("%10d %5d %6d HSF(p): %f %f %f %f %f %f\n",lastTimeSeen, 1, 0, st[0], st[1], st[2], st[3], st[4], st[5] );
 printf("%10d %5d %f %f %f ",lastTimeSeen, dt, earthAxisAccels[0], earthAxisAccels[1], earthAxisAccels[2] );
+printf("%f %f %f ", lastt, lastp, lasta );
 dump_hsf();
           break;
         case ctIDPressure:
