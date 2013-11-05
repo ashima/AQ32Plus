@@ -8,6 +8,7 @@
 */
 
 #include <inttypes.h>
+#include "board.h"
 #include "gps/skyTraq.h"
 #include "state/char_telem.h"
 
@@ -135,6 +136,7 @@ void skytraqNavigationDataPkt( message_0xA8_t* p );
 
 void skytraqBinPkt(uint8_t *p, int stLength)
   {
+  BLUE_LED_TOGGLE;
   switch ( p[0] )
     {
     case 0xA8 : skytraqNavigationDataPkt( (message_0xA8_t*)p ); break;
@@ -158,6 +160,7 @@ void skytraqNavigationDataPkt( message_0xA8_t* p )
     };
     uint8_t c[1];
   } x;
+  RED_LED_TOGGLE;
 
   x.fm = p->fix_mode;
   x.sv = p->number_of_sv_in_fix;
@@ -171,4 +174,5 @@ void skytraqNavigationDataPkt( message_0xA8_t* p )
   x.w = p->ecef_vz;
   
   ctPushSMTB(ctIDGPSraw, sizeof(x), x.c);
+
   }

@@ -382,10 +382,10 @@ void cliCom(void)
             else
                 cliPrint(" No Fix, ");
 
-            cliPrintF("%2ld, %8ld, %9.2f, %5.2f\n", sensors.gpsNumSats,
+            cliPrintF("%2ld, %8ld, %9.2f, %5.2f (%d)\n", sensors.gpsNumSats,
             		                                sensors.gpsDate,
             		                                sensors.gpsTime,
-            		                                sensors.gpsHdop);
+            		                                sensors.gpsHdop, (int)gpsNumCharsAvailable());
             validCliCommand = false;
         	break;
 

@@ -379,7 +379,6 @@ int main(void)
               hsf_step();
               hsf_update_t(); 
               ctPushSMTB(ctIDTemperature, sizeof(ctIDTemperature_t), ((ctIDTemperature_t){{rawTemperature, filter_dt}}).c_ptr);
-RED_LED_TOGGLE;
               }
             else {
               hsf_step();
@@ -508,8 +507,8 @@ RED_LED_TOGGLE;
 			deltaTime5Hz    = currentTime - previous5HzTime;
 			previous5HzTime = currentTime;
 
-			if (execUp == true)
-			    BLUE_LED_TOGGLE;
+			//if (execUp == true)
+			//    BLUE_LED_TOGGLE;
 
         	executionTime5Hz = micros() - currentTime;
         }
@@ -540,8 +539,8 @@ RED_LED_TOGGLE;
 #ifndef NOGPS
 void skytraqStepState(uint8_t c);
 
-        // while ( gpsAvailable() )
-        //   skytraqStepState( gpsRead() );
+        while ( gpsAvailable() )
+          skytraqStepState( gpsRead() );
 #endif
     }
 

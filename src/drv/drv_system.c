@@ -315,7 +315,7 @@ void systemInit(void)
     BLUE_LED_ON;
 
     //adcInit();
-    //gpsInit();
+    gpsInit();
     // i2cInit(I2C1);
     i2cInit(I2C2);
     pwmEscInit(eepromConfig.escPwmRate);
