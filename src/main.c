@@ -115,6 +115,7 @@ typedef union {
   } ctIDPressure_t;
 */
 
+void startupSensorsVar();
 
 int main(void)
 {
@@ -134,11 +135,18 @@ int main(void)
     floatXYZ_t a;
 
     systemInit();
+    startupSensorsVar();
+
+    // First call inits MargAHRS.
+    MargAHRSupdate( sensors.gyro500Hz[ROLL],   sensors.gyro500Hz[PITCH],  sensors.gyro500Hz[YAW],
+                    sensors.accel500Hz[XAXIS], sensors.accel500Hz[YAXIS], sensors.accel500Hz[ZAXIS],
+                    sensors.mag10Hz[XAXIS],    sensors.mag10Hz[YAXIS],    sensors.mag10Hz[ZAXIS],
+                    eepromConfig.accelCutoff, true,  1.0/500.0 );
 
     systemReady = true;
     highSpeedTelem1Enabled = true ;
 
-    delay(200);
+    //delay(200);
     hsf_init();
     pushInitTelem();
 
@@ -541,3 +549,42 @@ void skytraqStepState(uint8_t c);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+void startupSensorsVar()
+  {
+  enum {
+    startupSeconds = 1,
+    startupFreq    = 256,
+    startupN       = startupSeconds * startupFreq,
+    startup_dt     = (int)(1e6 / startupFreq),
+    };
+
+  floatXYZ_t a;
+  int i;
+  const float inv_sN = 1.0 / (float)startupN;
+
+
+  sensors.mag10Hz[XAXIS]    = sensors.mag10Hz[YAXIS]    = sensors.mag10Hz[ZAXIS]    = 
+  sensors.accel500Hz[XAXIS] = sensors.accel500Hz[YAXIS] = sensors.accel500Hz[ZAXIS] = 
+  sensors.gyro500Hz[XAXIS]  = sensors.gyro500Hz[YAXIS]  = sensors.gyro500Hz[ZAXIS]  = 0.0f;
+ 
+  for (i=0; i < startupN; i++ )
+    {
+    delayMicroseconds(startup_dt);
+    readMPU6000();
+
+    sreadMag(&a);
+    sensors.mag10Hz[XAXIS]    += a.x;   sensors.mag10Hz[YAXIS]    += a.y;     sensors.mag10Hz[ZAXIS]    += a.z;
+
+    sreadAccel( &a );
+    sensors.accel500Hz[XAXIS] += a.x;   sensors.accel500Hz[YAXIS] += a.y;     sensors.accel500Hz[ZAXIS] += a.z;
+
+    sreadGyro( &a );
+    sensors.gyro500Hz[XAXIS]  += a.x;   sensors.gyro500Hz[YAXIS]  += a.y;     sensors.gyro500Hz[ZAXIS]  += a.z;
+    }
+
+  sensors.mag10Hz[XAXIS]    *= inv_sN;  sensors.mag10Hz[YAXIS]    *= inv_sN;  sensors.mag10Hz[ZAXIS]    *= inv_sN;
+  sensors.accel500Hz[XAXIS] *= inv_sN;  sensors.accel500Hz[YAXIS] *= inv_sN;  sensors.accel500Hz[ZAXIS] *= inv_sN;
+  sensors.gyro500Hz[XAXIS]  *= inv_sN;  sensors.gyro500Hz[YAXIS]  *= inv_sN;  sensors.gyro500Hz[ZAXIS]  *= inv_sN;
+  }
+
