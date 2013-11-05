@@ -39,6 +39,7 @@ enum {
   ctIDHSFState     = 0x00 + ctState,
   ctIDBMP180Params = 0x01 + ctState,
   ctIDComHeight    = 0x02 + ctState,
+  ctIDhhPIDS       = 0x03 + ctState,
 
 // endmarker
   ctID_EM = 0x7f
@@ -99,4 +100,14 @@ typedef union {
   uint8_t c_ptr[1];
   } ctIDAcc_t;
 
+typedef union {
+  struct __attribute__((__packed__)) {
+    float h_set;
+    float h;
+    float dh_dt_set;
+    float dh_dt;
+    float throt;
+    } ;
+  uint8_t c_ptr[1];
+  } ctIDhhPIDs_t ;
 #endif

@@ -36,6 +36,8 @@
 
 #include "board.h"
 #include "state/harness.h"
+#include "state/char_telem.h"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -118,6 +120,8 @@ void computeAxisCommands(float dt)
       float *hsf = hsf_getState();
       float hDelta = 0.;
       float cDelta = 0.;
+      ctIDhhPIDs_t t;
+      static int pidTCount = 0;
 
       if ( previousAltitudeHoldState != ENGAGED )
         {
@@ -132,13 +136,24 @@ void computeAxisCommands(float dt)
       cDelta = (rxCommand[THROTTLE] - altitudeHoldThrottleValue) * 0.01 ; // Command to meters scaling.
 
       if (altitudeVelState)
-       hDelta += cDelta / 100.0; 
+       hDelta += cDelta / 10.0; 
       else
        hDelta = cDelta;
 
-      rateCmd[THROTTLE] = updatePID( heightReference + hDelta,  hsf[ hsfZ ] , dt, holdIntegrators, &eepromConfig.PID[H_PID] );
-      axisPID[THROTTLE] = altitudeHoldThrottleValue + 
-                          updatePID( rateCmd[THROTTLE], hsf[ hsfZdot ] , dt, holdIntegrators, &eepromConfig.PID[HDOT_PID] );
+      t.h         = hsf[ hsfZ ];
+      t.dh_dt     = hsf[ hsfZdot ];
+
+      t.h_set     = heightReference + hDelta;
+      t.dh_dt_set = updatePID( t.h_set,     t.h ,    dt, holdIntegrators, &eepromConfig.PID[ H_PID ] );
+      t.throt     = altitudeHoldThrottleValue
+                  + updatePID( t.dh_dt_set, t.dh_dt, dt, holdIntegrators, &eepromConfig.PID[ HDOT_PID ] );
+
+      rateCmd[THROTTLE] = t.dh_dt_set;
+      axisPID[THROTTLE] = t.throt;
+
+      if ( 0 == pidTCount++ %5 ) 
+        ctPushSMTB(ctIDhhPIDS, sizeof(ctIDhhPIDs_t), t.c_ptr );
+
       }
     else
       axisPID[THROTTLE ] = rxCommand[THROTTLE];

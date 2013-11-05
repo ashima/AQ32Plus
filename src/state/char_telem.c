@@ -37,10 +37,10 @@ void ctPushB(int32_t s, uint8_t *c)
   }
 #endif
 static const uint32_t ctChanEnable[ ctIDTableSIZE ] = {
-  0x00000014,
+  0x00000104,
   0x0000000f,
-  0x00000001,
-  0x00000007
+  0x00000000,
+  0x0000000b
   };
 
 bool ctChanEnabled(uint16_t m)
