@@ -33,7 +33,7 @@ DRVSRC=drv_adc.c drv_cli.c drv_i2c.c drv_led.c \
 	drv_crc.c
 GPSSRC=drv/drv_gps.c gps/skyTraq.c gps/gps.c
 #GPSSRC=
-SENSRC=shim.c hmc5883.c bmp085.c mpu6000_I2C.c
+SENSRC=shim.c hmc5883.c ms5611_I2C.c mpu6000_I2C.c
 OSDSRC=$(wildcard max7456/*.c)
 STATE=char_telem.c
 

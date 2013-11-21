@@ -61,7 +61,7 @@
     #define MS5611_ADDRESS 0x76
 #elif defined(MS5611_EXTERNAL)
     #define MS5611_I2C     I2C2
-    #define MS5611_ADDRESS 0x77
+    #define MS5611_ADDRESS 0x76
 #else
     #error "No MS5611 Definition!!"
 #endif

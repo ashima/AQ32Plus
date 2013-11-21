@@ -47,6 +47,13 @@
   #define OSR 4096  // 9.04 mSec conversion time ( 110.62 Hz)
 
 ///////////////////////////////////////
+// HACK
+int ac1 = 0, ac2 = 0, ac3 = 0;
+unsigned int ac4 = 0, ac5 = 0, ac6 = 0;
+int b1 = 0, b2 = 0, mb = 0, mc = 0, md = 0;
+long rawPressure = 0, rawTemperature = 0;
+uint8_t overSamplingSetting = 0;
+// END HACK
 
 uint32_t d1Average;
 
@@ -67,7 +74,7 @@ int64_t sensitivity;
 int32_t p;
 
 uint8_t pressureAltValid = false;
-///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // Read Temperature Request Pressure
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -75,11 +82,12 @@ void readTemperatureRequestPressure(I2C_TypeDef *I2Cx)
 {
     uint8_t data[3];
 
-    i2cRead(I2Cx, MS5611_ADDRESS, 0x00, 3, data);    // Request temperature read
+    (float)i2cRead(I2Cx, MS5611_ADDRESS, 0x00, 3, data);    // Request temperature read
 
     d2.bytes[2] = data[0];
     d2.bytes[1] = data[1];
     d2.bytes[0] = data[2];
+    rawTemperature = d2.value;
 
     #if   (OSR ==  256)
 	    i2cWrite(I2Cx, MS5611_ADDRESS, 0xFF, 0x40);  // Request pressure conversion
@@ -107,6 +115,7 @@ void readPressureRequestPressure(I2C_TypeDef *I2Cx)
     d1.bytes[2] = data[0];
     d1.bytes[1] = data[1];
     d1.bytes[0] = data[2];
+    rawPressure = d1.value;
 
     #if   (OSR ==  256)
 	    i2cWrite(I2Cx, MS5611_ADDRESS, 0xFF, 0x40);  // Request pressure conversion
@@ -134,6 +143,7 @@ void readPressureRequestTemperature(I2C_TypeDef *I2Cx)
     d1.bytes[2] = data[0];
     d1.bytes[1] = data[1];
     d1.bytes[0] = data[2];
+    rawPressure = d1.value;
 
     #if   (OSR ==  256)
 	    i2cWrite(I2Cx, MS5611_ADDRESS, 0xFF, 0x50);   // Request temperature converison

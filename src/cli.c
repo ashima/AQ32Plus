@@ -38,6 +38,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+extern uint32_t rawPressure, rawTemperature;
+
 uint8_t cliBusy = false;
 
 static volatile uint8_t cliQuery;
@@ -400,13 +402,7 @@ void cliCom(void)
         ///////////////////////////////
 
         case 'p': // Not Used
-        	;uint32_t mot_avg = (motor[0] + motor[1] + motor[2] + motor[3]) / 4;
-        	cliPrintF("%1.4f %1.4f %1.4f %1.4f  %f %1.0f %1.0f %1.0f %1.0f  %1d  %1.0f %1.0f %1.0f %1.0f  %1.2f %1.2f %1.2f\n",
-        		q0, q1, q2, q3, rxCommand[AUX2],
-        		rxCommand[ROLL], rxCommand[PITCH], rxCommand[YAW], rxCommand[THROTTLE], 
-        		mot_avg,
-        		motor[0]-mot_avg, motor[1]-mot_avg, motor[2]-mot_avg, motor[3]-mot_avg,
-        		eepromConfig.PID[ROLL_RATE_PID].iTerm, eepromConfig.PID[PITCH_RATE_PID].iTerm, eepromConfig.PID[YAW_RATE_PID].iTerm);
+        	cliPrintF("%1.4f %d %d\n", sensors.pressureAlt10Hz, rawTemperature, rawPressure);
         	validCliCommand = false;
         	break;
 
